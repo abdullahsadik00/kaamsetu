@@ -1,0 +1,130 @@
+# 03 — KaamSetu SaaS Business Model and Multi-Tenancy
+
+## 1. SaaS definition
+
+KaamSetu is a multi-tenant Software-as-a-Service product.
+
+One shared platform serves multiple independent AC service businesses. Each business has its own:
+- Employees.
+- Teams.
+- Customers.
+- AC equipment.
+- Jobs.
+- Invoices.
+- Payments.
+- AMC records.
+- Settings.
+
+One business must never be able to access another business's records.
+
+## 2. Tenant terminology
+
+Use `Organization` in the database and backend to represent a subscribing business.
+
+A user may belong to one or more organizations in the future, but the initial UI can assume one active business at a time.
+
+Every business-owned record must include an organization relationship or be securely reachable through an organization-owned parent.
+
+## 3. Tenant isolation
+
+Mandatory rules:
+1. Derive the active organization from the authenticated membership/session.
+2. Never trust a client-supplied organization ID by itself.
+3. Scope all reads, updates and deletes to the authenticated organization.
+4. Validate nested records belong to the same organization.
+5. Scope file access and signed URLs.
+6. Add organization-aware unique constraints where appropriate.
+7. Test cross-tenant access attempts.
+8. Include organization ID in audit and sync records.
+
+Consider PostgreSQL row-level security as an additional defense after the application-level authorization model is working. Do not rely on UI hiding for security.
+
+## 4. SaaS roles
+
+Platform roles:
+- Platform administrator/support (internal KaamSetu operations).
+- Organization owner.
+- Organization senior technician.
+- Organization helper.
+
+Platform administrator access must be separate from customer business roles and audited. Support access should be limited and controlled.
+
+## 5. Subscription model
+
+Do not over-engineer subscriptions before the first pilot.
+
+Suggested subscription concepts:
+- Trial.
+- Active.
+- Past due.
+- Suspended.
+- Cancelled.
+
+Potential pricing dimensions to validate:
+- Number of active employees.
+- Number of teams.
+- Monthly or annual billing.
+- Storage usage.
+- Premium support or integrations.
+
+Avoid pricing per job initially because it may discourage recording every service job.
+
+A simple future plan structure could be:
+- Starter: one small team and core job/billing features.
+- Growth: multiple teams and more staff.
+- Business: larger team limits, advanced reports and support.
+
+These are product packaging ideas, not finalized prices or commitments.
+
+## 6. Subscription enforcement
+
+The backend should know:
+- Plan ID.
+- Subscription status.
+- Billing period.
+- Start/end dates.
+- Feature entitlements.
+- Seat/team limits.
+
+Do not block technicians from accessing already assigned work solely because a subscription payment is overdue without a carefully designed grace-period and data-export policy.
+
+Never delete customer business data on subscription expiry.
+
+## 7. Onboarding
+
+Recommended onboarding:
+1. Owner creates account.
+2. Verifies phone number.
+3. Enters business name and phone.
+4. Adds business address.
+5. Creates first team.
+6. Adds senior technician.
+7. Adds helper if needed.
+8. Adds first customer.
+9. Creates first job.
+
+Avoid a long setup wizard. Allow the owner to skip optional details and complete them later.
+
+## 8. Data lifecycle
+
+- Provide business data export.
+- Define retention and deletion policies.
+- Support account closure requests.
+- Preserve financial audit records according to applicable legal requirements.
+- Use backups and restore testing.
+- Clearly communicate what happens when a subscription expires.
+- Do not use customer data for cross-tenant purposes.
+
+## 9. Privacy and legal readiness
+
+Before commercial launch, obtain appropriate Indian legal advice on:
+- Privacy policy.
+- Terms of service.
+- Data processing and retention.
+- Employee/customer personal data.
+- Payment provider requirements.
+- GST and invoice compliance.
+- Data breach handling.
+- Consumer/business contractual obligations.
+
+Do not claim tax or statutory compliance until the actual requirements have been validated and implemented.

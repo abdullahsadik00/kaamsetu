@@ -1,0 +1,932 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>KaamSetu Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap">
+<style>
+/* Layout: prototype controls panel beside one Android-size phone; on a phone the app fills the screen. Single light theme by design (the app ships light-first). */
+:root{
+  --teal:#0F766E;--teal-d:#115E59;--teal-t:#E6F2EF;--teal-ink:#0B5F58;
+  --ink:#14213D;--slate:#4A5468;--muted:#5B6576;--paper:#F7F5F0;--surface:#FFFFFF;--line:#E4E0D6;--line2:#CFC9BC;--soft:#F2F0EA;
+  --ok:#15803D;--ok-t:#E3F3E8;--ok-ink:#166534;
+  --warn:#B45309;--warn-t:#FDEBD3;--warn-ink:#8A4A06;
+  --bad:#B42318;--bad-t:#FBE4E4;--bad-ink:#A61B1B;
+  --info:#1E4FBF;--info-t:#E3ECFD;--asg:#5B32B4;--asg-t:#EDE7FB;--hold:#3B4556;--hold-t:#ECEEF2;
+  --stage:#E7E2D7;--saffron:#E8891C;
+  --f:'Noto Sans','Noto Sans Devanagari',system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--stage);color:var(--ink);font-family:var(--f);font-size:16px;-webkit-tap-highlight-color:transparent}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.stage{min-height:100%;display:flex;gap:40px;align-items:center;justify-content:center;padding-block:24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.panel{width:300px;display:flex;flex-direction:column;gap:18px}
+.brand{display:flex;align-items:center;gap:10px}
+.mark{width:40px;height:40px;border-radius:11px;background:var(--teal);display:flex;align-items:center;justify-content:center;flex:none}
+.brand b{font-size:20px;display:block}
+.brand span{font-size:13px;color:var(--slate)}
+.pgroup{display:flex;flex-direction:column;gap:8px}
+.plabel{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;height:40px;border:0;border-radius:9px;background:transparent;font-size:14px;font-weight:600;color:var(--slate)}
+.seg button.on{background:var(--teal);color:#fff}
+.pnote{font-size:13px;line-height:19px;color:var(--slate);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.pnote ul{margin:6px 0 0;padding-left:18px}
+.plink{background:none;border:0;padding:0;color:var(--teal);font-weight:600;font-size:14px;text-align:left}
+
+.phone{width:390px;height:844px;max-height:calc(100vh - 48px);border-radius:36px;background:var(--paper);box-shadow:0 0 0 10px #1d2433,0 24px 60px rgba(20,33,61,.28);position:relative;overflow:hidden;display:flex;flex-direction:column;flex:none}
+@media (max-width:760px){
+  .stage{padding:0;gap:0;flex-direction:column;align-items:stretch;justify-content:flex-start;height:100%}
+  .panel{width:auto;flex-direction:row;flex-wrap:wrap;gap:8px;padding:8px max(12px,env(safe-area-inset-left,0px)) 8px max(12px,env(safe-area-inset-right,0px));background:#1d2433;align-items:center}
+  .panel .brand,.panel .pnote,.panel .plabel{display:none}
+  .pgroup{flex:1 1 auto}
+  .seg{padding:2px;border:0;background:#2b3447}
+  .seg button{height:32px;font-size:12px;color:#cfd6e4}
+  .plink{color:#7FD8CB;font-size:12px;padding:6px}
+  .phone{width:100%;height:auto;flex:1;max-height:none;border-radius:0;box-shadow:none;min-height:0}
+}
+
+/* app */
+.hd{min-height:60px;display:flex;align-items:center;gap:4px;padding:0 6px;background:var(--surface);border-bottom:1px solid var(--line);flex:none}
+.hd.big{border:0;background:var(--paper);padding:14px 16px 6px;align-items:flex-end}
+.ht{flex:1;min-width:0;display:flex;flex-direction:column;padding-left:6px}
+.ht b{font-size:19px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ht span{font-size:13px;color:var(--slate)}
+.hd.big .ht{padding:0}
+.hd.big .ht b{font-size:26px;font-weight:700;white-space:normal}
+.ib{min-width:48px;height:48px;border:0;background:transparent;display:flex;align-items:center;justify-content:center;gap:4px;border-radius:12px;font-size:14px;font-weight:600;color:var(--ink);padding:0 8px}
+.ib.t{color:var(--teal)}
+.scr{flex:1;overflow-y:auto;overflow-x:hidden;min-height:0}
+.body{padding:14px 16px 28px;display:flex;flex-direction:column;gap:14px}
+.foot{flex:none;background:var(--surface);box-shadow:0 -2px 8px rgba(20,33,61,.06);padding:12px 16px 14px;display:flex;flex-direction:column;gap:8px}
+.foot .row{display:flex;gap:10px}
+.nav{flex:none;height:68px;background:var(--surface);border-top:1px solid var(--line);display:grid;align-items:center}
+.nav button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:12px;font-weight:600;color:var(--slate);height:100%}
+.nav button .pill{padding:3px 16px;border-radius:999px;display:flex}
+.nav button.on{color:var(--teal-ink)}
+.nav button.on .pill{background:var(--teal-t)}
+.nav button.on span:last-child{font-weight:700}
+.nav.tech{height:76px}
+.nav.tech button{font-size:13px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.card.tap{cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit}
+.k{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.sec{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sec h2{margin:0;font-size:18px;font-weight:600}
+.sec button{border:0;background:none;color:var(--teal);font-weight:600;font-size:14px;padding:6px 0}
+.muted{color:var(--slate)}
+.small{font-size:13px}
+.ln{display:flex;justify-content:space-between;gap:12px;font-size:15px}
+.ln span:first-child{color:var(--slate)}
+.ln span:last-child{font-weight:600;text-align:right}
+
+.btn{height:52px;border-radius:12px;border:0;font-size:16px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 16px;flex:1;text-align:center;line-height:20px}
+.btn.p{background:var(--teal);color:#fff}
+.btn.p:active{background:var(--teal-d)}
+.btn.s{background:var(--surface);color:var(--teal);border:1.5px solid var(--teal)}
+.btn.tn{background:var(--teal-t);color:var(--teal-ink)}
+.btn.d{background:var(--surface);color:var(--bad);border:1.5px solid #E7B4AE}
+.btn.dd{background:var(--bad);color:#fff}
+.btn.txt{background:transparent;color:var(--teal);height:44px}
+.btn.L{height:60px;font-size:18px}
+.foot>.btn,.sfoot>.btn,.body>.btn,.card>.btn,.fl>.btn{flex:none}
+.btn[disabled]{background:#E7E4DC;color:#6F7686;border-color:transparent}
+.btn.sm{height:44px;font-size:14px;flex:none}
+.dash{height:48px;border-radius:12px;border:1.5px dashed #9BA3B1;background:transparent;color:var(--teal);font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;width:100%}
+
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;border-radius:10px;border:1.5px solid var(--line2);background:var(--surface);font-size:15px;font-weight:500;color:var(--ink)}
+.chip.on{background:var(--teal-t);border-color:var(--teal);color:var(--teal-ink);font-weight:600}
+.chip.sm{min-height:36px;font-size:13px;padding:0 10px}
+.tech .chip{min-height:48px;font-size:16px}
+
+.badge{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap;flex:none}
+.b-New{background:var(--info-t);color:var(--info)}
+.b-Assigned{background:var(--asg-t);color:var(--asg)}
+.b-InProgress{background:var(--warn-t);color:var(--warn-ink)}
+.b-OnHold{background:var(--hold-t);color:var(--hold)}
+.b-Completed{background:var(--ok-t);color:var(--ok-ink)}
+.b-Cancelled{background:var(--bad-t);color:var(--bad-ink)}
+.b-Open{background:var(--soft);color:var(--ink)}
+.b-Scheduled{background:var(--teal-t);color:var(--teal-ink)}
+.b-HoldCust{background:var(--hold-t);color:var(--hold)}
+.b-HoldOurs{background:#FFE1CC;color:#9A3412}
+.tl{display:flex;gap:12px;padding:12px 14px;border-top:1px solid #EEEAE1;background:transparent;border-left:0;border-right:0;border-bottom:0;width:100%;text-align:left}
+.tl:first-child{border-top:0}
+.tl .dot{width:34px;height:34px;border-radius:17px;display:flex;align-items:center;justify-content:center;flex:none}
+.tl .mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.tl .mid b{font-size:15px;font-weight:600;line-height:21px}
+.tl .mid span{font-size:13px;color:var(--slate)}
+.tone-ours{background:#FFE1CC;color:#9A3412}.tone-cust{background:var(--hold-t);color:var(--hold)}.tone-info{background:var(--info-t);color:var(--info)}.tone-ok{background:var(--ok-t);color:var(--ok-ink)}.tone-teal{background:var(--teal-t);color:var(--teal-ink)}.tone-warn{background:var(--warn-t);color:var(--warn-ink)}
+.upopt{display:flex;gap:14px;align-items:center;padding:12px 14px;border-radius:12px;border:1.5px solid var(--line2);background:var(--surface);width:100%;text-align:left;min-height:64px}
+.upopt .dot{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none}
+.upopt b{font-size:17px;display:block}
+.upopt span.d{font-size:14px;color:var(--slate);display:block;line-height:19px}
+.grp{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.bell{position:relative}
+.bell i{position:absolute;top:4px;right:4px;min-width:20px;height:20px;border-radius:10px;background:var(--bad);color:#fff;font-size:11px;font-style:normal;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.b-Paid{background:var(--ok-t);color:var(--ok-ink)}
+.b-Partly{background:var(--warn-t);color:var(--warn-ink)}
+.b-Not{background:var(--bad-t);color:var(--bad-ink)}
+
+.fl{display:flex;flex-direction:column;gap:8px}
+.lbl{font-size:15px;font-weight:600;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.lbl small{font-size:13px;font-weight:500;color:var(--slate)}
+.inp{min-height:52px;border-radius:10px;border:1.5px solid var(--line2);background:var(--surface);display:flex;align-items:center;gap:8px;padding:0 14px;width:100%}
+.inp:focus-within{border:2px solid var(--teal)}
+.inp.err{border:2px solid var(--bad)}
+.inp input,.inp textarea{border:0;outline:0;background:transparent;width:100%;font-size:16px;padding:12px 0;min-width:0}
+.inp textarea{resize:none;height:64px}
+.inp .pre{color:var(--slate);font-weight:600;padding-right:8px;border-right:1px solid var(--line)}
+.inp.amt input{font-size:24px;font-weight:700}
+.inp.amt .rs{font-size:24px;font-weight:700}
+.errtxt{font-size:14px;font-weight:600;color:var(--bad)}
+.warnbox{background:var(--warn-t);border-radius:10px;padding:10px 12px;font-size:14px;line-height:20px;color:#5A3104}
+.infobox{background:var(--teal-t);border-radius:10px;padding:10px 12px;font-size:14px;line-height:20px;color:var(--teal-ink);display:flex;gap:10px;align-items:flex-start}
+.okbox{background:var(--ok-t);border-radius:10px;padding:10px 12px;font-size:15px;color:#14532D;display:flex;gap:8px;align-items:center}
+.offbar{margin:8px 16px 0;background:var(--hold-t);border-radius:10px;padding:10px 12px;display:flex;gap:10px;align-items:center;font-size:14px;line-height:20px;flex:none}
+.badbar{background:var(--bad-t);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px;font-size:14px;line-height:20px;color:#7A1414}
+
+.sw{width:52px;height:32px;border-radius:16px;border:0;background:var(--line2);position:relative;padding:0;flex:none}
+.sw::after{content:"";position:absolute;left:4px;top:4px;width:24px;height:24px;border-radius:12px;background:#fff;transition:left .15s}
+.sw.on{background:var(--teal)}
+.sw.on::after{left:24px}
+
+.row{display:flex;gap:10px;align-items:center}
+.jc{display:flex;gap:12px;align-items:flex-start}
+.jc .tm{width:58px;flex:none;display:flex;flex-direction:column}
+.jc .tm b{font-size:15px;color:var(--teal-ink)}
+.jc .mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.jc .mid b{font-size:16px;font-weight:600}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.li{display:flex;gap:12px;align-items:center;padding:12px 14px;border:0;border-top:1px solid #EEEAE1;background:transparent;width:100%;text-align:left}
+.li:first-child{border-top:0}
+.li .mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.li .mid b{font-size:16px;font-weight:600}
+.li .mid span{font-size:13px;color:var(--slate)}
+.ico{width:40px;height:40px;border-radius:10px;background:var(--soft);display:flex;align-items:center;justify-content:center;flex:none}
+.av{width:44px;height:44px;border-radius:22px;background:var(--teal-t);color:var(--teal-ink);font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.stat{border-radius:10px;padding:10px;display:flex;flex-direction:column;border:0;text-align:left}
+.stat b{font-size:24px}
+.stat span{font-size:13px;font-weight:600}
+.qa{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:84px;border-radius:12px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:600;line-height:16px;padding:4px}
+.qa.p{background:var(--teal);border-color:var(--teal);color:#fff}
+.alert{border:0;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;width:100%;text-align:left}
+.alert .n{width:44px;height:44px;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex:none}
+.alert .mid{flex:1;display:flex;flex-direction:column}
+.alert .mid b{font-size:16px}
+.alert .mid span{font-size:13px}
+.alert .go{height:40px;padding:0 14px;border-radius:10px;font-size:14px;font-weight:600;display:flex;align-items:center}
+.tabs{display:flex;gap:4px;background:var(--soft);border-radius:12px;padding:4px}
+.tabs button{flex:1;height:42px;border:0;border-radius:9px;background:transparent;font-size:15px;font-weight:600;color:var(--slate)}
+.tabs button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(20,33,61,.08)}
+.hscroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.hscroll .chip{flex:none;min-height:40px;font-size:14px}
+.photo{height:84px;border-radius:10px;background:#DCD7CB;display:flex;align-items:flex-end;padding:6px 8px;font-size:12px;font-weight:600;color:var(--hold)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.step{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700}
+.step .n{width:28px;height:28px;border-radius:14px;background:var(--ink);color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;flex:none}
+.step small{font-size:14px;font-weight:500;color:var(--slate)}
+.res{display:flex;align-items:center;gap:12px;min-height:60px;padding:0 14px;border-radius:12px;border:1.5px solid var(--line2);background:var(--surface);font-size:17px;font-weight:600;width:100%;text-align:left}
+.rad{width:24px;height:24px;border-radius:12px;border:2px solid #8A93A3;flex:none}
+.res.on{border-color:var(--ok);background:var(--ok-t);color:#14532D}
+.res.on .rad{border:7px solid var(--ok)}
+.tc{border-radius:12px;border:1.5px solid var(--line2);background:var(--surface);padding:12px 14px;display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left}
+.tc.on{border-color:var(--teal);background:#F3FAF8}
+.tc.on .rad{border:7px solid var(--teal)}
+.tc.off{background:var(--soft);border-color:var(--line);color:var(--slate)}
+.box{width:24px;height:24px;border-radius:6px;border:2px solid #8A93A3;flex:none;display:flex;align-items:center;justify-content:center}
+.tc.on .box{background:var(--teal);border-color:var(--teal)}
+.step2{display:flex;align-items:center;gap:6px}
+.step2 button{width:48px;height:48px;border-radius:10px;border:1.5px solid var(--line2);background:var(--surface);font-size:22px}
+.step2 b{width:36px;text-align:center;font-size:20px}
+.method{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:72px;border-radius:12px;border:1.5px solid var(--line2);background:var(--surface);font-size:14px;font-weight:600}
+.method.on{background:var(--teal-t);border-color:var(--teal);color:var(--teal-ink)}
+.prog{height:10px;border-radius:5px;background:#EEEAE1;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--ok)}
+.sync{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600}
+
+.scrim{position:absolute;inset:0;background:rgba(20,33,61,.5);z-index:20;display:flex;flex-direction:column;justify-content:flex-end}
+.sheet{background:var(--surface);border-radius:20px 20px 0 0;max-height:88%;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(20,33,61,.16)}
+.grab{width:40px;height:4px;border-radius:2px;background:var(--line2);align-self:center;margin-top:10px;flex:none}
+.shd{padding:10px 8px 0 16px;display:flex;justify-content:space-between;align-items:flex-start;flex:none}
+.shd b{font-size:20px;font-weight:600;display:block}
+.shd span{font-size:14px;color:var(--slate)}
+.sbody{padding:12px 16px 16px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.sfoot{padding:12px 16px 16px;border-top:1px solid #EEEAE1;flex:none;display:flex;flex-direction:column;gap:8px}
+.dlg{margin:auto 20px;background:var(--surface);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:10px;box-shadow:0 8px 24px rgba(20,33,61,.16)}
+.dlg b{font-size:18px}
+.dlg p{margin:0;font-size:15px;line-height:22px;color:var(--slate)}
+.scrim.center{justify-content:center}
+.toast{position:absolute;left:16px;right:16px;bottom:88px;background:var(--ink);color:#fff;border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:15px;z-index:30;box-shadow:0 8px 24px rgba(20,33,61,.25)}
+.toast button{border:0;background:none;color:#7FD8CB;font-weight:700;font-size:14px;padding:4px}
+.center{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px}
+.empty{background:var(--surface);border:1px dashed var(--line2);border-radius:12px;padding:22px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.empty b{font-size:16px}
+.empty span{font-size:14px;color:var(--slate)}
+.otp{display:flex;gap:10px;justify-content:center}
+.otp span{width:52px;height:60px;border-radius:12px;border:1.5px solid var(--line2);background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700}
+.otp span.on{border:2px solid var(--teal)}
+.dev{font-family:'Noto Sans Devanagari',var(--f)}
+@media (prefers-reduced-motion:reduce){.sw::after{transition:none}}
+</style>
+
+<div class="stage">
+  <aside class="panel" aria-label="Prototype controls">
+    <div class="brand">
+      <div class="mark"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 17c3-6 15-6 18 0"/><path d="M7 13.5V17M12 12v5M17 13.5V17"/></svg></div>
+      <div><b>KaamSetu <span class="dev" style="font-size:16px;color:var(--slate)">कामसेतु</span></b><span>Clickable prototype · sample data</span></div>
+    </div>
+    <div class="pgroup">
+      <span class="plabel">View the app as</span>
+      <div class="seg" id="roleSeg">
+        <button data-a="role" data-v="owner">Owner</button>
+        <button data-a="role" data-v="tech">Technician</button>
+        <button data-a="role" data-v="helper">Helper</button>
+      </div>
+    </div>
+    <div class="pgroup">
+      <span class="plabel">Phone internet</span>
+      <div class="seg" id="netSeg">
+        <button data-a="net" data-v="on">Online</button>
+        <button data-a="net" data-v="off">Offline</button>
+      </div>
+    </div>
+    <button class="plink" data-a="restart">Start from the welcome screens ›</button>
+    <div class="pnote"><b>Try these flows</b>
+      <ul>
+        <li>Owner: Home › Open enquiries › convert one to a job › assign a team.</li>
+        <li>Technician: go Offline, open Meera Joshi's job › Start Work › Finish Work. Then go Online and watch it send.</li>
+        <li>Owner: open that job › Create bill › switch GST › Record payment.</li>
+        <li>Technician › Profile › change language.</li>
+      </ul>
+      Everything resets when you reload. Names and numbers are examples.
+    </div>
+  </aside>
+  <main class="phone" id="app" aria-live="polite"></main>
+</div>
+
+<script>
+(function(){
+const fmt=n=>'₹'+Math.round(n).toLocaleString('en-IN');
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ph=p=>{p=String(p).replace(/\D/g,'');return '+91 '+p.slice(0,5)+' '+p.slice(5)};
+
+/* ---------- icons ---------- */
+const P={
+back:'<path d="M15 5l-7 7 7 7"/>',close:'<path d="M6 6l12 12M18 6L6 18"/>',chev:'<path d="M9 6l6 6-6 6"/>',down:'<path d="M6 9l6 6 6-6"/>',
+plus:'<path d="M12 5v14M5 12h14"/>',search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
+home:'<path d="M3 11l9-7 9 7v9a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1z"/>',bag:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2"/>',
+users:'<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6M16 4a4 4 0 010 8M22 21c0-3-2-5-4-5.5"/>',bill:'<path d="M6 2h12v20l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',
+menu:'<path d="M4 6h16M4 12h16M4 18h16"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+phone:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2"/>',wa:'<path d="M3 21l1.6-4.8A9 9 0 1112 21a9 9 0 01-4.2-1z"/>',
+nav:'<path d="M3 11l18-8-8 18-2-8z"/>',pin:'<path d="M12 22s7-6.5 7-12a7 7 0 10-14 0c0 5.5 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>',
+ac:'<rect x="2" y="5" width="20" height="9" rx="2"/><path d="M6 11h12M8 18l-1 2M12 18v2M16 18l1 2"/>',tool:'<path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/>',
+cam:'<path d="M3 8a2 2 0 012-2h2l2-2h6l2 2h2a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><circle cx="12" cy="13" r="3.5"/>',
+check:'<path d="M5 12l5 5 9-10"/>',play:'<path d="M7 4l13 8-13 8z" fill="currentColor"/>',pause:'<path d="M9 5v14M15 5v14"/>',
+cash:'<rect x="2" y="6" width="20" height="13" rx="2"/><circle cx="12" cy="12.5" r="2.5"/>',upi:'<rect x="6" y="2" width="12" height="20" rx="2"/><path d="M10 7l4 5-4 5"/>',
+bank:'<path d="M3 10l9-6 9 6M5 10v8M10 10v8M14 10v8M19 10v8M3 21h18"/>',dots:'<circle cx="5" cy="12" r="1.6" fill="currentColor"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><circle cx="19" cy="12" r="1.6" fill="currentColor"/>',
+mobile:'<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',up:'<path d="M12 19V5M5 12l7-7 7 7"/>',sent:'<path d="M3 12l5 5L18 7M10 17l1 1 10-11"/>',
+warn:'<path d="M12 3l10 18H2zM12 10v4M12 17v.5"/>',wifi:'<path d="M2 2l20 20M8.5 16.5a5 5 0 017 0M5 12.5a10 10 0 015.5-2.8M19 12.5a10 10 0 00-2.3-1.6M12 20h.01"/>',
+team:'<circle cx="8" cy="9" r="3"/><circle cx="16" cy="9" r="3"/><path d="M2 20c0-3 3-5 6-5s6 2 6 5M14 15c3 0 8 1 8 5"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-1.8-.3 1.6 1.6 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.6 1.6 0 00-1-1.5 1.6 1.6 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00.3-1.8 1.6 1.6 0 00-1.5-1H3a2 2 0 110-4h.1a1.6 1.6 0 001.5-1 1.6 1.6 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H9a1.6 1.6 0 001-1.5V3a2 2 0 114 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V9a1.6 1.6 0 001.5 1H21a2 2 0 110 4h-.1a1.6 1.6 0 00-1.5 1z"/>',
+list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',shop:'<path d="M3 9l2-5h14l2 5M4 9v11h16V9M9 20v-6h6v6"/>',lang:'<path d="M4 5h8M8 3v2M6 5c0 4 3 7 6 8M11 5c0 4-3 8-7 9M13 21l4-10 4 10M14.5 18h5"/>',
+card:'<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>',help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 114 2c-1 .6-1.5 1.2-1.5 2.5M12 17h.01"/>',
+inbox:'<path d="M3 13l3-8h12l3 8v6H3zM3 13h5l1 3h6l1-3h5"/>',cal:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',box:'<path d="M3 7l9-4 9 4v10l-9 4-9-4z"/><path d="M3 7l9 4 9-4M12 11v10"/>',note:'<path d="M4 4h16v12H8l-4 4z"/><path d="M8 9h8M8 12h5"/>',bell:'<path d="M6 16v-5a6 6 0 0112 0v5l2 2H4z"/><path d="M10 21h4"/>',refresh:'<path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/>',drop:'<path d="M12 3c3 4 6 7 6 11a6 6 0 01-12 0c0-4 3-7 6-11z"/>',logout:'<path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/>'
+};
+const ic=(n,s=22,w=2)=>'<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+w+'" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(P[n]||'')+'</svg>';
+
+/* ---------- language (technician & helper) ---------- */
+const T={
+en:{myWork:'My Work',history:'History',profile:'Profile',today:'Today',tomorrow:'Tomorrow',now:'Working now',more:'more',open:'Open job',start:'Start Work',finish:'Finish Work',call:'Call',dir:'Directions',addr:'Address',says:'Customer says',acs:'ACs',collect:'Collect from customer',setBy:'Set by owner',cant:"Can't do this job? Tell owner",cont:'Continue · Finish work',noNet:'<b>No internet.</b> Keep working. All saved on phone.',saved:'Saved on phone',sending:'Sending…',sent:'Sent',attn:'Needs attention',found:'What did you find?',work:'Work done on each AC',parts:'Parts used',ifany:'if any',photos:'Photos',note:'Note for owner',opt:'optional',money:'Money from customer',result:'Result',done:'Work completed',again:'Needs another visit',couldnt:'Could not finish',addPhoto:'Add photo',addPart:'Add part',lang:'Language',notStarted:'Not started',inProg:'In Progress',since:'since',fin:'Finish work',completedTitle:'Work completed',safe:'<b>Saved on this phone.</b> It is safe.',waitNet:'Waiting for internet to send to owner',auto:"It will send by itself when internet comes back. You don't need to do anything.",sentOwner:'Sent to owner',next:'Next job',backWork:'Back to My Work',noJobs:'No jobs today',noJobsSub:'New jobs from the owner appear here.',callOwner:'Call owner',cash:'Cash',upi:'UPI',notPaid:'Not paid',received:'received',todaysWork:"Today's work",senior:'your senior',helperNote:"Your senior fills in the job report. You don't need to fill anything.",carry:'Carry',me:'Me',team:'Team',logout:'Log out',upd:'Update status',grpProg:'Work progress',grpProb:'Problem',grpOther:'Other',appt:'Appointment fixed',apptD:'You spoke to the customer and fixed a time',started:'Started work',startedD:'You are at the site and working',compl:'Work completed',complD:'Fill the short finish page',part:'Part needed',partD:'Ask owner to arrange a part',custHold:'Customer not ready',custHoldD:'On hold · customer side',ourHold:"Can't continue",ourHoldD:'On hold · our side',addNote:'Note for owner',addNoteD:'Send a remark, no status change',informed:'Owner informed',later:'Saved. Owner will see it when internet comes back.',day:'Day',time:'Time',save:'Save',why:'Why?',newDate:'New date from customer',none:'Not given',which:'Which part?',qty:'How many?',canGo:'Can you continue without it?',yesGo:'Yes, continue',noGo:'No, work stopped',fixAppt:'Fix appointment',notFixed:'Appointment not fixed',apptAt:'Appointment',onHoldC:'On hold · customer',onHoldO:'On hold · our side',startAgain:'Start again',partWait:'Waiting for part',partReady:'Part is ready'},
+hi:{myWork:'मेरा काम',history:'पुराने काम',profile:'प्रोफ़ाइल',today:'आज',tomorrow:'कल',now:'अभी चल रहा काम',more:'और',open:'काम खोलें',start:'काम शुरू करें',finish:'काम पूरा करें',call:'कॉल करें',dir:'रास्ता देखें',addr:'पता',says:'ग्राहक ने कहा',acs:'एसी',collect:'ग्राहक से लेना है',setBy:'मालिक ने तय किया',cant:'यह काम नहीं हो सकता? मालिक को बताएं',cont:'आगे बढ़ें · काम पूरा करें',noNet:'<b>इंटरनेट नहीं है।</b> काम जारी रखें। सब फ़ोन में सेव है।',saved:'फ़ोन में सेव',sending:'भेज रहे हैं…',sent:'भेज दिया',attn:'ध्यान दें',found:'क्या मिला?',work:'हर एसी पर किया गया काम',parts:'लगे हुए पार्ट',ifany:'अगर लगे हों',photos:'फ़ोटो',note:'मालिक के लिए नोट',opt:'ज़रूरी नहीं',money:'ग्राहक से पैसे',result:'नतीजा',done:'काम पूरा हुआ',again:'फिर से आना होगा',couldnt:'पूरा नहीं हो सका',addPhoto:'फ़ोटो जोड़ें',addPart:'पार्ट जोड़ें',lang:'भाषा',notStarted:'शुरू नहीं हुआ',inProg:'काम चल रहा है',since:'से',fin:'काम पूरा करें',completedTitle:'काम पूरा हुआ',safe:'<b>इस फ़ोन में सेव है।</b> सुरक्षित है।',waitNet:'मालिक को भेजने के लिए इंटरनेट का इंतज़ार',auto:'इंटरनेट आते ही अपने आप चला जाएगा। आपको कुछ नहीं करना है।',sentOwner:'मालिक को भेज दिया',next:'अगला काम',backWork:'मेरा काम पर वापस',noJobs:'आज कोई काम नहीं',noJobsSub:'मालिक से नया काम यहाँ दिखेगा।',callOwner:'मालिक को कॉल करें',cash:'नकद',upi:'UPI',notPaid:'नहीं दिया',received:'मिले',todaysWork:'आज का काम',senior:'आपके सीनियर',helperNote:'काम की रिपोर्ट सीनियर भरेंगे। आपको कुछ नहीं भरना है।',carry:'साथ ले जाएं',me:'मैं',team:'टीम',logout:'लॉग आउट',upd:'काम की स्थिति बताएं',grpProg:'काम कहाँ तक हुआ',grpProb:'दिक्कत',grpOther:'और',appt:'समय तय हुआ',apptD:'ग्राहक से बात करके समय तय किया',started:'काम शुरू किया',startedD:'आप साइट पर हैं और काम चल रहा है',compl:'काम पूरा हुआ',complD:'छोटा सा फ़ॉर्म भरें',part:'पार्ट चाहिए',partD:'मालिक से पार्ट मंगवाएं',custHold:'ग्राहक तैयार नहीं',custHoldD:'रुका है · ग्राहक की वजह से',ourHold:'काम आगे नहीं हो सकता',ourHoldD:'रुका है · हमारी तरफ़ से',addNote:'मालिक के लिए नोट',addNoteD:'सिर्फ़ जानकारी भेजें',informed:'मालिक को बता दिया',later:'सेव हो गया। इंटरनेट आने पर मालिक को दिखेगा।',day:'दिन',time:'समय',save:'सेव करें',why:'क्यों?',newDate:'ग्राहक की नई तारीख',none:'नहीं बताई',which:'कौन सा पार्ट?',qty:'कितने?',canGo:'इसके बिना काम चल सकता है?',yesGo:'हाँ, काम चालू',noGo:'नहीं, काम रुका',fixAppt:'समय तय करें',notFixed:'समय तय नहीं',apptAt:'तय समय',onHoldC:'रुका · ग्राहक',onHoldO:'रुका · हमारी तरफ़',startAgain:'फिर शुरू करें',partWait:'पार्ट का इंतज़ार',partReady:'पार्ट आ गया'},
+mr:{myWork:'माझे काम',history:'जुनी कामे',profile:'प्रोफाइल',today:'आज',tomorrow:'उद्या',now:'आत्ता सुरू असलेले काम',more:'अजून',open:'काम उघडा',start:'काम सुरू करा',finish:'काम पूर्ण करा',call:'कॉल करा',dir:'रस्ता पहा',addr:'पत्ता',says:'ग्राहक म्हणतात',acs:'एसी',collect:'ग्राहकाकडून घ्यायचे',setBy:'मालकाने ठरवले',cant:'हे काम होऊ शकत नाही? मालकाला सांगा',cont:'पुढे · काम पूर्ण करा',noNet:'<b>इंटरनेट नाही.</b> काम चालू ठेवा. सर्व फोनमध्ये सेव्ह आहे.',saved:'फोनमध्ये सेव्ह',sending:'पाठवत आहे…',sent:'पाठवले',attn:'लक्ष द्या',found:'काय आढळले?',work:'प्रत्येक एसीवर केलेले काम',parts:'वापरलेले पार्ट',ifany:'असल्यास',photos:'फोटो',note:'मालकासाठी नोट',opt:'ऐच्छिक',money:'ग्राहकाकडून पैसे',result:'निकाल',done:'काम पूर्ण झाले',again:'पुन्हा यावे लागेल',couldnt:'पूर्ण होऊ शकले नाही',addPhoto:'फोटो जोडा',addPart:'पार्ट जोडा',lang:'भाषा',notStarted:'सुरू झाले नाही',inProg:'काम सुरू आहे',since:'पासून',fin:'काम पूर्ण करा',completedTitle:'काम पूर्ण झाले',safe:'<b>या फोनमध्ये सेव्ह आहे.</b> सुरक्षित आहे.',waitNet:'मालकाला पाठवण्यासाठी इंटरनेटची वाट',auto:'इंटरनेट आल्यावर आपोआप जाईल. तुम्हाला काही करायचे नाही.',sentOwner:'मालकाला पाठवले',next:'पुढचे काम',backWork:'माझे काम कडे परत',noJobs:'आज काम नाही',noJobsSub:'मालकाकडून नवीन काम इथे दिसेल.',callOwner:'मालकाला कॉल करा',cash:'रोख',upi:'UPI',notPaid:'दिले नाहीत',received:'मिळाले',todaysWork:'आजचे काम',senior:'तुमचे सीनियर',helperNote:'कामाचा रिपोर्ट सीनियर भरतील. तुम्हाला काही भरायचे नाही.',carry:'सोबत न्या',me:'मी',team:'टीम',logout:'लॉग आउट',upd:'कामाची स्थिती कळवा',grpProg:'काम कुठपर्यंत आले',grpProb:'अडचण',grpOther:'इतर',appt:'वेळ ठरली',apptD:'ग्राहकाशी बोलून वेळ ठरवली',started:'काम सुरू केले',startedD:'तुम्ही साइटवर आहात आणि काम चालू आहे',compl:'काम पूर्ण झाले',complD:'छोटा फॉर्म भरा',part:'पार्ट हवा आहे',partD:'मालकाकडून पार्ट मागवा',custHold:'ग्राहक तयार नाही',custHoldD:'थांबले · ग्राहकामुळे',ourHold:'काम पुढे होऊ शकत नाही',ourHoldD:'थांबले · आपल्या बाजूने',addNote:'मालकासाठी नोट',addNoteD:'फक्त माहिती पाठवा',informed:'मालकाला कळवले',later:'सेव्ह झाले. इंटरनेट आल्यावर मालकाला दिसेल.',day:'दिवस',time:'वेळ',save:'सेव्ह करा',why:'का?',newDate:'ग्राहकाची नवी तारीख',none:'सांगितली नाही',which:'कोणता पार्ट?',qty:'किती?',canGo:'याशिवाय काम चालू राहील का?',yesGo:'हो, काम चालू',noGo:'नाही, काम थांबले',fixAppt:'वेळ ठरवा',notFixed:'वेळ ठरली नाही',apptAt:'ठरलेली वेळ',onHoldC:'थांबले · ग्राहक',onHoldO:'थांबले · आपल्या बाजूने',startAgain:'पुन्हा सुरू करा',partWait:'पार्टची वाट',partReady:'पार्ट आला'}
+};
+
+/* ---------- sample data ---------- */
+const D={
+ biz:{name:'Cool Care AC Services',city:'Pune',phone:'9890011223',gstin:'27ABCDE1234F1Z5',prefix:'KS'},
+ teams:[
+  {id:'t1',name:'Team 1',senior:'Imran Shaikh',helper:'Vikas Gaikwad',leave:false},
+  {id:'t2',name:'Team 2',senior:'Prakash Deshmukh',helper:'Sunil More',leave:true},
+  {id:'t3',name:'Team 3',senior:'Santosh Pawar',helper:'Akash Shinde',leave:false},
+  {id:'t4',name:'Team 4',senior:'Nitin Kale',helper:'Rohit Lonkar',leave:false},
+  {id:'t5',name:'Team 5',senior:'Ganesh More',helper:'Rahul Jadhav',leave:false},
+  {id:'t6',name:'Team 6',senior:'Sameer Patil',helper:'Kiran Bhosale',leave:false}
+ ],
+ staff:[],
+ customers:[
+  {id:'c1',name:'Rohan Kulkarni',phone:'9822045117',gst:false,since:2024,sites:[{id:'s1',label:'Home',addr:'Flat 304, Karishma Society, Kothrud',land:'Near Karishma Chowk',acs:[{id:'a1',room:'Bedroom 1',type:'Split',brand:'Voltas',cap:'1.5 ton',last:'18 Nov'},{id:'a2',room:'Hall',type:'Split',brand:'LG',cap:'2 ton',last:'12 Aug'}]},{id:'s2',label:'Office',addr:'2nd floor, Pride Icon, Baner',land:'',acs:[{id:'a3',room:'Cabin',type:'Split',brand:'Daikin',cap:'1.5 ton',last:'Mar'},{id:'a4',room:'Work area 1',type:'Cassette',brand:'Blue Star',cap:'2 ton',last:'Mar'},{id:'a5',room:'Work area 2',type:'Cassette',brand:'Blue Star',cap:'2 ton',last:'Mar'}]}]},
+  {id:'c2',name:'Meera Joshi',phone:'9890312244',gst:false,since:2025,sites:[{id:'s3',label:'Home',addr:'B-12, Shivtirth Nagar, Lane 4, Karve Nagar, Pune 411052',land:'Near Datta Mandir · Ground floor',acs:[{id:'a6',room:'Hall',type:'Split',brand:'Daikin',cap:'1.5 ton',last:'Mar 2026 · gas filled'},{id:'a7',room:'Bedroom',type:'Window',brand:'Blue Star',cap:'1 ton',last:''}]}]},
+  {id:'c3',name:'Shreeji Clinic',phone:'9763011890',gst:true,gstin:'27AAKFS5521M1Z2',since:2023,sites:[{id:'s4',label:'Clinic',addr:'Shop 4, Mauli Complex, Warje',land:'Opposite petrol pump',acs:[{id:'a8',room:'Waiting room',type:'Split',brand:'Hitachi',cap:'2 ton',last:'Jul'}]}]},
+  {id:'c4',name:'Anil Deshpande',phone:'9011456723',gst:false,since:2026,sites:[{id:'s5',label:'Home',addr:'Row house 7, Sai Park, Baner',land:'',acs:[]}]},
+  {id:'c5',name:'Fatima Sayyed',phone:'9545098712',gst:false,since:2026,sites:[{id:'s6',label:'Home',addr:'A-602, Ganga Florentina, NIBM Road',land:'',acs:[{id:'a9',room:'Bedroom',type:'Split',brand:'Samsung',cap:'1.5 ton',last:''},{id:'a10',room:'Hall',type:'Split',brand:'Samsung',cap:'1.5 ton',last:''},{id:'a11',room:'Kids room',type:'Split',brand:'Lloyd',cap:'1 ton',last:''}]}]},
+  {id:'c6',name:'Kapil Traders',phone:'9822198001',gst:true,gstin:'27AAHFK9031Q1Z8',since:2026,sites:[{id:'s7',label:'Showroom',addr:'Laxmi Road, Budhwar Peth',land:'Above Kapil Sarees',acs:[]}]},
+  {id:'c7',name:'Sunita Rao',phone:'9604477120',gst:false,since:2025,sites:[{id:'s8',label:'Home',addr:'C-9, Siddhi Towers, Aundh',land:'',acs:[{id:'a12',room:'Bedroom',type:'Split',brand:'Carrier',cap:'1.5 ton',last:'Yesterday'}]}]},
+  {id:'c8',name:'Hotel Annapurna',phone:'9822300456',gst:true,gstin:'27AACHA4410K1Z3',since:2022,sites:[{id:'s9',label:'Hotel',addr:'FC Road, Deccan',land:'Near Goodluck Chowk',acs:[{id:'a13',room:'Dining hall 1',type:'Cassette',brand:'Daikin',cap:'3 ton',last:'Today'},{id:'a14',room:'Dining hall 2',type:'Cassette',brand:'Daikin',cap:'3 ton',last:'Today'},{id:'a15',room:'Party room',type:'Split',brand:'Voltas',cap:'2 ton',last:'Sep'},{id:'a16',room:'Office',type:'Split',brand:'Voltas',cap:'1.5 ton',last:'Sep'}]}]}
+ ],
+ enquiries:[
+  {id:'e1',no:'E-212',cust:'c4',site:'s5',acs:[],service:'Installation',problem:'New split AC 1.5 ton bought. Wants installation price.',src:'WhatsApp',day:'Pick date',slot:'',age:'2 days ago',status:'Open'},
+  {id:'e2',no:'E-213',cust:'c5',site:'s6',acs:['a9','a10','a11'],service:'AMC visit',problem:'Asked yearly AMC price for 3 ACs',src:'Call',day:'Pick date',slot:'',age:'Yesterday',status:'Open'},
+  {id:'e3',no:'E-214',cust:'c6',site:'s7',acs:[],service:'Service',problem:'10 cassette ACs. Wants service before Diwali sale.',src:'WhatsApp',day:'Pick date',slot:'',age:'Today, 9:40 AM',status:'Open'},
+  {id:'e4',no:'E-215',cust:'c1',site:'s1',acs:['a2'],service:'Repair',problem:'Hall AC makes noise at night',src:'WhatsApp',day:'Tomorrow',slot:'Morning',age:'Today, 10:15 AM',status:'Open'}
+ ],
+ jobs:[
+  {id:'j1043',no:1043,cust:'c1',site:'s1',acs:['a1'],service:'Repair',problem:'Not cooling, water dripping inside',src:'WhatsApp',day:'Today',time:'11:00 AM',team:'t3',status:'Completed',toCollect:1000,sync:'sent',seen:false,
+    report:{found:['Low gas','Drain blocked'],work:{a1:['Gas top-up','Drain pipe cleared','Filter cleaned']},parts:[{name:'Gas R32',unit:'kg',qty:1},{name:'Drain pipe',unit:'m',qty:2}],photos:4,note:'Outdoor unit stand rusted. Customer may need new stand soon.',result:'done',when:'11:05 AM – 12:20 PM'},
+    cash:{amt:1000,method:'Cash',by:'Santosh Pawar',received:false}},
+  {id:'j1044',no:1044,cust:'c2',site:'s3',acs:['a6','a7'],service:'Service',problem:'Both ACs smell bad. Hall AC makes noise at night.',src:'Call',day:'Today',time:'2:30 PM',team:'t3',status:'Scheduled',appt:{day:'Today',time:'2:30 PM',by:'Santosh',at:'9:12 AM'},toCollect:1400,sync:'sent',carry:'Jet pump, wash cover'},
+  {id:'j1045',no:1045,cust:'c3',site:'s4',acs:['a8'],service:'Gas filling',problem:'Cooling low since last week',src:'Call',day:'Today',time:'5:00 PM',team:'t3',status:'Assigned',toCollect:0,sync:'sent',carry:'Gas cylinder R32, gauge'},
+  {id:'j1046',no:1046,cust:'c7',site:'s8',acs:['a12'],service:'Repair',problem:'AC trips the MCB',src:'WhatsApp',day:'Today',time:'11:30 AM',team:'t1',status:'In Progress',appt:{day:'Today',time:'11:30 AM',by:'Imran',at:'8:50 AM'},toCollect:800,sync:'sent',partReq:[{name:'MCB 16A',qty:1,unit:'pc',note:'Old MCB is weak. Temporary one fitted.',blocking:false,status:'Requested',at:'12:05 PM',by:'Imran'}]},
+  {id:'j1047',no:1047,cust:'c8',site:'s9',acs:['a15','a16'],service:'Service',problem:'Party room and office ACs, routine service',src:'Call',day:'Tomorrow',time:'Morning',team:null,status:'New',toCollect:0,sync:'sent'},
+  {id:'j1048',no:1048,cust:'c3',site:'s4',acs:['a8'],service:'Inspection',problem:'Check before AMC renewal',src:'Other',day:'Tomorrow',time:'Afternoon',team:null,status:'New',toCollect:0,sync:'sent'},
+  {id:'j1049',no:1049,cust:'c7',site:'s8',acs:['a12'],service:'Repair',problem:'Indoor PCB faulty',src:'WhatsApp',day:'17 Nov',time:'4:00 PM',team:'t5',status:'On Hold',holdSide:'ours',hold:'Part needed: Indoor PCB',toCollect:0,sync:'sent',partReq:[{name:'Indoor PCB',qty:1,unit:'pc',note:'Carrier 1.5 ton, model CAI18EK3',blocking:true,status:'Requested',at:'17 Nov, 4:30 PM',by:'Ganesh'}]},
+  {id:'j1053',no:1053,cust:'c5',site:'s6',acs:['a10'],service:'Service',problem:'Hall AC service',src:'Call',day:'Today',time:'1:00 PM',team:'t4',status:'On Hold',holdSide:'customer',hold:'Customer not at home',newDate:'Sat, 22 Nov',toCollect:600,sync:'sent'},
+  {id:'j1050',no:1050,cust:'c8',site:'s9',acs:['a13','a14'],service:'Deep cleaning',problem:'Dining hall cassette ACs',src:'Call',day:'Today',time:'9:30 AM',team:'t1',status:'Completed',toCollect:0,sync:'sent',seen:true,billed:'b83',
+    report:{found:['Dirty filter','Dirty coil'],work:{a13:['Deep cleaning','Filter cleaned'],a14:['Deep cleaning','Filter cleaned']},parts:[],photos:6,note:'',result:'done',when:'9:35 AM – 11:10 AM'}},
+  {id:'j1051',no:1051,cust:'c1',site:'s1',acs:['a2'],service:'Deep cleaning',problem:'Yearly cleaning',src:'WhatsApp',day:'Tomorrow',time:'10:00 AM',team:'t3',status:'Assigned',toCollect:900,sync:'sent'},
+  {id:'j1052',no:1052,cust:'c5',site:'s6',acs:['a9'],service:'Repair',problem:'Remote not working, AC beeps',src:'Call',day:'Tomorrow',time:'3:00 PM',team:'t3',status:'Assigned',toCollect:500,sync:'sent'},
+  {id:'j1039',no:1039,cust:'c2',site:'s3',acs:['a6'],service:'Gas filling',problem:'Cooling low',src:'Call',day:'14 Nov',time:'12:00 PM',team:'t3',status:'Completed',toCollect:0,sync:'sent',seen:true,billed:'b84',report:{found:['Low gas'],work:{a6:['Gas filled']},parts:[{name:'Gas R32',unit:'kg',qty:0.5}],photos:2,note:'',result:'done',when:'12:10 – 1:00 PM'}},
+  {id:'j1036',no:1036,cust:'c4',site:'s5',acs:[],service:'Installation',problem:'2 split ACs',src:'WhatsApp',day:'12 Nov',time:'10:00 AM',team:'t3',status:'Completed',toCollect:0,sync:'sent',seen:true,billed:'b86',report:{found:['All OK'],work:{},parts:[{name:'Copper pipe',unit:'m',qty:6}],photos:4,note:'',result:'done',when:'10:00 AM – 2:30 PM'}}
+ ],
+ bills:[
+  {id:'b83',no:'KS-0083',cust:'c8',job:'j1050',date:'18 Nov 2026',gst:true,lines:[{d:'Deep cleaning, cassette AC',q:2,u:'',r:1800,tax:18}],disc:0,pays:[],status:'issued'},
+  {id:'b84',no:'KS-0084',cust:'c2',job:'j1039',date:'14 Nov 2026',gst:false,lines:[{d:'AC repair visit',q:1,u:'',r:500,tax:18},{d:'Gas top-up R32',q:0.5,u:'kg',r:2200,tax:18},],disc:100,pays:[{amt:1500,method:'UPI',date:'14 Nov',note:'on site',by:'Santosh'}],status:'issued'},
+  {id:'b85',no:'KS-0085',cust:'c3',job:null,date:'31 Oct 2026',gst:true,lines:[{d:'AMC visit, split AC',q:2,u:'',r:2100,tax:18}],disc:0,pays:[],status:'issued'},
+  {id:'b86',no:'KS-0086',cust:'c4',job:'j1036',date:'12 Nov 2026',gst:false,lines:[{d:'Installation, split AC',q:2,u:'',r:1800,tax:18},{d:'Copper pipe',q:6,u:'m',r:450,tax:18}],disc:200,pays:[{amt:3000,method:'Cash',date:'12 Nov',note:'',by:'Owner'}],status:'issued'}
+ ],
+ rates:[{d:'Split AC service',r:600},{d:'Window AC service',r:500},{d:'AC repair visit',r:500},{d:'Deep cleaning, split AC',r:900},{d:'Gas top-up R32',u:'kg',r:2200},{d:'Drain pipe',u:'m',r:75},{d:'Copper pipe',u:'m',r:450},{d:'Installation, split AC',r:1800},{d:'Uninstallation',r:800},{d:'Capacitor',r:450}],
+ settings:{photoReq:2,helperPhoto:true,gstDefault:false},
+ nextJob:1053,nextEnq:216,nextBill:87
+};
+D.staff=[].concat(...D.teams.map(t=>[{name:t.senior,role:'Senior technician',team:t.id,login:true,phone:'98'+Math.floor(10000000+Math.random()*89999999)},{name:t.helper,role:'Helper',team:t.id,login:t.id==='t3',phone:'97'+Math.floor(10000000+Math.random()*89999999)}]));
+
+D.seq=0;
+(function seedUpdates(){const add=(id,by,type,text,at,seen)=>{const j=D.jobs.find(x=>x.id===id);j.updates=j.updates||[];j.updates.unshift({seq:++D.seq,job:id,by,type,text,at,seen:!!seen})};
+ add('j1049','Ganesh','part','Part needed: 1 Indoor PCB. Work stopped.','17 Nov, 4:30 PM',false);
+ add('j1046','Imran','appt','Appointment fixed: Today 11:30 AM','8:50 AM',true);
+ add('j1043','Santosh','appt','Appointment fixed: Today 11:00 AM','9:05 AM',true);
+ add('j1044','Santosh','appt','Appointment fixed: Today 2:30 PM. Customer asked for afternoon.','9:12 AM',true);
+ add('j1043','Santosh','start','Started work','11:05 AM',true);
+ add('j1050','Imran','done','Work completed. Report sent.','11:10 AM',true);
+ add('j1046','Imran','start','Started work','11:40 AM',true);
+ add('j1046','Imran','part','Part needed: 1 MCB 16A. Work continues with a temporary one.','12:05 PM',false);
+ add('j1043','Santosh','done','Work completed. Report sent.','12:20 PM',false);
+ add('j1053','Nitin','holdC','On hold, customer side: Customer not at home. New date Sat, 22 Nov.','1:15 PM',false);
+})();
+let clockMin=14*60+32;
+const clock=()=>{clockMin+=3;const h=Math.floor(clockMin/60),m=clockMin%60;return ((h+11)%12+1)+':'+String(m).padStart(2,'0')+' '+(h<12?'AM':'PM')};
+const C=id=>D.customers.find(c=>c.id===id);
+const J=id=>D.jobs.find(j=>j.id===id);
+const Tm=id=>D.teams.find(t=>t.id===id);
+const B=id=>D.bills.find(b=>b.id===id);
+const E=id=>D.enquiries.find(e=>e.id===id);
+const site=(c,sid)=>(c.sites.find(s=>s.id===sid)||c.sites[0]);
+const acOf=(c,aid)=>{for(const s of c.sites){const a=s.acs.find(x=>x.id===aid);if(a)return a}return null};
+const area=(c,sid)=>{const a=site(c,sid).addr.split(',');return a[a.length-1].trim().replace(/, Pune.*$/,'').replace(/ Pune \d+/,'')};
+function billTotals(b){
+  let sub=0,tax=0;b.lines.forEach(l=>{const a=l.q*l.r;sub+=a;if(b.gst)tax+=a*(l.tax||0)/100});
+  const afterDisc=sub-(b.disc||0);if(b.gst&&sub>0)tax=tax*(afterDisc/sub);
+  const total=afterDisc+tax;const paid=b.pays.reduce((s,p)=>s+p.amt,0);
+  return {sub,tax,total,paid,rem:Math.max(0,total-paid)};
+}
+const billStatus=b=>{if(b.status==='cancelled')return 'Cancelled';const t=billTotals(b);return t.rem<=0.5?'Paid':(t.paid>0?'Partly':'Not')};
+const billLabel={Paid:'✓ Paid',Partly:'◐ Partly paid',Not:'○ Not paid',Cancelled:'Cancelled'};
+
+/* ---------- state ---------- */
+const S={role:'owner',lang:'en',online:true,stack:[{s:'home'}],sheet:null,dlg:null,toast:null,f:{},login:null};
+const t=k=>(T[S.lang]&&T[S.lang][k])||T.en[k]||k;
+const top=()=>S.stack[S.stack.length-1];
+function go(s,p){S.stack.push({s,p:p||{}});S.sheet=null;render(true)}
+function back(){if(S.sheet){S.sheet=null;return render()}if(S.stack.length>1)S.stack.pop();render(true)}
+function tab(s){S.stack=[{s,p:{}}];S.sheet=null;render(true)}
+function replace(s,p){S.stack[S.stack.length-1]={s,p:p||{}};render(true)}
+let toastTimer;
+function toast(msg,undo){S.toast={msg,undo};clearTimeout(toastTimer);toastTimer=setTimeout(()=>{S.toast=null;render()},4000);render()}
+
+/* ---------- small builders ---------- */
+const hd=(title,o={})=>'<div class="hd'+(o.big?' big':'')+'">'+(o.back!==false&&!o.big?'<button class="ib" data-a="back" aria-label="Back">'+ic(o.x?'close':'back',24)+(o.backLabel?'<span style="font-size:16px">'+esc(o.backLabel)+'</span>':'')+'</button>':'')+'<div class="ht">'+(o.pre?'<span>'+o.pre+'</span>':'')+'<b>'+title+'</b>'+(o.sub?'<span>'+o.sub+'</span>':'')+'</div>'+(o.right||'')+'</div>';
+const badge=x=>{if(x&&typeof x==='object'){if(x.status==='On Hold'){const o=x.holdSide!=='customer';return '<span class="badge '+(o?'b-HoldOurs':'b-HoldCust')+'">'+ic(o?'warn':'pause',13,2.6)+(S.role==='owner'?'On Hold · '+(o?'Our side':'Customer'):t(o?'onHoldO':'onHoldC'))+'</span>'}x=x.status}const s=x;const k=s.replace(/\s/g,'');const icn={New:'<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="6"/></svg>',Assigned:ic('users',13,2.6),InProgress:ic('tool',13,2.6),OnHold:ic('pause',13,2.8),Completed:ic('check',13,3),Cancelled:ic('close',13,3),Open:ic('inbox',13,2.4),Scheduled:ic('cal',13,2.4)}[k]||'';return '<span class="badge b-'+k+'">'+icn+esc(s)+'</span>'};
+const bbadge=b=>{const s=billStatus(b);return '<span class="badge b-'+(s==='Cancelled'?'Cancelled':s)+'">'+billLabel[s]+'</span>'};
+const syncLine=j=>{const m={saved:['mobile','var(--hold)',t('saved')],sending:['up','var(--teal-ink)',t('sending')],sent:['sent','var(--ok-ink)',t('sent')],fail:['warn','var(--bad)',t('attn')]}[j.sync]||null;return m?'<span class="sync" style="color:'+m[1]+'">'+ic(m[0],16,2.2)+m[2]+'</span>':''};
+const chip=(label,on,a,v,extra='')=>'<button class="chip'+(on?' on':'')+' '+extra+'" data-a="'+a+'" data-v="'+esc(v)+'" aria-pressed="'+(on?'true':'false')+'">'+(on&&extra.indexOf('nock')<0?ic('check',16,2.8):'')+esc(label)+'</button>';
+const sw=(on,a,label)=>'<button class="sw'+(on?' on':'')+'" data-a="'+a+'" role="switch" aria-checked="'+(on?'true':'false')+'" aria-label="'+esc(label)+'"></button>';
+const empty=(icon,title,sub,btn)=>'<div class="empty"><span style="color:var(--teal)">'+ic(icon,34,1.8)+'</span><b>'+title+'</b><span>'+sub+'</span>'+(btn||'')+'</div>';
+const offbar=()=>S.online?'':'<div class="offbar" role="status">'+ic('wifi',20)+'<span>'+(S.role==='owner'?'<b>No internet.</b> You can look at saved information. New bills need internet.':t('noNet'))+'</span></div>';
+const jobLine=j=>{const c=C(j.cust);return j.service+(j.acs.length?' · '+j.acs.length+' AC'+(j.acs.length>1?'s':''):'')+' · '+area(c,j.site)};
+const teamName=id=>{const tm=Tm(id);return tm?tm.name+' · '+tm.senior.split(' ')[0]:'No team yet'};
+
+function jobCard(j){const c=C(j.cust);
+ return '<button class="card tap jc" data-a="openJob" data-v="'+j.id+'"><div class="tm"><b>'+esc(j.time.replace(/ (AM|PM)$/,''))+'</b><span class="small muted">'+esc((j.time.match(/AM|PM/)||[''])[0]||j.day)+'</span></div><div class="mid"><b>'+esc(c.name)+'</b><span class="small muted">'+esc(jobLine(j))+'</span><span class="small muted">'+esc(teamName(j.team))+'</span>'+lastLine(j)+'</div>'+badge(j)+'</button>'}
+
+/* ---------- updates & owner actions ---------- */
+const UPD_ICON={appt:['cal','tone-teal'],start:['play','tone-warn'],done:['check','tone-ok'],part:['box','tone-ours'],holdC:['pause','tone-cust'],holdO:['warn','tone-ours'],note:['note','tone-info'],owner:['user','tone-info'],partOrdered:['box','tone-info'],partReady:['box','tone-ok']};
+const visUpd=j=>(j.updates||[]).filter(u=>!u.pending);
+function lastLine(j){const u=visUpd(j)[0];return u?'<span class="small" style="color:var(--ink);margin-top:2px">'+ic(UPD_ICON[u.type][0],13,2.4)+' '+esc(u.text.length>58?u.text.slice(0,56)+'…':u.text)+' <span class="muted">· '+esc(u.by)+', '+esc(u.at)+'</span></span>':''}
+function allUpdates(){return [].concat(...D.jobs.map(visUpd)).sort((a,b)=>b.seq-a.seq)}
+const unseen=()=>allUpdates().filter(u=>!u.seen&&u.by!=='You').length;
+function whoAmI(){return S.role==='helper'?'Akash (helper)':S.role==='tech'?'Santosh':'You'}
+function addUpd(j,type,text){j.updates=j.updates||[];const u={seq:++D.seq,job:j.id,by:whoAmI(),type,text,at:clock(),seen:S.role==='owner',pending:S.role!=='owner'&&!S.online};j.updates.unshift(u);if(S.role!=='owner')j.sync=S.online?'sent':'saved';return u}
+function ownerActions(){const a=[];
+ D.jobs.forEach(j=>{if(j.status==='Cancelled')return;if(j.status==='Completed'&&!(j.partReq||[]).some(p=>p.status==='Requested'))return;const c=C(j.cust);
+  (j.partReq||[]).forEach(p=>{if(p.status==='Requested'&&!p.pending)a.push({icon:'box',tone:'tone-ours',title:'Part needed: '+p.qty+' '+p.name,sub:c.name+' · '+teamName(j.team)+(p.blocking?' · work stopped':' · work continues'),j:j.id,btn:'Arrange'})});
+  if(j.status==='On Hold'&&!j.holdPending){if(j.holdSide==='customer')a.push({icon:'pause',tone:'tone-cust',title:'Customer delay: '+j.hold,sub:c.name+(j.newDate?' · asked for '+j.newDate:' · no new date yet'),j:j.id,btn:j.newDate?'Confirm date':'Reschedule'});
+   else if(!(j.partReq||[]).some(p=>p.blocking&&p.status!=='Ready'))a.push({icon:'warn',tone:'tone-ours',title:'Team stuck: '+j.hold,sub:c.name+' · '+teamName(j.team),j:j.id,btn:'Open'})}
+  if(j.status==='Assigned'&&j.day==='Today')a.push({icon:'cal',tone:'tone-info',title:'Appointment not fixed yet',sub:c.name+' · '+teamName(j.team)+' · today',j:j.id,btn:'Open'});
+ });return a}
+const actionRow=x=>'<button class="tl" data-a="openJob" data-v="'+x.j+'"><span class="dot '+x.tone+'">'+ic(x.icon,18,2.2)+'</span><span class="mid"><b>'+esc(x.title)+'</b><span>'+esc(x.sub)+'</span></span><span class="btn tn sm" style="height:36px;padding:0 10px;font-size:13px">'+x.btn+'</span></button>';
+const updRow=(u,showCust)=>{const j=J(u.job);const m=UPD_ICON[u.type]||['note','tone-info'];return '<button class="tl" data-a="openJob" data-v="'+u.job+'"'+(u.seen||!showCust?'':' style="background:#F3FAF8"')+'><span class="dot '+m[1]+'">'+ic(m[0],17,2.2)+'</span><span class="mid"><b>'+esc(u.text)+'</b><span>'+(showCust?esc(C(j.cust).name)+' · #'+j.no+' · ':'')+esc(u.by)+' · '+esc(u.at)+(u.pending?' · not sent yet':'')+'</span></span></button>'};
+
+
+/* ======================================================================
+   SCREENS
+   ====================================================================== */
+const SC={};
+
+/* ---------- login & setup ---------- */
+SC.splash=()=>({full:'<div style="flex:1;background:var(--teal);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center"><div style="width:84px;height:84px;border-radius:22px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--teal)"><svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 17c3-6 15-6 18 0"/><path d="M7 13.5V17M12 12v5M17 13.5V17"/></svg></div><div style="font-size:32px;font-weight:700">KaamSetu</div><div class="dev" style="font-size:20px;font-weight:600;opacity:.95">कामसेतु</div><div class="dev" style="font-size:17px;line-height:28px;opacity:.9">काम आसान। हिसाब आसान।<br>कारोबार आसान।</div><button class="btn" style="flex:none;margin-top:24px;background:#fff;color:var(--teal);width:220px" data-a="toIntro">Get started</button><button class="btn" style="flex:none;background:transparent;color:#fff;width:220px;height:44px;font-size:15px" data-a="toLogin">I already use KaamSetu</button></div>'});
+const INTRO=[
+ {icon:'inbox',title:'Every enquiry in one place',text:'Save each WhatsApp message or call as an enquiry. Turn it into a job with one tap. Nothing gets lost in chats.',hi:'हर पूछताछ एक जगह'},
+ {icon:'team',title:'Every team knows its work',text:'Give a job to a team. The senior technician sees the address, the problem and the AC, and can work even without internet.',hi:'हर टीम को अपना काम पता'},
+ {icon:'bill',title:'Bills and payments made easy',text:'The bill fills itself from the work done. Record cash or UPI and always know who still has to pay.',hi:'बिल और पैसे का हिसाब आसान'}
+];
+SC.intro=p=>{const n=p.n||0;const s=INTRO[n];const last=n===INTRO.length-1;
+ return {full:'<div style="flex:1;display:flex;flex-direction:column;background:var(--paper)"><div style="display:flex;justify-content:flex-end;padding:12px 12px 0"><button class="ib t" data-a="toLogin">Skip</button></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:24px 28px;text-align:center"><div style="width:148px;height:148px;border-radius:40px;background:var(--teal-t);color:var(--teal);display:flex;align-items:center;justify-content:center">'+ic(s.icon,76,1.6)+'</div><span class="k" style="color:var(--teal-ink)">'+(n+1)+' of '+INTRO.length+'</span><h1 style="margin:0;font-size:28px;line-height:36px;font-weight:700;text-wrap:balance">'+s.title+'</h1><p style="margin:0;font-size:17px;line-height:26px;color:var(--slate);max-width:320px">'+s.text+'</p><span class="dev muted" style="font-size:16px">'+s.hi+'</span></div><div style="padding:0 16px 20px;display:flex;flex-direction:column;gap:16px"><div style="display:flex;justify-content:center;gap:8px" aria-hidden="true">'+INTRO.map((_,i)=>'<span style="width:'+(i===n?24:8)+'px;height:8px;border-radius:4px;background:'+(i===n?'var(--teal)':'var(--line2)')+'"></span>').join('')+'</div><div class="row">'+(n?'<button class="btn s" data-a="introGo" data-v="'+(n-1)+'">Back</button>':'')+'<button class="btn p" style="flex:2" data-a="'+(last?'toLogin':'introGo')+'" data-v="'+(n+1)+'">'+(last?'Log in with mobile number':'Next')+'</button></div></div></div>'}};
+SC.login=()=>{const f=S.f;return {head:hd('Log in',{back:false}),body:'<div class="body" style="gap:20px;padding-top:28px"><div class="fl"><span style="font-size:26px;font-weight:700;line-height:34px">Enter your mobile number</span><span class="muted">We will send a 6-digit code by SMS.</span></div><div class="fl"><label class="lbl" for="lp">Mobile number</label><div class="inp'+(f.err?' err':'')+'"><span class="pre">+91</span><input id="lp" inputmode="numeric" maxlength="10" data-f="lp" value="'+esc(f.lp||'')+'" placeholder="10 digit number"></div>'+(f.err?'<span class="errtxt">'+f.err+'</span>':'')+'</div><div class="infobox">'+ic('help',20)+'<span>Try these example numbers: <b>98900 11223</b> owner · <b>98220 45001</b> technician · <b>97300 12001</b> helper. Any other number starts a new business.</span></div><div class="fl"><span class="lbl">Language</span><div class="chips">'+[['en','English'],['hi','हिंदी'],['mr','मराठी']].map(l=>chip(l[1],S.lang===l[0],'setLang',l[0],'nock dev')).join('')+'</div></div></div>',foot:'<button class="btn p" data-a="sendOtp">Send code</button>'}};
+SC.otp=()=>({head:hd('Enter code',{sub:ph(S.f.lp||'')}),body:'<div class="body" style="gap:22px;padding-top:28px"><span style="font-size:22px;font-weight:700;line-height:30px">Enter the 6-digit code sent to '+ph(S.f.lp||'')+'</span><div class="otp" aria-label="Code 482913"><span>4</span><span>8</span><span>2</span><span>9</span><span>1</span><span class="on">3</span></div><span class="muted small" style="text-align:center">Code filled in automatically from SMS · Resend in 0:24</span></div>',foot:'<button class="btn p" data-a="verifyOtp">Continue</button>'});
+SC.onbBiz=()=>{const f=S.f;return {head:hd('Your business',{sub:'Step 1 of 3',back:false}),body:'<div class="body" style="gap:18px"><div class="fl"><label class="lbl" for="bn">Business name</label><div class="inp'+(f.bnErr?' err':'')+'"><input id="bn" data-f="bn" value="'+esc(f.bn||'')+'" placeholder="e.g. Cool Care AC Services"></div>'+(f.bnErr?'<span class="errtxt">Enter your business name</span>':'')+'</div><div class="fl"><label class="lbl" for="bo">Your name</label><div class="inp"><input id="bo" data-f="bo" value="'+esc(f.bo||'')+'" placeholder="Owner name"></div></div><div class="fl"><label class="lbl" for="bc">City</label><div class="inp"><input id="bc" data-f="bc" value="'+esc(f.bc||'Pune')+'"></div></div><div class="card" style="flex-direction:row;align-items:center;justify-content:space-between"><div style="display:flex;flex-direction:column"><b style="font-size:16px">We give GST bills</b><span class="small muted">You can still turn GST off for any bill</span></div>'+sw(!!f.bg,'tog_bg','GST bills')+'</div>'+(f.bg?'<div class="fl"><label class="lbl" for="bgst">GSTIN <small>optional now</small></label><div class="inp"><input id="bgst" data-f="bgst" value="'+esc(f.bgst||'')+'" placeholder="27ABCDE1234F1Z5" style="text-transform:uppercase"></div></div>':'')+'<div class="card" style="flex-direction:row;align-items:center;justify-content:space-between"><div style="display:flex;flex-direction:column"><b style="font-size:16px">I also go on jobs</b><span class="small muted">Adds your own jobs to Home</span></div>'+sw(!!f.bf,'tog_bf','I also go on jobs')+'</div></div>',foot:'<button class="btn p" data-a="onbNext1">Next</button>'}};
+SC.onbTeam=()=>{const f=S.f;return {head:hd('Add your first team',{sub:'Step 2 of 3'}),body:'<div class="body" style="gap:18px"><div class="infobox">'+ic('team',20)+'<span>A team is one senior technician and their helper. Jobs are given to teams. You can add more teams later.</span></div><div class="fl"><label class="lbl" for="tsn">Senior technician name</label><div class="inp"><input id="tsn" data-f="tsn" value="'+esc(f.tsn||'')+'" placeholder="e.g. Santosh Pawar"></div></div><div class="fl"><label class="lbl" for="tsp">Senior\'s mobile</label><div class="inp"><span class="pre">+91</span><input id="tsp" inputmode="numeric" maxlength="10" data-f="tsp" value="'+esc(f.tsp||'')+'"></div><span class="small muted">They log in with this number. No password.</span></div><div class="fl"><label class="lbl" for="thn">Helper name <small>optional</small></label><div class="inp"><input id="thn" data-f="thn" value="'+esc(f.thn||'')+'" placeholder="e.g. Akash Shinde"></div></div><div class="card" style="flex-direction:row;align-items:center;justify-content:space-between"><div style="display:flex;flex-direction:column"><b style="font-size:16px">Helper uses the app</b><span class="small muted">Off: helper works on the senior\'s phone</span></div>'+sw(!!f.thl,'tog_thl','Helper uses the app')+'</div></div>',foot:'<div class="row"><button class="btn txt" data-a="onbSkip">Skip for now</button><button class="btn p" data-a="onbNext2">Save team</button></div>'}};
+SC.onbDone=()=>({head:hd('All set',{sub:'Step 3 of 3',back:false}),body:'<div class="body center" style="padding-top:48px"><div style="width:88px;height:88px;border-radius:44px;background:var(--ok-t);color:var(--ok);display:flex;align-items:center;justify-content:center">'+ic('check',48,2.6)+'</div><span style="font-size:26px;font-weight:700">'+esc(S.f.bn||'Your business')+' is ready</span><span class="muted" style="font-size:16px;line-height:24px">We sent an SMS to '+esc(S.f.tsn||'your technician')+' with the app link. They log in with their number.</span><div class="card" style="width:100%;text-align:left"><span class="k">Next</span><span>1. Add your next enquiry or job when a customer calls.</span><span>2. Add your rate list so bills fill in by themselves.</span></div></div>',foot:'<button class="btn p" data-a="onbFinish">Go to Home</button><span class="small muted" style="text-align:center">The prototype continues with example data</span>'});
+
+/* ---------- owner: home ---------- */
+SC.home=()=>{
+ const today=D.jobs.filter(j=>j.day==='Today'&&j.status!=='Cancelled');
+ const cnt=f=>today.filter(f).length;
+ const needTeam=D.jobs.filter(j=>j.status==='New');
+ const openE=D.enquiries.filter(e=>e.status==='Open');
+ const reports=D.jobs.filter(j=>j.status==='Completed'&&!j.seen&&!j.billed);
+ let due=0,nb=0,old=0;D.bills.forEach(b=>{if(b.status==='cancelled')return;const r=billTotals(b).rem;if(r>0.5){due+=r;nb++;if(/Oct/.test(b.date))old++}});
+ const cashT=D.jobs.filter(j=>j.cash&&!j.cash.received).reduce((s,j)=>s+j.cash.amt,0);
+ const acts=ownerActions();const feed=allUpdates().slice(0,4);const un=unseen();
+ return {head:'<div class="hd big"><div class="ht"><span>Wed, 18 Nov</span><b>Good morning, Sadik</b></div><button class="ib bell" data-a="go" data-v="updates" aria-label="Updates from teams'+(un?', '+un+' new':'')+'" style="background:var(--surface);border:1px solid var(--line);border-radius:24px;margin-right:6px">'+ic('bell')+(un?'<i>'+un+'</i>':'')+'</button><button class="ib" data-a="go" data-v="search" aria-label="Search" style="background:var(--surface);border:1px solid var(--line);border-radius:24px">'+ic('search')+'</button></div>',
+ body:offbar()+'<div class="body">'+
+  (openE.length?'<button class="alert" style="background:var(--surface);border:1px solid var(--line)" data-a="jobsTab" data-v="enq"><span class="n" style="background:var(--soft)">'+openE.length+'</span><span class="mid"><b>Open enquiries</b><span class="muted">'+openE.filter(e=>e.src==='WhatsApp').length+' WhatsApp, '+openE.filter(e=>e.src!=='WhatsApp').length+' call · not jobs yet</span></span><span class="go" style="border:1.5px solid var(--teal);color:var(--teal)">Open</span></button>':'')+
+  (needTeam.length?'<button class="alert" style="background:var(--info-t)" data-a="assign" data-v="'+needTeam[0].id+'"><span class="n" style="background:var(--info);color:#fff">'+needTeam.length+'</span><span class="mid"><b>Jobs need a team</b><span style="color:#24356B">Next: '+esc(C(needTeam[0].cust).name)+', '+esc(needTeam[0].day.toLowerCase())+'</span></span><span class="go" style="background:var(--info);color:#fff">Assign</span></button>':'')+
+  '<div class="list"><div class="li" style="cursor:default;padding-bottom:8px"><span class="mid"><b style="font-size:18px">Needs your action'+(acts.length?' · '+acts.length:'')+'</b><span>Parts, delays and jobs not yet fixed with the customer</span></span></div>'+(acts.length?acts.map(actionRow).join(''):'<div class="tl"><span class="dot tone-ok">'+ic('check',18,2.4)+'</span><span class="mid"><b>Nothing waiting on you</b><span>Teams will tell you here when they need something</span></span></div>')+'</div>'+
+  '<div class="card"><div class="sec"><h2>Today · '+today.length+' sites</h2><button data-a="jobsTab" data-v="today">See all</button></div><div class="grid4">'+
+   '<button class="stat" style="background:var(--teal-t)" data-a="jobsTab" data-v="Not started"><b style="color:var(--teal-ink)">'+cnt(j=>j.status==='Assigned'||j.status==='Scheduled')+'</b><span style="color:var(--teal-ink)">Not started</span></button>'+
+   '<button class="stat" style="background:var(--warn-t)" data-a="jobsTab" data-v="In Progress"><b style="color:var(--warn-ink)">'+cnt(j=>j.status==='In Progress')+'</b><span style="color:#6B3904">Working</span></button>'+
+   '<button class="stat" style="background:#FFE1CC" data-a="jobsTab" data-v="On Hold"><b style="color:#9A3412">'+D.jobs.filter(j=>j.status==='On Hold').length+'</b><span style="color:#7C2D12">On hold</span></button>'+
+   '<button class="stat" style="background:var(--ok-t)" data-a="jobsTab" data-v="Completed"><b style="color:var(--ok-ink)">'+cnt(j=>j.status==='Completed')+'</b><span style="color:#14532D">Done</span></button></div></div>'+
+  '<div class="list"><div class="li" style="cursor:default;padding-bottom:8px"><span class="mid"><b style="font-size:18px">Latest from teams</b><span>Every status change arrives here by itself</span></span><button class="btn txt sm" style="height:36px;padding:0 4px" data-a="go" data-v="updates">All</button></div>'+(feed.length?feed.map(u=>updRow(u,true)).join(''):'<div class="tl"><span class="mid"><span>No updates yet today</span></span></div>')+'</div>'+
+  (reports.length?'<button class="alert" style="background:var(--ok-t)" data-a="openJob" data-v="'+reports[0].id+'"><span class="n" style="background:var(--ok);color:#fff">'+reports.length+'</span><span class="mid"><b>Work report'+(reports.length>1?'s':'')+' ready to bill</b><span style="color:#14532D">'+esc(C(reports[0].cust).name)+'</span></span><span class="go" style="background:var(--ok);color:#fff">View</span></button>':'')+
+  '<button class="card tap" data-a="tab" data-v="billing"><div class="sec"><h2>Money to collect</h2><span style="color:var(--teal);font-weight:600;font-size:14px">Open</span></div><div style="display:flex;justify-content:space-between;align-items:flex-end;gap:8px"><div style="display:flex;flex-direction:column"><span style="font-size:28px;font-weight:700;line-height:34px">'+fmt(due)+'</span><span class="small muted">from '+nb+' bills'+(old?' · '+old+' over 15 days':'')+'</span></div>'+(cashT?'<div style="display:flex;flex-direction:column;align-items:flex-end"><b style="color:var(--warn-ink)">'+fmt(cashT)+'</b><span class="small muted">with teams, to hand over</span></div>':'')+'</div></button>'+
+  '<div class="grid4"><button class="qa p" data-a="newJob">'+ic('plus',24,2.4)+'New enquiry or job</button><button class="qa" data-a="go" data-v="addCustomer"><span style="color:var(--teal)">'+ic('user',24)+'</span>Add customer</button><button class="qa" data-a="pickBill"><span style="color:var(--teal)">'+ic('bill',24)+'</span>Create bill</button><button class="qa" data-a="pickPay"><span style="color:var(--teal)">'+ic('cash',24)+'</span>Record payment</button></div>'+
+ '</div>',nav:'owner',tab:'home'}};
+
+SC.updates=()=>{const all=allUpdates();const v=S.f.uv||'all';const list=v==='problems'?all.filter(u=>['part','holdC','holdO'].includes(u.type)):all;
+ const html='<div class="body"><div class="tabs"><button class="'+(v==='all'?'on':'')+'" data-a="uv" data-v="all">All updates</button><button class="'+(v==='problems'?'on':'')+'" data-a="uv" data-v="problems">Delays &amp; parts</button></div><div class="list">'+(list.length?list.map(u=>updRow(u,true)).join(''):'<div class="tl"><span class="mid"><span>No updates</span></span></div>')+'</div><span class="small muted" style="text-align:center">Teams send these from their phone. You don\'t need to call them.</span></div>';
+ setTimeout(()=>{all.forEach(u=>u.seen=true)},0);
+ return {head:hd('Updates from teams'),body:html}};
+
+SC.search=()=>{const q=(S.f.sq||'').toLowerCase().replace(/\s/g,'');const cs=q.length>=2?D.customers.filter(c=>c.name.toLowerCase().replace(/\s/g,'').includes(q)||c.phone.includes(q)):[];const js=q.length>=2?D.jobs.filter(j=>String(j.no).includes(q)):[];
+ return {head:'<div class="hd"><button class="ib" data-a="back" aria-label="Back">'+ic('back',24)+'</button><div class="inp" style="flex:1;border-radius:999px;margin-right:8px;min-height:44px">'+ic('search',18)+'<input id="sq" data-f="sq" value="'+esc(S.f.sq||'')+'" placeholder="Customer name, phone or job no." autofocus></div></div>',body:'<div class="body">'+(q.length<2?'<span class="muted small">Type 2 or more letters or digits.</span>':(cs.length||js.length?'<div class="list">'+cs.map(c=>'<button class="li" data-a="openCust" data-v="'+c.id+'"><span class="av">'+c.name.split(' ').map(x=>x[0]).join('').slice(0,2)+'</span><span class="mid"><b>'+esc(c.name)+'</b><span>'+ph(c.phone)+' · '+esc(area(c,c.sites[0].id))+'</span></span>'+ic('chev',18)+'</button>').join('')+js.map(j=>'<button class="li" data-a="openJob" data-v="'+j.id+'"><span class="ico">'+ic('bag',20)+'</span><span class="mid"><b>Job #'+j.no+'</b><span>'+esc(C(j.cust).name)+'</span></span>'+badge(j)+'</button>').join('')+'</div>':empty('search','No match','Check the spelling or number.','<button class="btn p sm" data-a="go" data-v="addCustomer">+ Add new customer</button>')))+'</div>'}};
+
+/* ---------- owner: jobs & enquiries ---------- */
+SC.jobs=p=>{const v=S.f.jv||'jobs';const flt=S.f.jf||'All';
+ const tabs='<div class="tabs"><button class="'+(v==='enq'?'on':'')+'" data-a="jv" data-v="enq">Enquiries · '+D.enquiries.filter(e=>e.status==='Open').length+'</button><button class="'+(v==='jobs'?'on':'')+'" data-a="jv" data-v="jobs">Jobs</button></div>';
+ let inner='';
+ if(v==='enq'){const ef=S.f.ef||'Open';const list=D.enquiries.filter(e=>ef==='Open'?e.status==='Open':e.status!=='Open');
+  inner='<div class="hscroll">'+['Open','Closed'].map(x=>chip(x,ef===x,'ef',x,'nock')).join('')+'</div>'+(list.length?list.map(e=>{const c=C(e.cust);return '<button class="card tap" data-a="go" data-v="enquiry" data-i="'+e.id+'" style="gap:6px"><div class="sec"><span class="small muted">'+e.no+' · '+esc(e.age)+'</span>'+(e.status==='Open'?badge('Open'):'<span class="badge b-'+(e.status==='Converted'?'Completed':'OnHold')+'">'+esc(e.status==='Converted'?'Converted · #'+e.job:e.status)+'</span>')+'</div><b style="font-size:16px">'+esc(c.name)+'</b><span class="small muted">'+esc(e.service)+' · '+esc(area(c,e.site))+' · via '+esc(e.src)+'</span><span style="font-size:14px">"'+esc(e.problem)+'"</span></button>'}).join(''):empty('inbox',ef==='Open'?'No open enquiries':'Nothing closed yet','Save an enquiry when a customer asks but has not booked.'));
+ }else{const fs=['All','Today','Needs action','New','Not started','In Progress','On Hold','Completed','Cancelled'];
+  const acted=new Set(ownerActions().map(a=>a.j));
+  const pass=(j,x)=>x==='All'?true:x==='Today'?j.day==='Today'&&j.status!=='Cancelled':x==='Needs action'?acted.has(j.id):x==='Not started'?(j.status==='Assigned'||j.status==='Scheduled'):j.status===x;
+  let list=D.jobs.slice().sort((a,b)=>b.no-a.no).filter(j=>pass(j,flt));
+  inner='<div class="hscroll">'+fs.map(x=>chip(x+(x==='All'?'':' · '+D.jobs.filter(j=>pass(j,x)).length),flt===x,'jf',x,'nock')).join('')+'</div>'+(list.length?list.map(j=>{const c=C(j.cust);return '<button class="card tap" data-a="openJob" data-v="'+j.id+'" style="gap:6px"><div class="sec"><span class="small muted">#'+j.no+' · '+esc(j.day)+', '+esc(j.time)+'</span>'+badge(j)+'</div><b style="font-size:16px">'+esc(c.name)+'</b><span class="small muted">'+esc(jobLine(j))+'</span><span class="small muted">'+esc(teamName(j.team))+(j.appt&&j.status==='Scheduled'?' · '+esc(j.appt.day+', '+j.appt.time):'')+(j.status==='Completed'&&!j.billed?' · <b style="color:var(--info)">Not billed</b>':'')+'</span>'+lastLine(j)+'</button>'}).join(''):empty('bag','No jobs here','Try another filter.'));
+ }
+ return {head:hd('Jobs',{big:true,right:'<button class="btn p sm" data-a="newJob" style="height:44px">'+ic('plus',18,2.4)+'New</button>'}),body:offbar()+'<div class="body">'+tabs+inner+'</div>',nav:'owner',tab:'jobs'}};
+
+SC.enquiry=p=>{const e=E(p.i);const c=C(e.cust);const s=site(c,e.site);
+ return {head:hd('Enquiry '+e.no,{sub:esc(e.age)+' · via '+esc(e.src)}),body:'<div class="body">'+(e.status!=='Open'?'<div class="warnbox">'+(e.status==='Converted'?'Converted to job #'+e.job+'.':'Closed: '+esc(e.status))+'</div>':'')+
+ '<div class="card"><div style="display:flex;flex-direction:column"><b style="font-size:18px">'+esc(c.name)+'</b><span class="small muted">'+ph(c.phone)+' · '+esc(s.addr)+'</span></div><div class="row"><button class="btn tn sm" style="flex:1" data-a="fake" data-v="Opens the phone dialer">'+ic('phone',18)+'Call</button><button class="btn tn sm" style="flex:1" data-a="fake" data-v="Opens WhatsApp chat">'+ic('wa',18)+'WhatsApp</button></div></div>'+
+ '<div class="card"><span class="k">What they asked</span><span style="font-size:17px;line-height:25px">"'+esc(e.problem)+'"</span><div class="ln"><span>Service</span><span>'+esc(e.service)+'</span></div><div class="ln"><span>ACs</span><span>'+(e.acs.length?e.acs.map(a=>esc(acOf(c,a).room)).join(', '):'Not known yet')+'</span></div><div class="ln"><span>When</span><span>'+esc(e.day==='Pick date'?'Not decided':e.day+(e.slot?' · '+e.slot:''))+'</span></div></div>'+
+ '<span class="small muted" style="text-align:center">Converting copies all of this into a new job. Nothing to type again.</span></div>',
+ foot:e.status==='Open'?'<button class="btn p" data-a="convert" data-v="'+e.id+'">'+ic('bag',20)+'Convert to job</button><button class="btn txt" data-a="closeEnq" data-v="'+e.id+'">Close enquiry</button>':''}};
+
+/* ---------- owner: new enquiry / job ---------- */
+function blankForm(pre){return Object.assign({cust:null,site:null,acs:[],service:null,problem:'',day:'Tomorrow',slot:'Morning',src:'WhatsApp',fromEnq:null,errs:{}},pre||{})}
+SC.newJob=()=>{const f=S.f.nj;const c=f.cust&&C(f.cust);const s=c&&site(c,f.site);const er=f.errs||{};
+ const svc=['Service','Repair','Deep cleaning','Gas filling','Installation','Uninstall','AMC visit','Inspection','Commercial','Other'];
+ return {head:hd(f.fromEnq?'New job from '+E(f.fromEnq).no:'New enquiry or job',{x:true,right:'<span class="small muted" style="padding-right:12px">Draft saved</span>'}),
+ body:'<div class="body" style="gap:22px">'+
+  '<div class="fl"><span class="lbl">Customer<small>Search by phone or name</small></span>'+(c?'<div class="card" style="border:1.5px solid var(--teal);gap:6px"><div class="sec"><b style="font-size:17px">'+esc(c.name)+'</b><button data-a="pickCust" style="padding:8px 0 8px 12px">Change</button></div><span class="small muted">'+ph(c.phone)+'</span><div class="row" style="align-items:flex-start;font-size:14px;gap:8px"><span class="muted">'+ic('pin',18)+'</span><span>'+esc(s.addr)+' <span class="muted">· '+esc(s.label)+'</span></span></div>'+(c.sites.length>1?'<div class="chips">'+c.sites.map(x=>chip(x.label,x.id===s.id,'njSite',x.id,'sm nock')).join('')+'</div>':'')+'</div>':'<button class="inp'+(er.cust?' err':'')+'" style="text-align:left;color:var(--muted)" data-a="pickCust">'+ic('search',20)+'<span style="flex:1">Phone or name</span></button>'+(er.cust?'<span class="errtxt">Choose or add the customer</span>':''))+'</div>'+
+  (c?'<div class="fl"><span class="lbl">Which AC?<small>Tick all that need work</small></span>'+(s.acs.length?s.acs.map(a=>{const on=f.acs.includes(a.id);return '<button class="tc'+(on?' on':'')+'" data-a="njAc" data-v="'+a.id+'"><span class="box">'+(on?'<span style="color:#fff">'+ic('check',16,3)+'</span>':'')+'</span><span style="display:flex;flex-direction:column;flex:1"><b style="font-size:16px">'+esc(a.room)+'</b><span class="small muted">'+esc(a.type+' · '+a.brand+' · '+a.cap)+'</span></span></button>'}).join(''):'<span class="small muted">No ACs saved at this address yet. The technician can add them on site.</span>')+'<button class="dash" data-a="go" data-v="addAc" data-i="'+c.id+'|'+s.id+'|nj">'+ic('plus',20,2.4)+'Add AC</button></div>':'')+
+  '<div class="fl"><span class="lbl">Service</span><div class="chips">'+svc.map(x=>chip(x,f.service===x,'njSvc',x,'nock')).join('')+'</div>'+(er.service?'<span class="errtxt">Choose the service</span>':'')+'</div>'+
+  '<div class="fl"><label class="lbl" for="njp">Problem<small>Optional</small></label><div class="inp"><textarea id="njp" data-f="nj.problem" placeholder="What did the customer say?">'+esc(f.problem)+'</textarea></div><div class="chips">'+['Not cooling','Water leak','Noise','Bad smell'].map(x=>'<button class="chip sm" data-a="njProb" data-v="'+x+'">+ '+x+'</button>').join('')+'</div></div>'+
+  '<div class="fl"><span class="lbl">When<small>Customer\'s preferred time</small></span><div class="chips">'+['Today','Tomorrow','Pick date'].map(x=>chip(x==='Pick date'&&f.day!=='Today'&&f.day!=='Tomorrow'&&f.day!=='Pick date'?f.day:x,f.day===x||(x==='Pick date'&&!['Today','Tomorrow'].includes(f.day)),'njDay',x,'nock')).join('')+'</div><div class="chips">'+['Morning','Afternoon','Evening'].map(x=>chip(x,f.slot===x,'njSlot',x,'nock')).join('')+'</div></div>'+
+  '<div class="fl"><span class="lbl">Came from</span><div class="chips">'+[['WhatsApp','wa'],['Call','phone'],['Other','']].map(x=>'<button class="chip'+(f.src===x[0]?' on':'')+'" data-a="njSrc" data-v="'+x[0]+'">'+(x[1]?ic(x[1],18):'')+x[0]+'</button>').join('')+'</div></div>'+
+ '</div>',
+ foot:'<div class="row">'+(f.fromEnq?'':'<button class="btn s" data-a="saveEnq">Save enquiry</button>')+'<button class="btn p" style="flex:1.3" data-a="saveJob">Create job &amp; assign</button></div>'}};
+
+/* ---------- owner: job details ---------- */
+SC.job=p=>{const j=J(p.i);const c=C(j.cust);const s=site(c,j.site);const tm=Tm(j.team);const r=j.report;
+ if(j.status==='Completed')j.seen=true;(j.updates||[]).forEach(u=>{if(!u.pending)u.seen=true});
+ let foot='';
+ if(j.status==='New')foot='<button class="btn p" data-a="assign" data-v="'+j.id+'">'+ic('users',20)+'Assign team</button>';
+ else if(j.status==='On Hold')foot='<div class="row"><button class="btn p" data-a="assign" data-v="'+j.id+'">'+ic('cal',20)+'Reschedule</button><button class="btn tn" style="flex:none;padding:0 16px" data-a="fake" data-v="Opens the dialer to '+(tm?tm.senior:'the team')+'">'+ic('phone',18)+'Call team</button></div>';
+ else if(j.status==='Assigned'||j.status==='Scheduled')foot='<div class="row"><button class="btn s" data-a="assign" data-v="'+j.id+'">Change team or time</button><button class="btn tn" style="flex:none;padding:0 16px" data-a="fake" data-v="Opens the dialer to '+(tm?tm.senior:'')+'">'+ic('phone',18)+'Call team</button></div>';
+ else if(j.status==='In Progress')foot='<button class="btn tn" data-a="fake" data-v="Opens the dialer to '+(tm?tm.senior:'')+'">'+ic('phone',20)+'Call '+esc(tm?tm.senior.split(' ')[0]:'team')+'</button>';
+ else if(j.status==='Completed')foot=j.billed?'<button class="btn p" data-a="go" data-v="bill" data-i="'+j.billed+'">'+ic('bill',20)+'View bill</button>':'<button class="btn p" data-a="createBill" data-v="'+j.id+'">'+ic('bill',20)+'Create bill</button>';
+ const linked=[j.followOf?'<button class="li" data-a="openJob" data-v="'+j.followOf+'"><span class="ico">'+ic('bag',20)+'</span><span class="mid"><b>Follow-up of #'+J(j.followOf).no+'</b><span>Visit 1</span></span>'+ic('chev',18)+'</button>':'',j.followUp?'<button class="li" data-a="openJob" data-v="'+j.followUp+'"><span class="ico">'+ic('bag',20)+'</span><span class="mid"><b>Visit 2 · #'+J(j.followUp).no+'</b><span>'+esc(J(j.followUp).status)+'</span></span>'+ic('chev',18)+'</button>':'',j.fromEnq?'<div class="li"><span class="ico">'+ic('inbox',20)+'</span><span class="mid"><b>From enquiry '+E(j.fromEnq).no+'</b><span>'+esc(E(j.fromEnq).age)+'</span></span></div>':''].join('');
+ const ours=j.holdSide!=='customer';
+ const holdCard=j.status==='On Hold'?'<div class="card" style="background:'+(ours?'#FFF1E6;border-color:#F5C7A3':'var(--hold-t);border-color:#D5D9E0')+'"><div class="sec"><span class="k" style="color:'+(ours?'#9A3412':'var(--hold)')+'">On hold · '+(ours?'our side':'customer side')+'</span></div><b style="font-size:17px">'+esc(j.hold)+'</b>'+(j.newDate?'<span class="small">Customer asked for <b>'+esc(j.newDate)+'</b></span>':'')+'<span class="small muted">'+(ours?'The team needs something from you before work can continue.':'Waiting on the customer. Not the team\'s delay.')+'</span>'+(j.newDate?'<button class="btn p sm" style="flex:none" data-a="confirmNewDate" data-v="'+j.id+'">Confirm '+esc(j.newDate)+' with same team</button>':'')+'</div>':'';
+ const partsCard=(j.partReq||[]).length?'<div class="card"><span class="k">Parts asked by team</span>'+j.partReq.map((x,i)=>'<div style="display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid #EEEAE1"><div class="sec"><b style="font-size:16px">'+x.qty+' × '+esc(x.name)+'</b><span class="badge '+(x.status==='Requested'?'b-HoldOurs':x.status==='Ordered'?'b-New':'b-Completed')+'">'+(x.status==='Requested'?'Waiting for you':x.status==='Ordered'?'Ordered':'Ready')+'</span></div>'+(x.note?'<span class="small">'+esc(x.note)+'</span>':'')+'<span class="small muted">Asked by '+esc(x.by)+' · '+esc(x.at)+' · '+(x.blocking?'work stopped':'work continues')+'</span>'+(x.status==='Requested'?'<div class="row"><button class="btn s sm" style="flex:1" data-a="partStep" data-v="'+j.id+'|'+i+'|Ordered">I ordered it</button><button class="btn p sm" style="flex:1" data-a="partStep" data-v="'+j.id+'|'+i+'|Ready">Part is ready</button></div>':x.status==='Ordered'?'<button class="btn p sm" style="flex:none" data-a="partStep" data-v="'+j.id+'|'+i+'|Ready">Part is ready · tell team</button>':'')+'</div>').join('')+'</div>':'';
+ const ups=visUpd(j);
+ return {head:hd('Job #'+j.no,{right:(['New','Assigned','Scheduled','On Hold','In Progress'].includes(j.status)?'<button class="ib" data-a="jobMore" data-v="'+j.id+'">'+ic('dots',20)+'More</button>':'')}),
+ body:'<div class="body">'+
+  '<div class="row" style="flex-wrap:wrap;gap:8px">'+badge(j)+(j.status==='Completed'&&!j.billed?'<span class="badge b-New">Not billed</span>':'')+(j.cancelReason?'<span class="small muted">'+esc(j.cancelReason)+'</span>':'')+'</div>'+
+  holdCard+partsCard+
+  '<div class="card"><div style="display:flex;flex-direction:column"><b style="font-size:18px">'+esc(c.name)+'</b><span class="small muted">'+ph(c.phone)+' · '+esc(s.addr)+'</span></div><div class="row"><button class="btn tn sm" style="flex:1" data-a="fake" data-v="Opens the phone dialer">'+ic('phone',18)+'Call</button><button class="btn tn sm" style="flex:1" data-a="fake" data-v="Opens WhatsApp chat">'+ic('wa',18)+'WhatsApp</button><button class="btn tn sm" style="flex:1" data-a="openCust" data-v="'+c.id+'">Customer</button></div></div>'+
+  '<div class="card"><span class="k">Job</span><div class="ln"><span>Service</span><span>'+esc(j.service)+'</span></div><div class="ln"><span>AC</span><span>'+(j.acs.length?j.acs.map(a=>{const x=acOf(c,a);return esc(x.room+' · '+x.brand+' '+x.cap)}).join('<br>'):'Not known')+'</span></div><div class="ln"><span>Problem</span><span>'+esc(j.problem||'—')+'</span></div><div class="ln"><span>Team</span><span>'+(tm?esc(tm.name+' · '+tm.senior)+'<br><span class="small muted" style="font-weight:500">Helper: '+esc(tm.helper)+'</span>':'<span style="color:var(--info)">No team yet</span>')+'</span></div><div class="ln"><span>Appointment</span><span>'+(j.appt?esc(j.appt.day+', '+j.appt.time)+'<br><span class="small muted" style="font-weight:500">fixed by '+esc(j.appt.by)+' at '+esc(j.appt.at)+'</span>':(['New','Assigned'].includes(j.status)?'<span style="color:var(--info)">Not fixed yet</span><br><span class="small muted" style="font-weight:500">Customer asked: '+esc(j.day+' '+j.time)+'</span>':esc(j.day+' · '+(r?r.when:j.time))))+'</span></div><div class="ln"><span>To collect on site</span><span>'+(j.toCollect?fmt(j.toCollect):'Nothing')+'</span></div><div class="ln"><span>Came from</span><span>'+esc(j.src)+'</span></div></div>'+
+  (ups.length?'<div class="list"><div class="li" style="cursor:default;padding-bottom:6px"><span class="mid"><b style="font-size:17px">Updates</b><span>From the team, newest first</span></span></div>'+ups.map(u=>updRow(u,false)).join('')+'</div>':'')+
+  (r?'<div class="card"><div class="sec"><span class="k">Work report</span>'+syncLine(j)+'</div><span class="small muted">Found: '+esc(r.found.join(' · ')||'—')+'</span>'+Object.keys(r.work).map(a=>'<div style="display:flex;flex-direction:column;gap:6px"><b style="font-size:14px">'+esc((acOf(c,a)||{room:'AC'}).room)+'</b><div class="chips">'+r.work[a].map(w=>'<span class="badge" style="background:var(--soft);color:var(--ink);height:30px;border-radius:8px;font-size:14px;font-weight:500">'+esc(w)+'</span>').join('')+'</div></div>').join('')+(r.parts.length?'<div style="display:flex;flex-direction:column;gap:6px;padding-top:6px;border-top:1px solid #EEEAE1">'+r.parts.map(x=>'<div class="ln"><span style="color:var(--ink)">'+esc(x.name)+'</span><span>'+x.qty+' '+esc(x.unit)+'</span></div>').join('')+'</div>':'')+(r.photos?'<div class="grid4">'+Array.from({length:Math.min(4,r.photos)},(_,i)=>'<div class="photo" style="height:68px">'+(i<r.photos/2?'Before':'After')+'</div>').join('')+'</div>':'')+(r.note?'<span style="font-size:14px;line-height:20px;background:var(--soft);border-radius:8px;padding:10px">"'+esc(r.note)+'"</span>':'')+(r.result==='again'?'<div class="warnbox">Technician says: needs another visit. '+esc(r.againWhy||'')+'</div>':'')+'</div>':'')+
+  (j.cash?'<div class="card" style="background:#FFF8EE;border-color:#F1D3A7"><div class="sec"><span class="k" style="color:var(--warn-ink)">Collected on site</span><b>'+fmt(j.cash.amt)+' · '+esc(j.cash.method)+'</b></div><span class="small muted">'+(j.cash.received?'Handed over to you ✓':'With '+esc(j.cash.by)+' · not handed over yet')+'</span>'+(!j.cash.received&&j.cash.method==='Cash'?'<button class="btn s sm" style="border-color:var(--warn);color:var(--warn-ink);flex:none" data-a="cashRecv" data-v="'+j.id+'">I received this cash</button>':'')+'</div>':'')+
+  (linked?'<div class="list">'+linked+'</div>':'')+
+  (j.status==='Completed'&&!j.followUp?'<button class="dash" data-a="followUp" data-v="'+j.id+'">'+ic('plus',20,2.4)+'Book a follow-up visit</button>':'')+
+ '</div>',foot}};
+
+/* ---------- owner: customers ---------- */
+SC.customers=()=>{const q=(S.f.cq||'').toLowerCase();const list=D.customers.filter(c=>!q||c.name.toLowerCase().includes(q)||c.phone.includes(q.replace(/\s/g,'')));
+ return {head:hd('Customers',{big:true,right:'<button class="btn p sm" data-a="go" data-v="addCustomer" style="height:44px">'+ic('plus',18,2.4)+'Add</button>'}),body:offbar()+'<div class="body"><div class="inp" style="border-radius:999px">'+ic('search',20)+'<input id="cq" data-f="cq" value="'+esc(S.f.cq||'')+'" placeholder="Phone or name"></div>'+(list.length?'<div class="list">'+list.map(c=>{let due=0;D.bills.filter(b=>b.cust===c.id&&b.status!=='cancelled').forEach(b=>due+=billTotals(b).rem);const n=c.sites.reduce((s,x)=>s+x.acs.length,0);return '<button class="li" data-a="openCust" data-v="'+c.id+'"><span class="av">'+c.name.split(' ').map(x=>x[0]).join('').slice(0,2)+'</span><span class="mid"><b>'+esc(c.name)+'</b><span>'+ph(c.phone)+' · '+esc(area(c,c.sites[0].id))+' · '+n+' AC'+(n===1?'':'s')+'</span></span>'+(due>0.5?'<span class="small" style="color:var(--warn-ink);font-weight:700">'+fmt(due)+'</span>':'')+'</button>'}).join('')+'</div>':empty('search','No customer found','Check the spelling, or add them.','<button class="btn p sm" data-a="go" data-v="addCustomer">+ Add as new customer</button>'))+'</div>',nav:'owner',tab:'customers'}};
+
+SC.customer=p=>{const c=C(p.i);let due=0,nb=0;D.bills.filter(b=>b.cust===c.id&&b.status!=='cancelled').forEach(b=>{const r=billTotals(b).rem;if(r>0.5){due+=r;nb++}});
+ const hist=D.jobs.filter(j=>j.cust===c.id).sort((a,b)=>b.no-a.no);
+ return {head:hd('Customer',{right:'<button class="ib t" data-a="fake" data-v="Edit customer opens the same form as Add customer">Edit</button>'}),
+ body:'<div style="background:var(--surface);padding:4px 16px 16px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:12px"><div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:24px;font-weight:700">'+esc(c.name)+'</span><span class="muted" style="font-size:15px">'+ph(c.phone)+' · since '+c.since+'</span><span class="small" style="color:'+(c.gst?'var(--teal-ink)':'var(--slate)')+';font-weight:600">'+(c.gst?'GST bills · '+esc(c.gstin||'GSTIN not added'):'Bills without GST')+'</span></div><div class="row"><button class="btn tn sm" style="flex:1" data-a="fake" data-v="Opens the phone dialer">'+ic('phone',18)+'Call</button><button class="btn tn sm" style="flex:1" data-a="fake" data-v="Opens WhatsApp chat">'+ic('wa',18)+'WhatsApp</button><button class="btn p sm" style="flex:1" data-a="newJobFor" data-v="'+c.id+'">'+ic('plus',18,2.4)+'New job</button></div>'+(due>0.5?'<button class="li" style="background:var(--warn-t);border-radius:10px;border:0" data-a="custBills" data-v="'+c.id+'"><span class="mid"><span style="font-size:15px;color:var(--ink)"><b style="font-size:15px">'+fmt(due)+' remaining</b> on '+nb+' bill'+(nb>1?'s':'')+'</span></span><span style="color:var(--warn-ink);font-weight:600;font-size:14px">View</span></button>':'')+'</div>'+
+ '<div class="body">'+c.sites.map(s=>'<div class="list"><div class="li" style="cursor:default"><span class="mid"><span class="k">'+esc(s.label)+'</span><b style="font-size:15px">'+esc(s.addr)+'</b>'+(s.land?'<span>'+esc(s.land)+'</span>':'')+'</span><button class="btn tn sm" style="height:40px;padding:0 12px" data-a="fake" data-v="Opens Google Maps">Map</button></div>'+s.acs.map(a=>'<button class="li" data-a="go" data-v="ac" data-i="'+c.id+'|'+a.id+'"><span class="ico" style="color:var(--teal)">'+ic('ac',22)+'</span><span class="mid"><b>'+esc(a.room)+'</b><span>'+esc(a.type+' · '+a.brand+' '+a.cap)+(a.last?' · last '+esc(a.last):'')+'</span></span>'+ic('chev',18)+'</button>').join('')+'<button class="li" style="color:var(--teal);font-weight:600;font-size:15px" data-a="go" data-v="addAc" data-i="'+c.id+'|'+s.id+'|cust">'+ic('plus',18,2.4)+'Add AC here</button></div>').join('')+
+ '<button class="dash" data-a="fake" data-v="Add address uses the same address fields as Add customer">'+ic('plus',20,2.4)+'Add another address</button>'+
+ '<div class="list"><div class="li" style="cursor:default"><span class="mid"><b style="font-size:17px">Service history</b></span><span class="small muted">'+hist.length+' jobs</span></div>'+(hist.length?hist.map(j=>'<button class="li" data-a="openJob" data-v="'+j.id+'"><span style="width:52px;flex:none;display:flex;flex-direction:column"><b style="font-size:14px">'+esc(j.day)+'</b><span class="small muted">#'+j.no+'</span></span><span class="mid"><b style="font-size:15px">'+esc(j.service)+(j.acs.length?' · '+esc(j.acs.map(a=>(acOf(c,a)||{}).room).join(', ')):'')+'</b><span>'+esc(j.report?Object.values(j.report.work).flat().slice(0,2).join(', ')||j.problem:j.problem)+'</span></span>'+badge(j)+'</button>').join(''):'<div class="li"><span class="mid"><span>No jobs yet</span></span></div>')+'</div></div>'}};
+
+SC.ac=p=>{const [cid,aid]=p.i.split('|');const c=C(cid);const a=acOf(c,aid);const jobs=D.jobs.filter(j=>j.cust===cid&&j.acs.includes(aid));
+ return {head:hd(esc(a.room),{sub:esc(c.name)}),body:'<div class="body"><div class="card"><div class="row"><span class="ico" style="color:var(--teal);width:56px;height:56px">'+ic('ac',30)+'</span><div style="display:flex;flex-direction:column"><b style="font-size:18px">'+esc(a.brand+' '+a.type)+'</b><span class="muted">'+esc(a.cap)+'</span></div></div><div class="ln"><span>Model</span><span class="muted">Not added</span></div><div class="ln"><span>Serial no.</span><span class="muted">Not added</span></div><div class="ln"><span>Gas</span><span>'+(a.type==='Window'?'R22':'R32')+'</span></div><div class="ln"><span>Warranty</span><span class="muted">Not added</span></div>'+(a.onSite?'<div class="warnbox">Added on site by technician. Check details.</div>':'')+'</div><div class="list"><div class="li" style="cursor:default"><span class="mid"><b style="font-size:17px">Visits for this AC</b></span></div>'+(jobs.length?jobs.map(j=>'<button class="li" data-a="openJob" data-v="'+j.id+'"><span class="mid"><b style="font-size:15px">'+esc(j.day)+' · '+esc(j.service)+'</b><span>'+esc(j.report?(j.report.work[aid]||[]).join(', '):j.problem)+'</span></span>'+badge(j)+'</button>').join(''):'<div class="li"><span class="mid"><span>No visits yet</span></span></div>')+'</div></div>',foot:'<button class="btn p" data-a="newJobFor" data-v="'+cid+'" data-i="'+aid+'">'+ic('plus',20,2.4)+'New job for this AC</button>'}};
+
+SC.addCustomer=()=>{const f=S.f.ac||(S.f.ac={name:'',phone:(S.f.sq||'').replace(/\D/g,'').slice(0,10),addr:'',land:'',label:'Home',type:'Home',gst:false,gstin:'',errs:{}});const er=f.errs;const dup=f.phone.length===10&&D.customers.find(c=>c.phone===f.phone);
+ return {head:hd('Add customer',{x:true}),body:'<div class="body" style="gap:18px"><div class="fl"><span class="lbl">Customer type</span><div class="chips">'+['Home','Business'].map(x=>chip(x,f.type===x,'acType',x,'nock')).join('')+'</div></div><div class="fl"><label class="lbl" for="acn">'+(f.type==='Business'?'Business name':'Name')+'</label><div class="inp'+(er.name?' err':'')+'"><input id="acn" data-f="ac.name" value="'+esc(f.name)+'" placeholder="'+(f.type==='Business'?'e.g. Shreeji Clinic':'e.g. Rohan Kulkarni')+'"></div>'+(er.name?'<span class="errtxt">Enter the customer\'s name</span>':'')+'</div><div class="fl"><label class="lbl" for="acp">Mobile number</label><div class="inp'+(er.phone?' err':'')+'"><span class="pre">+91</span><input id="acp" inputmode="numeric" maxlength="10" data-f="ac.phone" value="'+esc(f.phone)+'"></div>'+(er.phone?'<span class="errtxt">Number should have 10 digits</span>':'')+(dup?'<div class="warnbox">This number belongs to <b>'+esc(dup.name)+'</b>. <button style="border:0;background:none;padding:0;color:var(--teal);font-weight:700;text-decoration:underline" data-a="openCust" data-v="'+dup.id+'">Open customer</button></div>':'')+'</div><div class="fl"><label class="lbl" for="aca">Address</label><div class="inp'+(er.addr?' err':'')+'"><textarea id="aca" data-f="ac.addr" placeholder="Flat / house, society, area">'+esc(f.addr)+'</textarea></div>'+(er.addr?'<span class="errtxt">Enter at least the area</span>':'')+'<button class="chip sm" style="align-self:flex-start" data-a="fake" data-v="Paste a WhatsApp location link or drop a pin">'+ic('pin',16)+'Add map location</button></div><div class="fl"><label class="lbl" for="acl">Landmark<small>Optional</small></label><div class="inp"><input id="acl" data-f="ac.land" value="'+esc(f.land)+'" placeholder="Near…"></div></div><div class="card" style="flex-direction:row;align-items:center;justify-content:space-between"><div style="display:flex;flex-direction:column"><b style="font-size:16px">Give GST bills</b><span class="small muted">Default for this customer. Can change per bill.</span></div>'+sw(f.gst,'acGst','Give GST bills')+'</div>'+(f.gst?'<div class="fl"><label class="lbl" for="acg">Customer GSTIN<small>Optional</small></label><div class="inp"><input id="acg" data-f="ac.gstin" value="'+esc(f.gstin)+'" style="text-transform:uppercase" placeholder="27XXXXX0000X1Z0"></div></div>':'')+'<span class="small muted">You can add ACs after saving.</span></div>',foot:'<button class="btn p" data-a="saveCust">Save customer</button>'}};
+
+SC.addAc=p=>{const [cid,sid,from]=p.i.split('|');const f=S.f.aa||(S.f.aa={room:'',type:'Split',brand:'',cap:'1.5 ton',errs:{}});
+ return {head:hd('Add AC',{x:true,sub:esc(C(cid).name+' · '+site(C(cid),sid).label)}),body:'<div class="body" style="gap:18px"><div class="fl"><label class="lbl" for="aar">Room or place</label><div class="inp'+(f.errs.room?' err':'')+'"><input id="aar" data-f="aa.room" value="'+esc(f.room)+'" placeholder="e.g. Bedroom 2"></div>'+(f.errs.room?'<span class="errtxt">Say where the AC is</span>':'')+'<div class="chips">'+['Hall','Bedroom','Kitchen','Office','Shop'].map(x=>'<button class="chip sm" data-a="aaRoom" data-v="'+x+'">'+x+'</button>').join('')+'</div></div><div class="fl"><span class="lbl">Type</span><div class="chips">'+['Split','Window','Cassette','Tower','Ductable'].map(x=>chip(x,f.type===x,'aaType',x,'nock')).join('')+'</div></div><div class="fl"><span class="lbl">Brand</span><div class="chips">'+['Voltas','LG','Daikin','Blue Star','Samsung','Lloyd','Carrier','Hitachi','Other'].map(x=>chip(x,f.brand===x,'aaBrand',x,'nock')).join('')+'</div></div><div class="fl"><span class="lbl">Capacity</span><div class="chips">'+['1 ton','1.5 ton','2 ton','3 ton','Not sure'].map(x=>chip(x,f.cap===x,'aaCap',x,'nock')).join('')+'</div></div><button class="chip" style="align-self:flex-start" data-a="fake" data-v="Model, serial number, warranty and gas type are optional extra fields">+ More details (model, serial, warranty)</button></div>',foot:'<button class="btn p" data-a="saveAc" data-v="'+p.i+'">Save AC</button>'}};
+
+/* ---------- owner: billing ---------- */
+SC.billing=()=>{const v=S.f.bv||'due';let list=D.bills.slice().sort((a,b)=>b.no.localeCompare(a.no));if(v==='due')list=list.filter(b=>b.status!=='cancelled'&&billTotals(b).rem>0.5);
+ let due=0;D.bills.forEach(b=>{if(b.status!=='cancelled')due+=billTotals(b).rem});
+ const unb=D.jobs.filter(j=>j.status==='Completed'&&!j.billed);
+ const cashJ=D.jobs.filter(j=>j.cash&&!j.cash.received);
+ return {head:hd('Billing',{big:true}),body:offbar()+'<div class="body"><div class="card" style="flex-direction:row;justify-content:space-between;align-items:flex-end"><div style="display:flex;flex-direction:column"><span class="small muted">To collect</span><span style="font-size:28px;font-weight:700">'+fmt(due)+'</span></div>'+(cashJ.length?'<div style="display:flex;flex-direction:column;align-items:flex-end"><b style="color:var(--warn-ink)">'+fmt(cashJ.reduce((s,j)=>s+j.cash.amt,0))+'</b><span class="small muted">cash with teams</span></div>':'')+'</div>'+
+ (unb.length?'<div class="list"><div class="li" style="cursor:default"><span class="mid"><b style="font-size:16px">Ready to bill · '+unb.length+'</b><span>Completed jobs with no bill</span></span></div>'+unb.map(j=>'<button class="li" data-a="createBill" data-v="'+j.id+'"><span class="mid"><b style="font-size:15px">'+esc(C(j.cust).name)+'</b><span>#'+j.no+' · '+esc(j.service)+' · '+esc(j.day)+'</span></span><span class="btn tn sm" style="height:36px;padding:0 10px">Create bill</span></button>').join('')+'</div>':'')+
+ (cashJ.length?'<div class="list"><div class="li" style="cursor:default"><span class="mid"><b style="font-size:16px">Cash with teams</b><span>Mark when it is handed to you</span></span></div>'+cashJ.map(j=>'<button class="li" data-a="openJob" data-v="'+j.id+'"><span class="mid"><b style="font-size:15px">'+fmt(j.cash.amt)+' · '+esc(j.cash.by)+'</b><span>'+esc(C(j.cust).name)+' · #'+j.no+'</span></span>'+ic('chev',18)+'</button>').join('')+'</div>':'')+
+ '<div class="tabs"><button class="'+(v==='due'?'on':'')+'" data-a="bv" data-v="due">To collect</button><button class="'+(v==='all'?'on':'')+'" data-a="bv" data-v="all">All bills</button></div>'+(list.length?'<div class="list">'+list.map(b=>{const tt=billTotals(b);return '<button class="li" data-a="go" data-v="bill" data-i="'+b.id+'"><span class="mid"><b>'+esc(C(b.cust).name)+'</b><span>'+b.no+' · '+esc(b.date)+(b.gst?' · GST':'')+'</span></span><span style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><b style="font-size:15px">'+fmt(v==='due'?tt.rem:tt.total)+'</b>'+bbadge(b)+'</span></button>'}).join('')+'</div>':empty('check','Nothing to collect','All bills are paid.'))+'</div>',nav:'owner',tab:'billing'}};
+
+function draftFromJob(j){const c=C(j.cust);const lines=[];const r=j.report||{work:{},parts:[]};
+ const svcRate={'Service':'Split AC service','Repair':'AC repair visit','Deep cleaning':'Deep cleaning, split AC','Gas filling':'AC repair visit','Installation':'Installation, split AC','Uninstall':'Uninstallation'};
+ const rate=d=>(D.rates.find(x=>x.d===d)||{r:0}).r;
+ const n=Math.max(1,j.acs.length);const sd=svcRate[j.service]||'AC repair visit';
+ lines.push({d:sd,q:j.service==='Repair'||j.service==='Gas filling'?1:n,u:'',r:rate(sd),tax:18,from:'Rate list'});
+ r.parts.forEach(p=>{const m=D.rates.find(x=>p.name.toLowerCase().includes(x.d.toLowerCase().split(' ')[0])&&x.u===p.unit)||D.rates.find(x=>x.d.toLowerCase().indexOf(p.name.toLowerCase().split(' ')[0])>=0);lines.push({d:m?m.d:p.name,q:p.qty,u:p.unit,r:m?m.r:0,tax:18,from:'Report'})});
+ const pays=j.cash?[{amt:j.cash.amt,method:j.cash.method,date:'18 Nov',note:'on site',by:j.cash.by.split(' ')[0]}]:[];
+ return {id:null,no:null,cust:j.cust,job:j.id,date:'18 Nov 2026',gst:!!c.gst,lines,disc:0,pays,status:'draft'};
+}
+SC.createBill=()=>{const b=S.f.bill;const tt=billTotals(b);const c=C(b.cust);
+ return {head:hd('New bill',{x:true,sub:esc(c.name)+(b.job?' · Job #'+J(b.job).no:'')}),
+ body:'<div class="body">'+(b.job?'<div class="infobox">'+ic('check',20)+'<span>Filled from the work report and your rate list. Check and change if needed.</span></div>':'')+
+ '<div class="list"><div class="li" style="cursor:default"><span class="mid"><span class="k">Items</span></span><span class="k">Amount</span></div>'+b.lines.map((l,i)=>'<div class="li" style="flex-direction:column;align-items:stretch;gap:8px;cursor:default"><div class="sec"><input aria-label="Item name" data-f="bill.lines.'+i+'.d" value="'+esc(l.d)+'" style="border:0;font-size:16px;font-weight:600;flex:1;min-width:0;padding:4px 0;background:transparent"><b>'+fmt(l.q*l.r)+'</b></div><div class="row" style="gap:8px"><div class="inp" style="width:84px;min-height:40px;padding:0 10px"><input aria-label="Quantity" inputmode="decimal" data-f="bill.lines.'+i+'.q" data-num="1" value="'+l.q+'" style="padding:6px 0;font-size:15px"><span class="small muted">'+esc(l.u)+'</span></div><span class="muted">×</span><div class="inp" style="flex:1;min-height:40px;padding:0 10px"><span>₹</span><input aria-label="Rate" inputmode="numeric" data-f="bill.lines.'+i+'.r" data-num="1" value="'+l.r+'" style="padding:6px 0;font-size:15px"></div>'+(b.gst?'<span class="badge" style="background:var(--soft);color:var(--ink)">GST '+l.tax+'%</span>':(l.from?'<span class="badge" style="background:var(--teal-t);color:var(--teal-ink);border-radius:6px">'+l.from+'</span>':''))+'<button class="ib" style="min-width:40px;height:40px;color:var(--bad)" data-a="billDel" data-v="'+i+'" aria-label="Remove item">'+ic('close',18)+'</button></div></div>').join('')+
+ '<div class="li" style="gap:8px;cursor:default"><button class="dash" style="flex:1;height:44px" data-a="billAdd">'+ic('plus',18,2.4)+'Add item</button><button class="dash" style="flex:1;height:44px" data-a="billDisc">'+ic('plus',18,2.4)+(b.disc?'Change discount':'Discount')+'</button></div></div>'+
+ '<div class="card" style="gap:2px"><div class="ln" style="padding:6px 0"><span>Subtotal</span><span>'+fmt(tt.sub)+'</span></div>'+(b.disc?'<div class="ln" style="padding:6px 0"><span>Discount</span><span>− '+fmt(b.disc)+'</span></div>':'')+
+ '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-top:1px solid #EEEAE1;border-bottom:1px solid #EEEAE1;margin:4px 0;gap:10px"><div style="display:flex;flex-direction:column"><b style="font-size:15px">GST bill</b><span class="small muted">'+(c.gst===b.gst?(b.gst?'On':'Off')+' for '+esc(c.name.split(' ')[0])+' (customer default)':'Changed for this bill only')+'</span></div>'+sw(b.gst,'billGst','GST bill')+'</div>'+
+ (b.gst?'<div class="ln" style="padding:4px 0"><span>CGST 9%</span><span>'+fmt(tt.tax/2)+'</span></div><div class="ln" style="padding:4px 0"><span>SGST 9%</span><span>'+fmt(tt.tax/2)+'</span></div><span class="small muted">Your GSTIN '+D.biz.gstin+(c.gstin?' · Customer '+c.gstin:'')+'</span>':'<span class="small muted" style="padding:2px 0 4px">Turn on to add GST per item. GST bills use their own number series.</span>')+
+ '<div class="ln" style="padding:10px 0 4px;font-size:18px"><span style="color:var(--ink);font-weight:700">Bill total</span><span style="font-weight:700">'+fmt(tt.total)+'</span></div>'+b.pays.map(p=>'<div class="ln" style="padding:4px 0"><span style="color:var(--ok-ink)">Received '+esc(p.note)+' · '+esc(p.method)+'</span><span style="color:var(--ok-ink)">− '+fmt(p.amt)+'</span></div>').join('')+'<div class="ln" style="padding:6px 0;font-size:20px"><span style="color:var(--warn-ink);font-weight:700">Remaining</span><span style="color:var(--warn-ink);font-weight:700">'+fmt(tt.rem)+'</span></div></div>'+
+ '<div class="card" style="flex-direction:row;justify-content:space-between;align-items:center"><div style="display:flex;flex-direction:column"><b style="font-size:15px">Bill date</b><span class="small muted">Number given when saved</span></div><b style="font-size:15px">18 Nov 2026</b></div>'+(S.online?'':'<div class="warnbox"><b>Bills need internet</b> so bill numbers never repeat. Your draft is kept on this phone.</div>')+'</div>',
+ foot:'<button class="btn p" data-a="saveBill" data-v="share"'+(S.online&&b.lines.length?'':' disabled')+'>'+ic('wa',20)+'Save &amp; send on WhatsApp</button><button class="btn txt" data-a="saveBill" data-v="save"'+(S.online&&b.lines.length?'':' disabled')+'>Save only</button>'}};
+
+SC.bill=p=>{const b=B(p.i);const c=C(b.cust);const tt=billTotals(b);const st=billStatus(b);const pct=tt.total?Math.min(100,tt.paid/tt.total*100):0;
+ return {head:hd('Bill '+b.no,{sub:esc(b.date)+(b.job?' · Job #'+J(b.job).no:''),right:b.status!=='cancelled'?'<button class="ib" data-a="billMore" data-v="'+b.id+'">'+ic('dots',20)+'More</button>':''}),
+ body:'<div class="body"><div class="card" style="gap:14px"><div class="sec"><b style="font-size:17px">'+esc(c.name)+'</b>'+bbadge(b)+'</div><div style="display:flex;flex-direction:column;gap:2px"><span class="small muted">'+(st==='Paid'?'Fully paid':'Remaining')+'</span><span style="font-size:34px;line-height:40px;font-weight:700">'+fmt(st==='Paid'?tt.total:tt.rem)+'</span></div><div class="prog" aria-label="'+Math.round(pct)+'% paid"><i style="width:'+pct+'%"></i></div><div class="grid2"><div style="display:flex;flex-direction:column"><span class="small muted">Bill total</span><b style="font-size:18px">'+fmt(tt.total)+'</b></div><div style="display:flex;flex-direction:column"><span class="small muted">Received</span><b style="font-size:18px;color:var(--ok-ink)">'+fmt(tt.paid)+'</b></div></div><div class="row"><button class="btn tn sm" style="flex:1" data-a="fake" data-v="Sends the bill PDF on WhatsApp">'+ic('wa',18)+'Send bill</button>'+(st!=='Paid'?'<button class="btn tn sm" style="flex:1" data-a="fake" data-v="Opens WhatsApp with a polite reminder and the remaining amount">Send reminder</button>':'<button class="btn tn sm" style="flex:1" data-a="fake" data-v="Sends a payment receipt on WhatsApp">Send receipt</button>')+'</div></div>'+
+ '<div class="card"><span class="k">Payments · '+b.pays.length+'</span>'+(b.pays.length?b.pays.map((x,i)=>'<div class="row" style="padding-top:10px;border-top:1px solid #EEEAE1"><span class="ico" style="background:var(--ok-t);color:var(--ok-ink)">'+ic(x.method==='UPI'?'upi':x.method==='Bank'?'bank':x.method==='Other'?'dots':'cash',22)+'</span><span style="flex:1;display:flex;flex-direction:column"><b style="font-size:15px">'+esc(x.method)+(x.note?' · '+esc(x.note):'')+'</b><span class="small muted">'+esc(x.date)+' · by '+esc(x.by)+'</span></span><b>'+fmt(x.amt)+'</b></div>').join(''):'<span class="small muted">No payments yet</span>')+'</div>'+
+ '<div class="card"><span class="k">Items</span>'+b.lines.map(l=>'<div class="ln"><span style="color:var(--ink)">'+esc(l.d)+' · '+l.q+(l.u?' '+l.u:'')+(l.q!==1?' × '+fmt(l.r):'')+'</span><span style="font-weight:500">'+fmt(l.q*l.r)+'</span></div>').join('')+(b.disc?'<div class="ln"><span>Discount</span><span>− '+fmt(b.disc)+'</span></div>':'')+(b.gst?'<div class="ln"><span>CGST + SGST 18%</span><span>'+fmt(tt.tax)+'</span></div>':'')+'<div class="ln" style="border-top:1px solid #EEEAE1;padding-top:10px"><span style="color:var(--ink);font-weight:700">Bill total</span><span>'+fmt(tt.total)+'</span></div></div><span class="small muted" style="text-align:center">'+(b.status==='cancelled'?'This bill was cancelled.':'A saved bill can\'t be edited. Use More › Cancel bill and make a new one.')+'</span></div>',
+ foot:b.status==='cancelled'?'':(st==='Paid'?'<button class="btn s" data-a="back">Done</button>':'<button class="btn p" data-a="pay" data-v="'+b.id+'"'+(S.online?'':' disabled')+'>'+ic('plus',20,2.4)+(S.online?'Record payment':'Needs internet to record payment')+'</button>')}};
+
+/* ---------- owner: more ---------- */
+SC.more=()=>({head:hd('More',{big:true}),body:'<div class="body"><div class="card" style="flex-direction:row;align-items:center"><span class="av" style="width:52px;height:52px">CC</span><div style="display:flex;flex-direction:column;flex:1"><b style="font-size:17px">'+esc(D.biz.name)+'</b><span class="small muted">Sadik · Owner · '+esc(D.biz.city)+'</span></div></div><div class="list">'+[['team','Teams',D.teams.length+' teams','teams'],['users','Staff',D.staff.length+' people','staff'],['list','Rate list',D.rates.length+' items','rates'],['shop','Business details','Name, address, GSTIN','bizSettings'],['bill','Bill settings','GST, bill number, terms','billSettings'],['cam','Photo rules','Ask for '+D.settings.photoReq+' photos per job','photoRules'],['lang','Language','English','language'],['card','Plan & payment','Trial · 23 days left','plan'],['help','Help','Call or WhatsApp support','help']].map(x=>'<button class="li" data-a="go" data-v="'+x[3]+'"><span class="ico" style="color:var(--teal)">'+ic(x[0],22)+'</span><span class="mid"><b>'+x[1]+'</b><span>'+x[2]+'</span></span>'+ic('chev',18)+'</button>').join('')+'</div><button class="btn d" data-a="logout">'+ic('logout',20)+'Log out</button></div>',nav:'owner',tab:'more'});
+SC.teams=()=>({head:hd('Teams',{right:'<button class="ib t" data-a="go" data-v="addTeam">'+ic('plus',18,2.4)+'Add</button>'}),body:'<div class="body">'+D.teams.map(tm=>{const n=D.jobs.filter(j=>j.team===tm.id&&j.day==='Today'&&j.status!=='Cancelled').length;return '<button class="card tap" data-a="go" data-v="team" data-i="'+tm.id+'" style="gap:4px'+(tm.leave?';background:var(--soft)':'')+'"><div class="sec"><b style="font-size:17px">'+esc(tm.name)+'</b><span class="badge" style="background:'+(tm.leave?'var(--hold-t);color:var(--hold)':'var(--soft);color:var(--ink)')+'">'+(tm.leave?'On leave today':n+' job'+(n===1?'':'s')+' today')+'</span></div><span style="font-size:15px">'+esc(tm.senior)+' <span class="muted">· senior</span></span><span style="font-size:15px">'+esc(tm.helper||'No helper')+' <span class="muted">· helper</span></span></button>'}).join('')+'</div>'});
+SC.team=p=>{const tm=Tm(p.i);const js=D.jobs.filter(j=>j.team===tm.id&&(j.day==='Today'||j.day==='Tomorrow')&&j.status!=='Cancelled');
+ return {head:hd(esc(tm.name)),body:'<div class="body"><div class="list"><div class="li"><span class="av">'+tm.senior.split(' ').map(x=>x[0]).join('')+'</span><span class="mid"><b>'+esc(tm.senior)+'</b><span>Senior technician · uses the app</span></span><button class="btn tn sm" style="height:40px;padding:0 12px" data-a="fake" data-v="Opens the dialer">'+ic('phone',16)+'Call</button></div><div class="li"><span class="av" style="background:var(--soft);color:var(--ink)">'+(tm.helper||'?').split(' ').map(x=>x[0]).join('')+'</span><span class="mid"><b>'+esc(tm.helper||'No helper')+'</b><span>Helper · '+(D.staff.find(s=>s.name===tm.helper&&s.login)?'uses the app':'works on senior\'s phone')+'</span></span></div></div><div class="card" style="flex-direction:row;align-items:center;justify-content:space-between"><div style="display:flex;flex-direction:column"><b style="font-size:16px">On leave today</b><span class="small muted">Team is hidden when assigning</span></div>'+sw(tm.leave,'teamLeave','On leave today')+'</div><button class="btn s" style="flex:none" data-a="fake" data-v="Pick another staff member as today\'s or permanent helper">Change members</button><div class="sec"><h2>Today and tomorrow</h2></div>'+(js.length?js.map(jobCard).join(''):empty('check','No jobs','This team is free.'))+'</div>'}};
+SC.addTeam=()=>({head:hd('Add team',{x:true}),body:'<div class="body" style="gap:18px"><div class="fl"><label class="lbl" for="ntn">Team name</label><div class="inp"><input id="ntn" value="Team '+(D.teams.length+1)+'"></div></div><div class="fl"><span class="lbl">Senior technician</span><div class="chips">'+D.staff.filter(s=>s.role==='Senior technician').slice(0,3).map(s=>chip(s.name,false,'fake','Pick from staff, or add a new person','nock')).join('')+'<button class="chip" data-a="go" data-v="addStaff">+ New person</button></div></div><div class="fl"><span class="lbl">Helper<small>Optional</small></span><div class="chips"><button class="chip" data-a="go" data-v="addStaff">+ New person</button></div></div></div>',foot:'<button class="btn p" data-a="fakeBack" data-v="Team saved">Save team</button>'});
+SC.staff=()=>({head:hd('Staff',{right:'<button class="ib t" data-a="go" data-v="addStaff">'+ic('plus',18,2.4)+'Add</button>'}),body:'<div class="body"><div class="list">'+D.staff.map(s=>'<div class="li"><span class="av" style="'+(s.role==='Helper'?'background:var(--soft);color:var(--ink)':'')+'">'+s.name.split(' ').map(x=>x[0]).join('').slice(0,2)+'</span><span class="mid"><b>'+esc(s.name)+'</b><span>'+esc(s.role)+' · '+esc(Tm(s.team)?Tm(s.team).name:'No team')+'</span></span><span class="small" style="font-weight:600;color:'+(s.login?'var(--teal-ink)':'var(--slate)')+'">'+(s.login?'Uses app':'No login')+'</span></div>').join('')+'</div></div>'});
+SC.addStaff=()=>{const f=S.f.st||(S.f.st={name:'',phone:'',role:'Helper',team:'t3',login:false,errs:{}});
+ return {head:hd('Add staff',{x:true}),body:'<div class="body" style="gap:18px"><div class="fl"><label class="lbl" for="stn">Name</label><div class="inp'+(f.errs.name?' err':'')+'"><input id="stn" data-f="st.name" value="'+esc(f.name)+'"></div>'+(f.errs.name?'<span class="errtxt">Enter a name</span>':'')+'</div><div class="fl"><span class="lbl">Role</span><div class="chips">'+['Senior technician','Helper'].map(x=>chip(x,f.role===x,'stRole',x,'nock')).join('')+'</div></div><div class="fl"><span class="lbl">Team</span><div class="chips">'+D.teams.map(x=>chip(x.name,f.team===x.id,'stTeam',x.id,'nock')).join('')+'</div></div><div class="card" style="flex-direction:row;align-items:center;justify-content:space-between"><div style="display:flex;flex-direction:column"><b style="font-size:16px">Uses the app</b><span class="small muted">'+(f.role==='Helper'?'Off: helper works on the senior\'s phone, still shown on jobs':'Seniors need the app to see jobs')+'</span></div>'+sw(f.login||f.role!=='Helper','stLogin','Uses the app')+'</div>'+(f.login||f.role!=='Helper'?'<div class="fl"><label class="lbl" for="stp">Mobile number</label><div class="inp'+(f.errs.phone?' err':'')+'"><span class="pre">+91</span><input id="stp" inputmode="numeric" maxlength="10" data-f="st.phone" value="'+esc(f.phone)+'"></div>'+(f.errs.phone?'<span class="errtxt">Number should have 10 digits</span>':'<span class="small muted">We send them an SMS with the app link. They log in with an OTP.</span>')+'</div>':'')+'</div>',foot:'<button class="btn p" data-a="saveStaff">Save</button>'}};
+SC.rates=()=>({head:hd('Rate list',{right:'<button class="ib t" data-a="fake" data-v="Add item: name, unit and price">'+ic('plus',18,2.4)+'Add</button>'}),body:'<div class="body"><div class="infobox">'+ic('bill',20)+'<span>Bills fill these prices in for you. You can still change a price on any bill.</span></div><div class="list">'+D.rates.map(r=>'<div class="li"><span class="mid"><b>'+esc(r.d)+'</b><span>'+(r.u?'per '+r.u:'per job')+'</span></span><b>'+fmt(r.r)+'</b></div>').join('')+'</div></div>'});
+SC.billSettings=()=>({head:hd('Bill settings'),body:'<div class="body"><div class="card" style="flex-direction:row;align-items:center;justify-content:space-between"><div style="display:flex;flex-direction:column"><b style="font-size:16px">GST on by default</b><span class="small muted">For new customers. Each customer and bill can differ.</span></div>'+sw(D.settings.gstDefault,'gstDef','GST on by default')+'</div><div class="card"><div class="ln"><span>Your GSTIN</span><span>'+D.biz.gstin+'</span></div><div class="ln"><span>GST rate</span><span>18% (CGST 9% + SGST 9%)</span></div><div class="ln"><span>GST bill numbers</span><span>KS-G-0001…</span></div><div class="ln"><span>Other bill numbers</span><span>KS-0001…</span></div><div class="ln"><span>Bill language</span><span>English</span></div><div class="ln"><span>Terms on bill</span><span>Service warranty 30 days</span></div></div><span class="small muted">Check bill numbering with your CA before going live.</span></div>'});
+SC.photoRules=()=>({head:hd('Photo rules'),body:'<div class="body"><div class="card"><span class="lbl">Photos to ask for on each job</span><div class="chips">'+[0,1,2,4].map(n=>chip(n===0?'None':n+' photos',D.settings.photoReq===n,'photoReq',n,'nock')).join('')+'</div><span class="small muted">The technician can still finish without them, but you will see "Photos missing".</span></div><div class="card" style="flex-direction:row;align-items:center;justify-content:space-between"><div style="display:flex;flex-direction:column"><b style="font-size:16px">Helpers can add photos</b><span class="small muted">Only helpers who use the app</span></div>'+sw(D.settings.helperPhoto,'helperPhoto','Helpers can add photos')+'</div></div>'});
+SC.bizSettings=()=>({head:hd('Business details'),body:'<div class="body"><div class="card"><div class="ln"><span>Name</span><span>'+esc(D.biz.name)+'</span></div><div class="ln"><span>Phone</span><span>'+ph(D.biz.phone)+'</span></div><div class="ln"><span>City</span><span>'+esc(D.biz.city)+'</span></div><div class="ln"><span>GSTIN</span><span>'+D.biz.gstin+'</span></div><div class="ln"><span>Logo</span><span class="muted">Not added</span></div></div><button class="btn s" style="flex:none" data-a="fake" data-v="Opens the same fields as setup step 1">Edit details</button></div>'});
+SC.language=()=>({head:hd(S.role==='owner'?'Language':t('lang')),body:'<div class="body"><span class="muted">Only changes your own app. Customer names and notes stay as typed.</span><div class="list">'+[['en','English','English'],['hi','हिंदी','Hindi'],['mr','मराठी','Marathi']].map(l=>'<button class="li" data-a="setLang" data-v="'+l[0]+'"><span class="mid"><b class="dev" style="font-size:18px">'+l[1]+'</b><span>'+l[2]+'</span></span>'+(S.lang===l[0]?'<span style="color:var(--teal)">'+ic('check',22,2.6)+'</span>':'')+'</button>').join('')+'</div>'+(S.role==='owner'?'<span class="small muted">In this prototype, Hindi and Marathi are filled in for the technician and helper screens.</span>':'')+'</div>'});
+SC.plan=()=>({head:hd('Plan & payment'),body:'<div class="body"><div class="card"><span class="k">Free trial</span><span style="font-size:24px;font-weight:700">23 days left</span><span class="muted">All features. No card needed now.</span></div><div class="card"><b style="font-size:17px">Business plan</b><span class="muted">Up to 10 teams · unlimited jobs and bills</span><span style="font-size:22px;font-weight:700">[YOUR PRICE] / month</span><span class="small muted">Pay by UPI or card. Your data stays safe if you stop; the app becomes view-only.</span></div></div>',foot:'<button class="btn p" data-a="fake" data-v="Opens UPI payment">Choose plan</button>'});
+SC.help=()=>({head:hd('Help'),body:'<div class="body"><div class="card"><b style="font-size:17px">KaamSetu support</b><span class="muted">Mon–Sat, 9 AM – 7 PM</span><div class="row"><button class="btn tn sm" style="flex:1" data-a="fake" data-v="Opens the dialer">'+ic('phone',18)+'Call</button><button class="btn tn sm" style="flex:1" data-a="fake" data-v="Opens WhatsApp">'+ic('wa',18)+'WhatsApp</button></div></div></div>'});
+
+/* ---------- technician ---------- */
+const tBadge=j=>j.status==='In Progress'?'<span class="badge b-InProgress">'+ic('tool',13,2.6)+t('inProg')+'</span>':j.status==='Scheduled'?'<span class="badge b-Scheduled">'+ic('cal',13,2.6)+esc(j.appt?j.appt.time:j.time)+'</span>':j.status==='On Hold'?'<span class="badge '+(j.holdSide==='customer'?'b-HoldCust':'b-HoldOurs')+'">'+ic('pause',13,2.6)+(j.holdSide==='customer'?t('onHoldC'):t('onHoldO'))+'</span>':'<span class="badge b-Assigned">'+t('notFixed')+'</span>';
+const tInfo=j=>{let h='';
+ if(j.status==='On Hold'){const cu=j.holdSide==='customer';h+='<div class="card" style="padding:16px;'+(cu?'background:var(--hold-t);border-color:#D5D9E0':'background:#FFF1E6;border-color:#F5C7A3')+'"><span class="k" style="color:'+(cu?'var(--hold)':'#9A3412')+'">'+(cu?t('onHoldC'):t('onHoldO'))+'</span><b style="font-size:18px">'+esc(j.hold||'')+'</b>'+(j.newDate?'<span class="muted">'+t('newDate')+': <b>'+esc(j.newDate)+'</b></span>':'')+'</div>'}
+ (j.partReq||[]).forEach(p=>{const rd=p.status==='Ready';h+='<div class="card" style="padding:14px;flex-direction:row;align-items:center;gap:12px;'+(rd?'background:var(--ok-t);border-color:#B7DEC4':'')+'"><span class="dot" style="width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none;background:'+(rd?'#fff;color:var(--ok)':'#FFE1CC;color:#9A3412')+'">'+ic('box',22)+'</span><div style="display:flex;flex-direction:column;flex:1"><b style="font-size:17px">'+p.qty+' × '+esc(p.name)+'</b><span class="small" style="font-weight:600;color:'+(rd?'var(--ok-ink)':'#9A3412')+'">'+(rd?t('partReady'):t('partWait'))+(p.status==='Ordered'?' · ordered':'')+(p.pending?' · '+t('saved'):'')+'</span></div></div>'});
+ return h};
+
+const myTeam=()=>S.role==='helper'?'t3':'t3';
+SC.myWork=()=>{const mine=D.jobs.filter(j=>j.team===myTeam()&&j.status!=='Cancelled');
+ const now=mine.filter(j=>j.status==='In Progress');const today=mine.filter(j=>j.day==='Today'&&['Assigned','Scheduled','On Hold'].includes(j.status));const tom=mine.filter(j=>j.day!=='Today'&&['Assigned','Scheduled','On Hold'].includes(j.status));const doneToday=mine.filter(j=>j.day==='Today'&&j.status==='Completed');
+ const card=(j,big)=>{const c=C(j.cust);return '<button class="card tap" data-a="go" data-v="techJob" data-i="'+j.id+'" style="padding:16px;gap:8px'+(j.status==='In Progress'?';border:2px solid var(--warn)':'')+'"><div class="sec"><span style="font-size:20px;font-weight:700;color:var(--teal-ink)">'+esc(j.day!=='Today'&&j.day!=='Tomorrow'?j.day+' · ':'')+esc(j.appt?j.appt.time:j.time)+'</span>'+tBadge(j)+'</div><b style="font-size:19px">'+esc(c.name)+'</b><span style="font-size:15px" class="muted">'+esc(area(c,j.site))+' · '+esc(j.service)+' · '+j.acs.length+' '+t('acs')+'</span>'+(j.status==='On Hold'?'<span class="small" style="font-weight:600;color:'+(j.holdSide==='customer'?'var(--hold)':'#9A3412')+'">'+esc(j.hold||'')+'</span>':'')+(j.sync!=='sent'?syncLine(j):'')+(big?'<span class="btn '+(j.status==='In Progress'?'p L':'s')+'" style="flex:none;'+(j.status==='In Progress'?'':'height:52px;font-size:17px')+'">'+(j.status==='In Progress'?t('cont'):t('open')+ic('chev',20,2.2))+'</span>':'')+'</button>'};
+ return {head:'<div class="hd big"><div class="ht"><span>Wed, 18 Nov · '+t('team')+' 3</span><b>'+t('myWork')+'</b></div></div>',body:offbar()+'<div class="body tech" style="gap:12px">'+
+  (now.length?'<h2 style="margin:0;font-size:18px">'+t('now')+'</h2>'+now.map(j=>card(j,true)).join(''):'')+
+  (today.length?'<h2 style="margin:6px 0 0;font-size:18px">'+t('today')+' · '+today.length+(now.length?' '+t('more'):'')+'</h2>'+today.map((j,i)=>card(j,i===0&&!now.length)).join(''):(now.length?'':empty('check',t('noJobs'),t('noJobsSub'),'<button class="btn tn sm" data-a="fake" data-v="Opens the dialer to the owner">'+ic('phone',18)+t('callOwner')+'</button>')))+
+  (doneToday.length?'<span class="small muted">'+doneToday.length+' '+t('done').toLowerCase()+' '+t('today').toLowerCase()+' · '+doneToday.map(j=>syncLine(j)).join(' ')+'</span>':'')+
+  '<button class="card tap" data-a="toggleTom" style="flex-direction:row;justify-content:space-between;align-items:center;padding:16px"><b style="font-size:17px">'+t('tomorrow')+' · '+tom.length+'</b>'+ic('down',20)+'</button>'+(S.f.tom?tom.map(j=>card(j,false)).join(''):'')+
+ '</div>',nav:'tech',tab:'myWork'}};
+SC.techJob=p=>{const j=J(p.i);const c=C(j.cust);const s=site(c,j.site);
+ const prim=j.status==='Assigned'?'<button class="btn p L" data-a="stApptQuick" data-v="'+j.id+'">'+ic('cal',22)+t('fixAppt')+'</button>':j.status==='Scheduled'?'<button class="btn p L" data-a="startWork" data-v="'+j.id+'">'+ic('play',22)+t('start')+'</button>':j.status==='On Hold'?'<button class="btn p L" data-a="startWork" data-v="'+j.id+'">'+ic('play',22)+t('startAgain')+'</button>':j.status==='In Progress'?'<button class="btn p L" data-a="go" data-v="finish" data-i="'+j.id+'">'+ic('check',24,2.6)+t('finish')+'</button>':'';
+ const foot=j.status==='Completed'?'':prim+'<button class="btn s" style="height:52px;font-size:17px" data-a="updStatus" data-v="'+j.id+'">'+ic('refresh',20,2.2)+t('upd')+'</button>';
+ return {head:'<div class="hd"><button class="ib" data-a="back" style="font-size:16px">'+ic('back',24)+t('myWork')+'</button><span style="flex:1"></span><span style="padding-right:12px">'+syncLine(j)+'</span></div>',body:offbar()+'<div class="body tech">'+
+ '<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:16px;font-weight:700;color:var(--teal-ink)">'+esc(j.day==='Today'?t('today'):j.day==='Tomorrow'?t('tomorrow'):j.day)+' · '+esc(j.time)+'</span><span style="font-size:26px;font-weight:700;line-height:32px">'+esc(c.name)+'</span><span style="font-size:17px" class="muted">'+esc(j.service)+' · '+j.acs.length+' '+t('acs')+'</span>'+'<span style="align-self:flex-start;margin-top:4px">'+tBadge(j)+'</span>'+(j.appt?'<span class="small muted">'+t('apptAt')+': '+esc(j.appt.day==='Today'?t('today'):j.appt.day)+', '+esc(j.appt.time)+'</span>':'')+'</div>'+tInfo(j)+
+ '<div class="row"><button class="btn tn L" style="font-size:17px" data-a="fake" data-v="Opens the phone dialer: '+ph(c.phone)+'">'+ic('phone',22)+t('call')+'</button><button class="btn tn L" style="font-size:17px" data-a="fake" data-v="Opens Google Maps directions">'+ic('nav',22)+t('dir')+'</button></div>'+
+ '<div class="card" style="padding:16px"><span class="k">'+t('addr')+'</span><span style="font-size:18px;line-height:26px">'+esc(s.addr)+'</span>'+(s.land?'<span class="muted" style="font-size:15px">'+esc(s.land)+'</span>':'')+'</div>'+
+ (j.problem?'<div class="card" style="padding:16px;background:#FFF8EE;border-color:#F1D3A7"><span class="k" style="color:var(--warn-ink)">'+t('says')+'</span><span style="font-size:18px;line-height:26px">"'+esc(j.problem)+'"</span></div>':'')+
+ '<div class="card" style="padding:16px"><span class="k">'+t('acs')+' · '+j.acs.length+'</span>'+j.acs.map(a=>{const x=acOf(c,a);return '<div class="row" style="padding-top:10px;border-top:1px solid #EEEAE1;align-items:flex-start"><span style="color:var(--teal)">'+ic('ac',28)+'</span><div style="display:flex;flex-direction:column;flex:1"><b style="font-size:18px">'+esc(x.room)+'</b><span class="muted" style="font-size:15px">'+esc(x.type+' · '+x.brand+' · '+x.cap)+'</span><span class="muted" style="font-size:14px">'+(x.last?'Last: '+esc(x.last):'First visit')+'</span></div></div>'}).join('')+'</div>'+
+ (j.toCollect?'<div class="card" style="padding:16px;flex-direction:row;align-items:center;justify-content:space-between"><div style="display:flex;flex-direction:column"><span class="k">'+t('collect')+'</span><span class="small muted">'+t('setBy')+'</span></div><span style="font-size:24px;font-weight:700">'+fmt(j.toCollect)+'</span></div>':'')+
+ 
+ '</div>',foot}};
+SC.finish=p=>{const j=J(p.i);const c=C(j.cust);const f=S.f.fw[j.id];const multi=j.acs.length>1;
+ const workOpts=a=>{const x=acOf(c,a);return x.type==='Window'?['Service','Wet wash','Gas filled','Fan cleaned','Other']:['Service','Wet wash','Gas filled','Drain pipe cleared','Filter cleaned','Fan tightened','PCB repaired','Other']};
+ return {head:'<div class="hd"><button class="ib" data-a="back" aria-label="Back">'+ic('back',24)+'</button><div class="ht"><b style="font-size:19px;font-weight:700">'+t('fin')+'</b><span>'+esc(c.name)+' · '+j.acs.length+' '+t('acs')+'</span></div><span class="sync" style="padding-right:12px;color:var(--hold)">'+ic('mobile',16,2.2)+t('saved')+'</span></div>',
+ body:offbar()+'<div class="body tech" style="gap:26px">'+
+ '<div class="fl" style="gap:10px"><div class="step"><span class="n">1</span>'+t('found')+'</div><div class="chips">'+['Dirty filter','Bad smell','Noise','Low gas','Water leak','Drain blocked','All OK'].map(x=>chip(x,f.found.includes(x),'fwFound',j.id+'|'+x)).join('')+'</div></div>'+
+ '<div class="fl" style="gap:10px"><div class="step"><span class="n">2</span>'+t('work')+'</div>'+j.acs.map(a=>{const x=acOf(c,a);const w=f.work[a]||[];return '<div class="card"><div class="sec"><b style="font-size:17px">'+esc(x.room+' · '+x.brand)+'</b>'+(w.length?'<span style="font-size:14px;font-weight:700;color:var(--ok-ink)">✓ Done</span>':(multi?'<span class="small muted">Not done</span>':''))+'</div><div class="chips">'+workOpts(a).map(o=>chip(o,w.includes(o),'fwWork',j.id+'|'+a+'|'+o)).join('')+'</div></div>'}).join('')+'<button class="btn txt" style="justify-content:flex-start;padding:0" data-a="fake" data-v="Adds an AC found on site. The owner checks it later.">+ Customer showed another AC</button>'+(f.errWork?'<span class="errtxt">Tap the work you did</span>':'')+'</div>'+
+ '<div class="fl" style="gap:10px"><div class="step"><span class="n">3</span>'+t('parts')+' <small>'+t('ifany')+'</small></div>'+f.parts.map((x,i)=>'<div class="card" style="flex-direction:row;align-items:center;justify-content:space-between"><div style="display:flex;flex-direction:column"><b style="font-size:17px">'+esc(x.name)+'</b><span class="small muted">'+esc(x.unit)+'</span></div><div class="step2"><button aria-label="Less" data-a="fwQty" data-v="'+j.id+'|'+i+'|-1">−</button><b>'+x.qty+'</b><button aria-label="More" data-a="fwQty" data-v="'+j.id+'|'+i+'|1">+</button></div></div>').join('')+'<button class="dash" style="height:52px" data-a="fwAddPart" data-v="'+j.id+'">'+ic('plus',20,2.4)+t('addPart')+'</button></div>'+
+ '<div class="fl" style="gap:10px"><div class="step"><span class="n">4</span>'+t('photos')+' <small>'+(D.settings.photoReq?'owner asks for '+D.settings.photoReq:t('opt'))+'</small></div><div class="grid3">'+Array.from({length:f.photos},(_,i)=>'<div class="photo" style="height:96px">'+(i%2?'After':'Before')+'</div>').join('')+'<button style="height:96px;border-radius:10px;background:var(--teal-t);color:var(--teal-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:15px;font-weight:600;border:0" data-a="fwPhoto" data-v="'+j.id+'">'+ic('cam',28)+t('addPhoto')+'</button></div>'+(D.settings.photoReq?'<span class="small" style="font-weight:600;color:'+(f.photos>=D.settings.photoReq?'var(--ok-ink)':'var(--warn-ink)')+'">'+(f.photos>=D.settings.photoReq?'✓ ':'')+Math.min(f.photos,D.settings.photoReq)+' of '+D.settings.photoReq+'</span>':'')+'</div>'+
+ '<div class="fl" style="gap:10px"><div class="step"><span class="n">5</span>'+t('note')+' <small>'+t('opt')+'</small></div><div class="inp"><textarea data-f="fw.'+j.id+'.note" aria-label="'+t('note')+'" placeholder="…">'+esc(f.note)+'</textarea></div><div class="chips">'+['Stand rusted','Needs new part','Customer happy'].map(x=>'<button class="chip sm" data-a="fwNote" data-v="'+j.id+'|'+x+'">+ '+x+'</button>').join('')+'</div></div>'+
+ (j.toCollect?'<div class="fl" style="gap:10px"><div class="step"><span class="n">6</span>'+t('money')+'</div><div class="card"><div class="sec"><span class="muted">'+t('collect')+'</span><span style="font-size:22px;font-weight:700">'+fmt(j.toCollect)+'</span></div><div class="row" style="gap:8px">'+[['Cash',t('cash')],['UPI',t('upi')],['Not paid',t('notPaid')]].map(m=>'<button class="chip'+(f.method===m[0]?' on':'')+'" style="flex:1;justify-content:center" data-a="fwMethod" data-v="'+j.id+'|'+m[0]+'">'+m[1]+'</button>').join('')+'</div>'+(f.method!=='Not paid'?'<div class="inp amt"><span class="rs">₹</span><input aria-label="Amount received" inputmode="numeric" data-f="fw.'+j.id+'.amt" data-num="1" value="'+f.amt+'"><span class="small muted">'+t('received')+'</span></div>':'')+'</div></div>':'')+
+ '<div class="fl" style="gap:10px"><div class="step"><span class="n">'+(j.toCollect?7:6)+'</span>'+t('result')+'</div>'+[['done',t('done')],['again',t('again')],['couldnt',t('couldnt')]].map(r=>'<button class="res'+(f.result===r[0]?' on':'')+'" data-a="fwResult" data-v="'+j.id+'|'+r[0]+'"><span class="rad"></span>'+r[1]+'</button>').join('')+(f.result==='again'?'<div class="chips">'+['Part to bring','Customer asked','Gas leak check'].map(x=>chip(x,f.againWhy===x,'fwAgain',j.id+'|'+x,'nock')).join('')+'</div>':'')+(f.result==='couldnt'?'<span class="grp">'+t('onHoldC')+'</span><div class="chips">'+CUST_WHY.slice(0,3).map(x=>chip(x,f.holdWhy===x,'fwHold',j.id+'|'+x,'nock')).join('')+'</div><span class="grp">'+t('onHoldO')+'</span><div class="chips">'+OUR_WHY.slice(0,4).map(x=>chip(x,f.holdWhy===x,'fwHold',j.id+'|'+x,'nock')).join('')+'</div>':'')+'</div>'+
+ '</div>',foot:'<button class="btn p L" data-a="finishWork" data-v="'+j.id+'">'+ic('check',24,2.6)+t('finish')+'</button>'}};
+SC.saved=p=>{const j=J(p.i);const c=C(j.cust);const nxt=D.jobs.find(x=>x.team===myTeam()&&x.day==='Today'&&['Assigned','Scheduled'].includes(x.status));const ok=j.sync==='sent';
+ return {head:'',body:'<div class="body tech center" style="padding-top:64px;gap:18px"><div style="width:96px;height:96px;border-radius:48px;background:'+(j.status==='On Hold'?'var(--hold-t);color:var(--hold)':'var(--ok-t);color:var(--ok)')+';display:flex;align-items:center;justify-content:center">'+ic(j.status==='On Hold'?'pause':'check',52,2.6)+'</div><span style="font-size:28px;font-weight:700;line-height:36px">'+(j.status==='On Hold'?t('couldnt'):t('completedTitle'))+'</span><span class="muted" style="font-size:18px;line-height:26px">'+esc(c.name)+' · '+j.acs.length+' '+t('acs')+(j.cash?'<br>'+fmt(j.cash.amt)+' '+esc(j.cash.method==='Cash'?t('cash'):t('upi'))+' '+t('received'):'')+'</span><div class="card" style="width:100%;text-align:left;padding:18px;gap:14px"><div class="row" style="font-size:17px"><span style="width:36px;height:36px;border-radius:18px;background:var(--ok-t);color:var(--ok);display:flex;align-items:center;justify-content:center;flex:none">'+ic('check',20,2.8)+'</span><span>'+t('safe')+'</span></div><div class="row" style="font-size:17px"><span style="width:36px;height:36px;border-radius:18px;background:'+(ok?'var(--ok-t);color:var(--ok)':'var(--hold-t);color:var(--hold)')+';display:flex;align-items:center;justify-content:center;flex:none">'+ic(ok?'sent':(S.online?'up':'wifi'),20,2.2)+'</span><span style="color:'+(ok?'var(--ok-ink)':'var(--hold)')+';font-weight:'+(ok?700:400)+'">'+(ok?t('sentOwner'):(S.online?t('sending'):t('waitNet')))+'</span></div>'+(ok?'':'<div style="font-size:15px;line-height:22px;color:var(--slate);padding:12px;background:var(--soft);border-radius:10px">'+t('auto')+'</div>')+'</div></div>',foot:nxt?'<button class="btn p L" data-a="openNext" data-v="'+nxt.id+'">'+t('next')+' · '+esc(nxt.time)+' '+esc(area(C(nxt.cust),nxt.site))+'</button>':'<button class="btn p L" data-a="tab" data-v="myWork">'+t('backWork')+'</button>'}};
+SC.history=()=>{const list=D.jobs.filter(j=>j.team===myTeam()&&j.status==='Completed').sort((a,b)=>b.no-a.no);
+ return {head:hd(t('history'),{big:true}),body:offbar()+'<div class="body tech">'+(list.length?list.map(j=>{const c=C(j.cust);return '<div class="card" style="gap:6px"><div class="sec"><b style="font-size:15px;color:var(--teal-ink)">'+esc(j.day==='Today'?t('today'):j.day)+'</b>'+syncLine(j)+'</div><b style="font-size:18px">'+esc(c.name)+'</b><span class="muted" style="font-size:15px">'+esc(area(c,j.site))+' · '+esc(j.service)+' · '+j.acs.length+' '+t('acs')+'</span>'+(j.sync==='fail'?'<button class="btn dd sm" data-a="retry" data-v="'+j.id+'">Try again</button>':'')+'</div>'}).join(''):empty('clock',t('history'),'—'))+'</div>',nav:'tech',tab:'history'}};
+SC.techProfile=()=>({head:hd(t('profile'),{big:true}),body:'<div class="body tech"><div class="card" style="flex-direction:row;align-items:center"><span class="av" style="width:56px;height:56px;font-size:20px">'+(S.role==='helper'?'AS':'SP')+'</span><div style="display:flex;flex-direction:column"><b style="font-size:19px">'+(S.role==='helper'?'Akash Shinde':'Santosh Pawar')+'</b><span class="muted">'+t('team')+' 3 · '+(S.role==='helper'?'Helper':'Senior technician')+'</span></div></div><div class="list"><button class="li" data-a="go" data-v="language"><span class="ico" style="color:var(--teal)">'+ic('lang',22)+'</span><span class="mid"><b>'+t('lang')+'</b><span class="dev">'+({en:'English',hi:'हिंदी',mr:'मराठी'})[S.lang]+'</span></span>'+ic('chev',18)+'</button><button class="li" data-a="fake" data-v="Opens the dialer to the owner"><span class="ico" style="color:var(--teal)">'+ic('phone',22)+'</span><span class="mid"><b>'+t('callOwner')+'</b><span>Sadik</span></span>'+ic('chev',18)+'</button></div><button class="btn d" data-a="logout">'+ic('logout',20)+t('logout')+'</button><span class="small muted" style="text-align:center">KaamSetu 1.0 · '+esc(D.biz.name)+'</span></div>',nav:S.role==='helper'?null:'tech',tab:'techProfile'});
+
+/* ---------- helper ---------- */
+SC.helper=()=>{const mine=D.jobs.filter(j=>j.team==='t3'&&j.day==='Today'&&j.status!=='Cancelled'&&j.status!=='Completed');const cur=mine.find(j=>j.status==='In Progress')||mine[0];const nxt=mine.filter(j=>j!==cur)[0];
+ const ac=j=>j.acs.map(a=>acOf(C(j.cust),a).room).join(', ');
+ return {head:'<div class="hd big"><div class="ht"><span>Wed, 18 Nov</span><b>'+t('todaysWork')+'</b></div><button class="ib" data-a="go" data-v="techProfile" style="background:var(--surface);border:1px solid var(--line);border-radius:24px">'+ic('user',20)+t('me')+'</button></div>',
+ body:offbar()+'<div class="body tech"><div class="card" style="flex-direction:row;align-items:center"><span class="av" style="width:48px;height:48px">SP</span><div style="flex:1;display:flex;flex-direction:column"><span class="small muted">'+t('team')+' 3 · '+t('senior')+'</span><b style="font-size:18px">Santosh Pawar</b></div><button class="btn tn sm" data-a="fake" data-v="Opens the dialer to Santosh">'+ic('phone',20)+t('call')+'</button></div>'+
+ (cur?(()=>{const c=C(cur.cust);const s=site(c,cur.site);const ip=cur.status==='In Progress';return '<div class="card" style="padding:16px;'+(ip?'border:2px solid var(--warn)':'')+'"><div class="sec"><span class="k" style="color:'+(ip?'var(--warn-ink)':'var(--muted)')+'">'+(ip?t('now'):t('today'))+'</span>'+tBadge(cur)+'</div><span style="font-size:22px;font-weight:700">'+esc(area(c,cur.site))+'</span><span style="font-size:17px;line-height:25px">'+esc(s.addr)+(s.land?' · '+esc(s.land):'')+'</span><div style="display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid #EEEAE1"><div class="row" style="font-size:17px"><span style="color:var(--teal)">'+ic('ac',24)+'</span>'+esc(cur.service)+' · '+cur.acs.length+' '+t('acs')+' ('+esc(ac(cur))+')</div>'+(cur.carry?'<div class="row" style="font-size:17px"><span style="color:var(--teal)">'+ic('drop',24)+'</span>'+t('carry')+': '+esc(cur.carry)+'</div>':'')+'</div>'+tInfo(cur)+'<button class="btn p L" style="flex:none" data-a="updStatus" data-v="'+cur.id+'">'+ic('refresh',22,2.2)+t('upd')+'</button>'+(D.settings.helperPhoto?'<button class="btn tn L" style="flex:none;font-size:17px" data-a="helperPhoto">'+ic('cam',22)+t('addPhoto')+'</button>':'')+'</div>'})():empty('check',t('noJobs'),t('noJobsSub')))+
+ (nxt?'<div class="card" style="padding:16px"><div class="sec"><span class="k">'+t('next')+'</span><b style="color:var(--teal-ink)">'+esc(nxt.time)+'</b></div><span style="font-size:19px;font-weight:600">'+esc(area(C(nxt.cust),nxt.site))+'</span><span class="muted" style="font-size:16px">'+esc(nxt.service)+' · '+nxt.acs.length+' '+t('acs')+'</span></div>':'')+
+ '<span class="muted" style="text-align:center;font-size:15px;line-height:22px;padding:0 12px">'+t('helperNote')+'</span></div>'}};
+
+/* ======================================================================
+   SHEETS & DIALOGS
+   ====================================================================== */
+function sheetHTML(){const sh=S.sheet;if(!sh)return '';let title='',sub='',body='',foot='';
+ if(sh.k==='cust'){const q=(S.f.csq||'').toLowerCase().replace(/\s/g,'');const list=D.customers.filter(c=>!q||c.name.toLowerCase().replace(/\s/g,'').includes(q)||c.phone.includes(q));title='Find customer';sub='Phone or name';
+  body='<div class="inp" style="border-radius:999px">'+ic('search',20)+'<input id="csq" data-f="csq" value="'+esc(S.f.csq||'')+'" placeholder="Phone or name" autofocus></div><div class="list">'+list.map(c=>'<button class="li" data-a="pickedCust" data-v="'+c.id+'"><span class="av">'+c.name.split(' ').map(x=>x[0]).join('').slice(0,2)+'</span><span class="mid"><b>'+esc(c.name)+'</b><span>'+ph(c.phone)+' · '+esc(area(c,c.sites[0].id))+'</span></span></button>').join('')+(list.length?'':'<div class="li"><span class="mid"><span>No customer found</span></span></div>')+'</div>';foot='<button class="btn s" data-a="custNew">'+ic('plus',20,2.4)+'Add new customer'+(q?' “'+esc(S.f.csq)+'”':'')+'</button>'}
+ if(sh.k==='assign'){const j=J(sh.j);const c=C(j.cust);const f=sh;title='Assign team';sub=esc(j.service)+' · '+j.acs.length+' AC · '+esc(area(c,j.site));
+  const load=tid=>D.jobs.filter(x=>x.team===tid&&x.day===f.day&&x.id!==j.id&&x.status!=='Cancelled').length;
+  const teams=D.teams.slice().sort((a,b)=>(a.leave-b.leave)||(load(a.id)-load(b.id)));
+  body='<div class="fl"><span class="lbl">Day and time</span><div class="chips">'+['Today','Tomorrow','20 Nov'].map(x=>chip(x,f.day===x,'asDay',x,'nock')).join('')+'</div><div class="chips">'+['Morning','Afternoon','Evening','11:30 AM'].map(x=>chip(x,f.slot===x,'asSlot',x,'nock')).join('')+'</div>'+(j.time&&j.status==='New'?'<span class="small muted">Customer asked for: '+esc(j.day.toLowerCase()+' '+j.time.toLowerCase())+'</span>':'')+'</div><div class="fl"><span class="lbl">Team <small>fewest jobs that day first</small></span>'+teams.map(tm=>{const n=load(tm.id);const on=f.team===tm.id;return '<button class="tc'+(tm.leave?' off':'')+(on?' on':'')+'" data-a="asTeam" data-v="'+tm.id+'"'+(tm.leave?' disabled':'')+'><span class="rad" style="margin-top:2px"></span><span style="flex:1;display:flex;flex-direction:column;gap:3px"><span class="sec"><b style="font-size:16px">'+esc(tm.name)+'</b><span class="badge" style="background:'+(tm.leave?'var(--hold-t);color:var(--hold)':n>=3?'var(--warn-t);color:var(--warn-ink)':'var(--soft);color:var(--hold)')+'">'+(tm.leave?'On leave':n+' job'+(n===1?'':'s')+(n>=3?' · busy':''))+'</span></span><span style="font-size:14px">'+esc(tm.senior)+' <span class="muted">· senior</span></span><span style="font-size:14px">'+esc(f.helperSwap&&on?f.helperSwap:tm.helper)+' <span class="muted">· helper'+(f.helperSwap&&on?' for this day':'')+'</span></span>'+(on&&!tm.leave?'<span data-a="swapHelper" style="font-size:14px;font-weight:600;color:var(--teal);padding-top:4px">Change helper for this day</span>':'')+'</span></button>'}).join('')+'</div>';
+  const tm=Tm(f.team);foot='<button class="btn p" data-a="confirmAssign"'+(tm&&S.online?'':' disabled')+'>'+(S.online?(tm?'Assign '+esc(tm.name)+' · '+esc(f.day)+' '+esc(f.slot.toLowerCase()):'Choose a team'):'Needs internet to assign')+'</button>'}
+ if(sh.k==='pay'){const b=B(sh.b);const tt=billTotals(b);const amt=+String(sh.amt).replace(/[^\d.]/g,'')||0;const after=tt.rem-amt;title='Record payment';sub=esc(C(b.cust).name)+' · '+b.no;
+  body='<div class="grid3" style="background:var(--paper);border-radius:12px;padding:12px"><div style="display:flex;flex-direction:column"><span class="small muted">Bill total</span><b>'+fmt(tt.total)+'</b></div><div style="display:flex;flex-direction:column"><span class="small muted">Received</span><b style="color:var(--ok-ink)">'+fmt(tt.paid)+'</b></div><div style="display:flex;flex-direction:column"><span class="small muted">Remaining</span><b style="color:var(--warn-ink)">'+fmt(tt.rem)+'</b></div></div><div class="fl"><label class="lbl" for="pamt">Amount received now</label><div class="inp amt'+(sh.err?' err':'')+'" style="min-height:64px"><span class="rs">₹</span><input id="pamt" inputmode="numeric" data-f="sheet.amt" value="'+esc(sh.amt)+'"></div>'+(sh.err?'<span class="errtxt">'+sh.err+'</span>':'')+'<div class="chips">'+[tt.rem,Math.round(tt.rem/2),500].filter((v,i,a)=>v>0&&a.indexOf(v)===i).map((v,i)=>chip((i===0?'Full ':'')+fmt(v),amt===Math.round(v),'payAmt',Math.round(v),'nock sm')).join('')+'</div></div><div class="fl"><span class="lbl">How was it paid?</span><div class="grid4">'+[['Cash','cash'],['UPI','upi'],['Bank','bank'],['Other','dots']].map(m=>'<button class="method'+(sh.method===m[0]?' on':'')+'" data-a="payMethod" data-v="'+m[0]+'">'+ic(m[1],24)+m[0]+'</button>').join('')+'</div></div><div class="sec"><b style="font-size:15px">Date</b><b style="font-size:15px;color:var(--teal)">Today, 18 Nov</b></div><div class="inp"><input data-f="sheet.note" value="'+esc(sh.note||'')+'" placeholder="'+(sh.method==='UPI'?'UPI reference (optional)':'Note (optional)')+'"></div>'+(amt>0?(after<-0.5?'<div class="warnbox">'+fmt(-after)+' more than remaining. It will be saved as advance for this customer.</div>':'<div class="okbox">'+ic('check',20,2.6)+'<span>After this: <b>'+fmt(Math.max(0,after))+' remaining · '+(after<=0.5?'Paid':'Partly paid')+'</b></span></div>'):'');
+  foot='<button class="btn p" data-a="savePay"'+(amt>0?'':' disabled')+'>'+(amt>0?'Save payment · '+fmt(amt)+' '+esc(sh.method):'Enter an amount')+'</button>'}
+ if(sh.k==='reason'){title=sh.title;sub=sh.sub||'';body=sh.opts.map(o=>'<button class="tc" data-a="reasonPick" data-v="'+esc(o)+'"><span style="font-size:16px;font-weight:600">'+esc(o)+'</span></button>').join('')}
+ if(sh.k==='status'){const j=J(sh.j);const c=C(j.cust);title=t('upd');sub=esc(c.name)+' · #'+j.no;const helper=S.role==='helper';
+  const opt=(k,icn,tone,on)=>'<button class="upopt'+(on?'':'')+'" data-a="stPick" data-v="'+k+'"><span class="dot '+tone+'">'+ic(icn,24,2.2)+'</span><span style="flex:1"><b>'+t(k)+'</b><span class="d">'+t(k+'D')+'</span></span>'+ic('chev',18)+'</button>';
+  const prog=[];if(j.status!=='In Progress')prog.push(opt('appt','cal','tone-teal'));if(j.status!=='In Progress')prog.push(opt('started','play','tone-warn'));if(!helper)prog.push(opt('compl','check','tone-ok'));
+  body=(prog.length?'<span class="grp">'+t('grpProg')+'</span>'+prog.join(''):'')+'<span class="grp">'+t('grpProb')+'</span>'+opt('part','box','tone-ours')+opt('custHold','pause','tone-cust')+opt('ourHold','warn','tone-ours')+'<span class="grp">'+t('grpOther')+'</span>'+opt('addNote','note','tone-info')+'<span class="small muted" style="text-align:center">'+ic('bell',14,2.2)+' Sadik sees every update straight away</span>'}
+ if(sh.k==='appt'){const j=J(sh.j);title=t('appt');sub=esc(C(j.cust).name);
+  body='<div class="fl"><span class="lbl">'+t('day')+'</span><div class="chips">'+['Today','Tomorrow','Fri, 20 Nov','Sat, 21 Nov'].map(x=>chip(x==='Today'?t('today'):x==='Tomorrow'?t('tomorrow'):x,sh.day===x,'shSet','day|'+x,'nock')).join('')+'</div></div><div class="fl"><span class="lbl">'+t('time')+'</span><div class="chips">'+['10:00 AM','11:30 AM','1:00 PM','2:30 PM','4:00 PM','6:00 PM'].map(x=>chip(x,sh.time===x,'shSet','time|'+x,'nock')).join('')+'</div></div>';
+  foot='<button class="btn p L" data-a="saveAppt">'+ic('cal',22)+t('save')+' · '+esc((sh.day==='Today'?t('today'):sh.day==='Tomorrow'?t('tomorrow'):sh.day)+', '+sh.time)+'</button>'}
+ if(sh.k==='partReq'){const j=J(sh.j);title=t('part');sub=esc(C(j.cust).name)+' · '+t('partD');
+  body='<div class="fl"><span class="lbl">'+t('which')+'</span><div class="chips">'+['Capacitor','Indoor PCB','Outdoor PCB','Gas R32','Copper pipe','Fan motor','Remote','MCB 16A','Other'].map(x=>chip(x,sh.name===x,'shSet','name|'+x,'nock')).join('')+'</div>'+(sh.err==='pick'?'<span class="errtxt">'+t('which')+'</span>':'')+'</div>'+
+  '<div class="sec"><span class="lbl">'+t('qty')+'</span><div class="step2"><button aria-label="Less" data-a="shQty" data-v="-1">−</button><b>'+sh.qty+'</b><button aria-label="More" data-a="shQty" data-v="1">+</button></div></div>'+
+  '<div class="fl"><span class="lbl">'+t('canGo')+'</span>'+[['yes',t('yesGo')],['no',t('noGo')]].map(r=>'<button class="res'+(sh.blocking===r[0]?' on':'')+'" data-a="shSet" data-v="blocking|'+r[0]+'"><span class="rad"></span>'+r[1]+'</button>').join('')+(sh.err==='block'?'<span class="errtxt">'+t('canGo')+'</span>':'')+'</div>'+
+  '<div class="inp"><input data-f="sheet.note" value="'+esc(sh.note||'')+'" placeholder="'+t('note')+' ('+t('opt')+')"></div>';
+  foot='<button class="btn p L" data-a="savePart">'+ic('box',22)+t('partD')+'</button>'}
+ if(sh.k==='holdC'||sh.k==='holdO'){const j=J(sh.j);const cu=sh.k==='holdC';title=cu?t('custHold'):t('ourHold');sub=esc(C(j.cust).name)+' · '+(cu?t('custHoldD'):t('ourHoldD'));
+  body='<div class="fl"><span class="lbl">'+t('why')+'</span>'+(cu?CUST_WHY:OUR_WHY.filter(x=>x!=='Part needed')).map(x=>'<button class="res'+(sh.why===x?' on':'')+'" style="min-height:52px;font-size:16px" data-a="shSet" data-v="why|'+x+'"><span class="rad"></span>'+esc(x)+'</button>').join('')+(sh.err==='why'?'<span class="errtxt">'+t('why')+'</span>':'')+'</div>'+
+  (cu?'<div class="fl"><span class="lbl">'+t('newDate')+'</span><div class="chips">'+[['none',t('none')],['Tomorrow',t('tomorrow')],['Fri, 20 Nov','Fri, 20 Nov'],['Sat, 22 Nov','Sat, 22 Nov']].map(x=>chip(x[1],(sh.nd||'none')===x[0],'shSet','nd|'+x[0],'nock')).join('')+'</div></div>':'<span class="small muted">'+t('part')+'? '+'<button class="btn txt sm" style="display:inline;height:auto;padding:0" data-a="stPick" data-v="part">'+t('partD')+'</button></span>');
+  foot='<button class="btn p L" data-a="'+(cu?'saveHoldC':'saveHoldO')+'">'+ic('pause',22)+t('save')+'</button>'}
+ if(sh.k==='note'){const j=J(sh.j);title=t('addNote');sub=esc(C(j.cust).name);
+  body='<div class="inp"><textarea data-f="sheet.text" aria-label="'+t('note')+'" placeholder="…">'+esc(sh.text||'')+'</textarea></div>'+(sh.err==='text'?'<span class="errtxt">'+t('addNoteD')+'</span>':'')+'<div class="chips">'+['Reached site','Customer will pay later','Outdoor unit on terrace','Need ladder','Running late, 30 min'].map(x=>'<button class="chip sm" data-a="shNote" data-v="'+x+'">+ '+x+'</button>').join('')+'</div>';
+  foot='<button class="btn p L" data-a="saveNote">'+ic('sent',22)+t('save')+'</button>'}
+ if(sh.k==='menu'){title=sh.title;body='<div class="list">'+sh.items.map(o=>'<button class="li" data-a="'+o[1]+'" data-v="'+esc(o[2]||'')+'" style="'+(o[3]?'color:var(--bad)':'')+'"><span class="mid"><b style="'+(o[3]?'color:var(--bad)':'')+'">'+esc(o[0])+'</b></span></button>').join('')+'</div>'}
+ if(sh.k==='pickJob'){title=sh.title;body='<div class="list">'+sh.items.map(o=>'<button class="li" data-a="'+sh.act+'" data-v="'+o.v+'"><span class="mid"><b>'+esc(o.t)+'</b><span>'+esc(o.s)+'</span></span>'+(o.r||'')+'</button>').join('')+'</div>'+(sh.items.length?'':empty('check','Nothing here',''))}
+ if(sh.k==='part'){title='Add part';body='<div class="list">'+['Gas R32|kg','Drain pipe|m','Copper pipe|m','Capacitor|pc','Remote|pc','PCB|pc','Stand|pc'].map(x=>{const [n,u]=x.split('|');return '<button class="li" data-a="fwPart" data-v="'+sh.j+'|'+n+'|'+u+'"><span class="mid"><b>'+n+'</b><span>'+u+'</span></span>'+ic('plus',20,2.4)+'</button>'}).join('')+'</div>'}
+ if(sh.k==='disc'){title='Discount';body='<div class="inp amt"><span class="rs">₹</span><input id="dsc" inputmode="numeric" data-f="sheet.v" value="'+esc(sh.v)+'"></div><div class="chips">'+[50,100,200,500].map(v=>'<button class="chip" data-a="discQuick" data-v="'+v+'">'+fmt(v)+'</button>').join('')+'</div>';foot='<button class="btn p" data-a="discSave">Apply discount</button>'}
+ if(sh.k==='addLine'){title='Add item';body='<div class="list">'+D.rates.map((r,i)=>'<button class="li" data-a="billAddRate" data-v="'+i+'"><span class="mid"><b>'+esc(r.d)+'</b><span>'+(r.u?'per '+r.u:'per job')+'</span></span><b>'+fmt(r.r)+'</b></button>').join('')+'<button class="li" data-a="billAddRate" data-v="-1" style="color:var(--teal);font-weight:600">'+ic('plus',18,2.4)+'Something else</button></div>'}
+ return '<div class="scrim" data-a="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="'+esc(title)+'"><div class="grab"></div><div class="shd"><div><b>'+title+'</b>'+(sub?'<span>'+sub+'</span>':'')+'</div><button class="ib" data-a="closeSheet" aria-label="Close">'+ic('close',22)+'</button></div><div class="sbody">'+body+'</div>'+(foot?'<div class="sfoot">'+foot+'</div>':'')+'</div></div>'}
+function dlgHTML(){const d=S.dlg;if(!d)return '';return '<div class="scrim center" data-a="dlgScrim"><div class="dlg" role="alertdialog" aria-modal="true"><b>'+d.title+'</b><p>'+d.text+'</p><div class="row" style="justify-content:flex-end;gap:8px;margin-top:6px"><button class="btn txt sm" data-a="dlgNo">'+d.no+'</button><button class="btn '+(d.danger?'dd':'p')+' sm" data-a="dlgYes">'+d.yes+'</button></div></div></div>'}
+
+/* ======================================================================
+   RENDER
+   ====================================================================== */
+const app=document.getElementById('app');
+function render(scrollTop){
+ const cur=top();const fn=SC[cur.s];const v=fn?fn(cur.p||{}):{body:'<div class="body">Missing screen</div>'};
+ const keep=document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.f?{f:document.activeElement.dataset.f,s:document.activeElement.selectionStart}:null;
+ const sc=app.querySelector('.scr');const st=sc&&!scrollTop?sc.scrollTop:0;
+ let nav='';
+ if(v.nav==='owner')nav='<nav class="nav" style="grid-template-columns:repeat(5,minmax(0,1fr))">'+[['home','home','Home'],['jobs','bag','Jobs'],['customers','users','Customers'],['billing','bill','Billing'],['more','menu','More']].map(x=>'<button class="'+(v.tab===x[0]?'on':'')+'" data-a="tab" data-v="'+x[0]+'"'+(v.tab===x[0]?' aria-current="page"':'')+'><span class="pill">'+ic(x[1],22)+'</span><span>'+x[2]+'</span></button>').join('')+'</nav>';
+ if(v.nav==='tech')nav='<nav class="nav tech" style="grid-template-columns:repeat(3,minmax(0,1fr))">'+[['myWork','bag',t('myWork')],['history','clock',t('history')],['techProfile','user',t('profile')]].map(x=>'<button class="'+(v.tab===x[0]?'on':'')+'" data-a="tab" data-v="'+x[0]+'"><span class="pill">'+ic(x[1],26)+'</span><span>'+x[2]+'</span></button>').join('')+'</nav>';
+ app.innerHTML=(v.full||((v.head||'')+'<div class="scr">'+(v.body||'')+'</div>'+(v.foot?'<div class="foot">'+v.foot+'</div>':'')+nav))+sheetHTML()+dlgHTML()+(S.toast?'<div class="toast" role="status"><span>'+S.toast.msg+'</span>'+(S.toast.undo?'<button data-a="undo">UNDO</button>':'')+'</div>':'');
+ const nsc=app.querySelector('.scr');if(nsc)nsc.scrollTop=st;
+ if(keep){const el=app.querySelector('[data-f="'+keep.f+'"]');if(el){el.focus();try{el.setSelectionRange(keep.s,keep.s)}catch(e){}}}
+ document.querySelectorAll('#roleSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.role&&!S.login));
+ document.querySelectorAll('#netSeg button').forEach(b=>b.classList.toggle('on',(b.dataset.v==='on')===S.online));
+ try{const h={owner:'owner',tech:'technician',helper:'helper'}[S.role];if(location.hash!=='#'+h&&!S.login)history.replaceState(null,'','#'+h)}catch(e){}
+}
+
+/* ---------- field input ---------- */
+function setPath(path,val){const parts=path.split('.');let o=S.f;if(parts[0]==='sheet'){o=S.sheet;parts.shift()}else if(parts[0]==='fw'){o=S.f.fw;parts.shift()}
+ for(let i=0;i<parts.length-1;i++)o=o[parts[i]];o[parts[parts.length-1]]=val}
+app.addEventListener('input',e=>{const el=e.target;const p=el.dataset.f;if(!p)return;let v=el.value;if(el.dataset.num){v=parseFloat(v.replace(/[^\d.]/g,''))||0}
+ setPath(p,v);
+ if(/^(sq|cq|csq|sheet\.amt|bill\.|ac\.phone)/.test(p)||el.dataset.num)render()});
+
+/* ---------- actions ---------- */
+let undoFn=null;
+const A={
+ back:()=>back(),tab:v=>tab(v),go:(v,i)=>go(v,i?{i}:{}),
+ role:v=>{S.login=null;S.role=v;S.sheet=null;S.dlg=null;S.stack=[{s:v==='owner'?'home':v==='tech'?'myWork':'helper'}];if(v==='owner')S.lang='en';render(true)},
+ net:v=>{const was=S.online;S.online=v==='on';if(S.online&&!was){const w=D.jobs.filter(j=>j.sync==='saved');if(w.length){w.forEach(j=>j.sync='sending');render();setTimeout(()=>{w.forEach(j=>{j.sync='sent';j.holdPending=false;(j.updates||[]).forEach(u=>u.pending=false);(j.partReq||[]).forEach(p=>p.pending=false)});toast(w.length+' job'+(w.length>1?'s':'')+' sent to owner')},1800);return}}render()},
+ restart:()=>{S.login=true;S.lang='en';S.f={};S.sheet=null;S.dlg=null;S.stack=[{s:'splash'}];render(true)},
+ toLogin:()=>{S.stack=[{s:'login'}];render(true)},
+ toIntro:()=>replace('intro',{n:0}),
+ introGo:v=>replace('intro',{n:+v}),
+ setLang:v=>{S.lang=v;render()},
+ sendOtp:()=>{const n=(S.f.lp||'').replace(/\D/g,'');if(n.length!==10){S.f.err='Number should have 10 digits';return render()}S.f.err=null;go('otp')},
+ verifyOtp:()=>{const n=(S.f.lp||'').replace(/\D/g,'');S.login=null;
+  if(n==='9890011223'){S.role='owner';S.stack=[{s:'home'}];toast('Welcome back, Sadik')}
+  else if(n==='9822045001'){S.role='tech';S.stack=[{s:'myWork'}];render(true)}
+  else if(n==='9730012001'){S.role='helper';S.stack=[{s:'helper'}];render(true)}
+  else{S.login=true;S.role='owner';S.stack=[{s:'onbBiz'}];render(true)}},
+ tog_bg:()=>{S.f.bg=!S.f.bg;render()},tog_bf:()=>{S.f.bf=!S.f.bf;render()},tog_thl:()=>{S.f.thl=!S.f.thl;render()},
+ onbNext1:()=>{if(!(S.f.bn||'').trim()){S.f.bnErr=1;return render()}S.f.bnErr=0;go('onbTeam')},
+ onbNext2:()=>go('onbDone'),onbSkip:()=>go('onbDone'),
+ onbFinish:()=>{S.login=null;S.role='owner';S.stack=[{s:'home'}];toast('Welcome to KaamSetu')},
+ logout:()=>{const w=D.jobs.filter(j=>j.sync!=='sent'&&j.team==='t3');if(S.role!=='owner'&&w.length){S.dlg={title:'Work not sent yet',text:w.length+' job'+(w.length>1?'s are':' is')+' still on this phone. Connect to internet first, so nothing is lost.',no:'Cancel',yes:'OK',danger:false,yesFn:()=>{}};return render()}S.dlg={title:'Log out?',text:'You will need your mobile number and an SMS code to log in again.',no:'Stay',yes:'Log out',danger:true,yesFn:()=>A.restart()};render()},
+ fake:v=>toast(v),
+ fakeBack:v=>{back();toast(v)},
+ jobsTab:v=>{if(v==='enq'){S.f.jv='enq';S.f.ef='Open'}else{S.f.jv='jobs';S.f.jf=v==='today'?'Today':v}tab('jobs')},
+ jv:v=>{S.f.jv=v;render()},jf:v=>{S.f.jf=v;render()},ef:v=>{S.f.ef=v;render()},bv:v=>{S.f.bv=v;render()},
+ openJob:v=>{go(S.role==='owner'?'job':'techJob',{i:v})},
+ uv:v=>{S.f.uv=v;render()},
+ partStep:v=>{const [jid,i,st]=v.split('|');const j=J(jid);const p=j.partReq[+i];p.status=st;
+  if(st==='Ready'){addUpd(j,'partReady',p.name+' is ready · team can collect it');if(j.status==='On Hold'&&j.holdSide!=='customer'&&p.blocking){j.status=j.appt?'Scheduled':'Assigned';j.hold=null;j.holdSide=null}}
+  else addUpd(j,'partOrdered',p.name+' ordered by owner');
+  render();toast(Tm(j.team).senior.split(' ')[0]+' informed: '+p.name+(st==='Ready'?' is ready':' is ordered'))},
+ confirmNewDate:v=>{const j=J(v);const d=j.newDate;j.appt={day:d,time:j.appt?j.appt.time:'11:00 AM',by:'You',at:clock()};j.day=d;j.status='Scheduled';j.hold=null;j.holdSide=null;j.newDate=null;addUpd(j,'owner','Rescheduled to '+d+', '+j.appt.time+' · same team');render();toast('Job #'+j.no+' moved to '+d+' · team informed')},
+ /* status updates from technician / helper */
+ updStatus:v=>{S.sheet={k:'status',j:v};render()},
+ stPick:v=>{const j=J(S.sheet.j);const id=j.id;
+  if(v==='appt'){S.sheet={k:'appt',j:id,day:j.appt?j.appt.day:'Today',time:j.appt?j.appt.time:'2:30 PM'};return render()}
+  if(v==='started'){S.sheet=null;if(S.role==='helper'){j.status='In Progress';j.hold=null;j.holdSide=null;addUpd(j,'start','Started work');return stDone()}return A.startWork(id)}
+  if(v==='compl'){S.sheet=null;if(j.status!=='In Progress'){j.status='In Progress';addUpd(j,'start','Started work')}initFw(j);return go('finish',{i:id})}
+  if(v==='part'){S.sheet={k:'partReq',j:id,name:null,qty:1,blocking:null,note:''};return render()}
+  if(v==='custHold'){S.sheet={k:'holdC',j:id,why:null,nd:null};return render()}
+  if(v==='ourHold'){S.sheet={k:'holdO',j:id,why:null};return render()}
+  if(v==='addNote'){S.sheet={k:'note',j:id,text:''};return render()}},
+ shSet:v=>{const k=v.indexOf('|');const f=v.slice(0,k);let x=v.slice(k+1);S.sheet[f]=x;S.sheet.err=null;render()},
+ shQty:v=>{S.sheet.qty=Math.max(1,(S.sheet.qty||1)+(+v));render()},
+ shNote:v=>{S.sheet.text=(S.sheet.text?S.sheet.text.replace(/[.\s]+$/,'')+'. ':'')+v;render()},
+ saveAppt:()=>{const sh=S.sheet;const j=J(sh.j);j.appt={day:sh.day,time:sh.time,by:whoAmI().split(' ')[0],at:clock()};j.day=sh.day;j.time=sh.time;if(j.status!=='In Progress'){j.status='Scheduled';j.hold=null;j.holdSide=null;j.newDate=null}addUpd(j,'appt','Appointment fixed: '+sh.day+', '+sh.time);stDone()},
+ savePart:()=>{const sh=S.sheet;const j=J(sh.j);if(!sh.name||!sh.blocking){sh.err=!sh.name?'pick':'block';return render()}const blk=sh.blocking==='no';
+  j.partReq=j.partReq||[];j.partReq.push({name:sh.name,qty:sh.qty,by:whoAmI().split(' ')[0],at:clock(),blocking:blk,status:'Requested',note:(sh.note||'').trim(),pending:!S.online});
+  addUpd(j,'part','Part needed: '+sh.qty+' × '+sh.name+(blk?' · work stopped':' · work continues'));
+  if(blk){j.status='On Hold';j.holdSide='ours';j.hold='Part needed: '+sh.name;j.holdPending=!S.online}stDone()},
+ saveHoldC:()=>{const sh=S.sheet;const j=J(sh.j);if(!sh.why){sh.err='why';return render()}j.status='On Hold';j.holdSide='customer';j.hold=sh.why;j.newDate=sh.nd&&sh.nd!=='none'?sh.nd:null;j.holdPending=!S.online;
+  addUpd(j,'holdC','On hold · customer side: '+sh.why+(j.newDate?' · customer asked for '+j.newDate:''));stDone()},
+ saveHoldO:()=>{const sh=S.sheet;const j=J(sh.j);if(!sh.why){sh.err='why';return render()}j.status='On Hold';j.holdSide='ours';j.hold=sh.why;j.newDate=null;j.holdPending=!S.online;addUpd(j,'holdO','On hold · our side: '+sh.why);stDone()},
+ saveNote:()=>{const sh=S.sheet;const j=J(sh.j);const tx=(sh.text||'').trim();if(!tx){sh.err='text';return render()}addUpd(j,'note',tx);stDone()},
+ openCust:v=>go('customer',{i:v}),
+ custBills:v=>{S.f.bv='due';tab('billing')},
+ /* new job / enquiry */
+ newJob:()=>{S.f.nj=blankForm();go('newJob')},
+ newJobFor:(v,i)=>{const c=C(v);S.f.nj=blankForm({cust:v,site:c.sites[0].id,acs:i?[i]:[]});go('newJob')},
+ pickCust:()=>{S.f.csq='';S.sheet={k:'cust'};render()},
+ pickedCust:v=>{const f=S.f.nj;f.cust=v;f.site=C(v).sites[0].id;f.acs=[];f.errs.cust=0;S.sheet=null;render()},
+ custNew:()=>{S.sheet=null;S.f.ac={name:/\d/.test(S.f.csq||'')?'':(S.f.csq||''),phone:/\d/.test(S.f.csq||'')?(S.f.csq||'').replace(/\D/g,'').slice(0,10):'',addr:'',land:'',label:'Home',type:'Home',gst:false,gstin:'',errs:{},forJob:true};go('addCustomer')},
+ njSite:v=>{S.f.nj.site=v;S.f.nj.acs=[];render()},
+ njAc:v=>{const a=S.f.nj.acs;const i=a.indexOf(v);i<0?a.push(v):a.splice(i,1);render()},
+ njSvc:v=>{S.f.nj.service=v;S.f.nj.errs.service=0;render()},
+ njProb:v=>{const f=S.f.nj;f.problem=(f.problem?f.problem.replace(/[.\s]+$/,'')+'. ':'')+v;render()},
+ njDay:v=>{S.f.nj.day=v==='Pick date'?'20 Nov':v;render()},njSlot:v=>{S.f.nj.slot=v;render()},njSrc:v=>{S.f.nj.src=v;render()},
+ saveEnq:()=>{const f=S.f.nj;f.errs={cust:!f.cust};if(f.errs.cust)return render();const id='e'+(D.nextEnq);D.enquiries.unshift({id,no:'E-'+D.nextEnq++,cust:f.cust,site:f.site,acs:f.acs.slice(),service:f.service||'Not decided',problem:f.problem||'—',src:f.src,day:f.day,slot:f.slot,age:'Just now',status:'Open'});S.f.jv='enq';S.f.ef='Open';tab('jobs');toast('Enquiry saved · convert it when the customer books')},
+ saveJob:()=>{const f=S.f.nj;f.errs={cust:!f.cust,service:!f.service};if(f.errs.cust||f.errs.service){render();const el=app.querySelector('.errtxt');if(el)el.scrollIntoView({block:'center'});return}
+  const id='j'+D.nextJob;const j={id,no:D.nextJob++,cust:f.cust,site:f.site,acs:f.acs.slice(),service:f.service,problem:f.problem,src:f.src,day:f.day,time:f.slot,team:null,status:'New',toCollect:0,sync:'sent',fromEnq:f.fromEnq};D.jobs.push(j);
+  if(f.fromEnq){const e=E(f.fromEnq);e.status='Converted';e.job=j.no}
+  S.stack=[{s:'jobs'},{s:'job',p:{i:id}}];S.f.jv='jobs';S.f.jf='All';openAssign(id);toast('Job #'+j.no+' created')},
+ convert:v=>{const e=E(v);S.f.nj=blankForm({cust:e.cust,site:e.site,acs:e.acs.slice(),service:e.service==='Not decided'?null:e.service,problem:e.problem==='—'?'':e.problem,src:e.src,day:e.day==='Pick date'?'Tomorrow':e.day,slot:e.slot||'Morning',fromEnq:e.id});go('newJob')},
+ closeEnq:v=>{S.sheet={k:'reason',title:'Why close this enquiry?',sub:'It stays in Closed for later',opts:['Not interested','Price too high','Solved on phone','Went to someone else','Other'],fn:r=>{E(v).status=r;S.sheet=null;back();toast('Enquiry closed: '+r)}};render()},
+ /* assign */
+ assign:v=>openAssign(v),
+ asDay:v=>{S.sheet.day=v;render()},asSlot:v=>{S.sheet.slot=v;render()},asTeam:v=>{S.sheet.team=v;S.sheet.helperSwap=null;render()},
+ swapHelper:()=>{const sh=S.sheet;const others=D.staff.filter(s=>s.role==='Helper'&&s.name!==Tm(sh.team).helper).slice(0,5).map(s=>s.name);const keep=Object.assign({},sh);S.sheet={k:'reason',title:'Helper for this day',sub:'Team stays the same',opts:others,fn:r=>{keep.helperSwap=r;S.sheet=keep;render()}};render()},
+ confirmAssign:()=>{const sh=S.sheet;const j=J(sh.j);const tm=Tm(sh.team);const re=j.status!=='New';j.team=sh.team;j.day=sh.day;j.time=sh.slot;j.status='Assigned';j.hold=null;j.holdSide=null;j.newDate=null;j.appt=null;addUpd(j,'owner',(re?'Changed to ':'Assigned to ')+tm.name+' · '+sh.day+' '+sh.slot.toLowerCase());S.sheet=null;
+  if(top().s!=='job')go('job',{i:j.id});else render();toast('Job #'+j.no+' assigned to '+tm.name+' · '+tm.senior.split(' ')[0]+' will see it now')},
+ jobMore:v=>{const j=J(v);const items=[];if(j.status!=='New')items.push(['Change team or time','assign',v]);if(j.status!=='On Hold'&&j.status!=='New')items.push(['Put on hold','holdJob',v]);items.push(['Set amount to collect on site','setCollect',v]);items.push(['Cancel job','cancelJob',v,1]);S.sheet={k:'menu',title:'Job #'+j.no,items};render()},
+ holdJob:v=>{S.sheet={k:'reason',title:'Why on hold?',sub:'Customer reasons and our reasons are counted separately',opts:['Customer not available','Waiting for customer approval','Part needed (our side)','Team not available (our side)'],fn:r=>{const j=J(v);j.status='On Hold';j.holdSide=/our side/.test(r)?'ours':'customer';j.hold=r.replace(' (our side)','');addUpd(j,j.holdSide==='ours'?'holdO':'holdC','You put the job on hold: '+j.hold);S.sheet=null;render();toast('Job #'+j.no+' on hold · team informed')}};render()},
+ setCollect:v=>{const j=J(v);S.sheet={k:'reason',title:'Technician should collect',sub:'Only this amount is shown to them',opts:['Nothing','₹500','₹900','₹1,400','₹2,000'],fn:r=>{j.toCollect=+r.replace(/\D/g,'')||0;S.sheet=null;render();toast(j.toCollect?'Team will collect '+fmt(j.toCollect):'Team will not collect money')}};render()},
+ cancelJob:v=>{const j=J(v);S.sheet=null;S.dlg={title:'Cancel job #'+j.no+'?',text:'The team will no longer see it. It stays in history. You can\'t undo this.',no:'Keep job',yes:'Cancel job',danger:true,yesFn:()=>{S.sheet={k:'reason',title:'Reason for cancelling',opts:['Customer cancelled','Duplicate job','Could not reach customer','Other'],fn:r=>{j.status='Cancelled';j.cancelReason=r;j.team=j.team;S.sheet=null;render();toast('Job #'+j.no+' cancelled')}};render()}};render()},
+ cashRecv:v=>{J(v).cash.received=true;render();toast('Cash marked as received')},
+ followUp:v=>{const j=J(v);const id='j'+D.nextJob;const n={id,no:D.nextJob++,cust:j.cust,site:j.site,acs:j.acs.slice(),service:j.service,problem:'Follow-up of #'+j.no+(j.report&&j.report.againWhy?': '+j.report.againWhy:''),src:'Other',day:'Tomorrow',time:'Morning',team:null,status:'New',toCollect:0,sync:'sent',followOf:j.id};D.jobs.push(n);j.followUp=id;go('job',{i:id});openAssign(id);toast('Follow-up job #'+n.no+' linked to #'+j.no)},
+ /* customers */
+ acType:v=>{S.f.ac.type=v;render()},acGst:()=>{S.f.ac.gst=!S.f.ac.gst;render()},
+ saveCust:()=>{const f=S.f.ac;f.errs={name:!f.name.trim(),phone:f.phone.replace(/\D/g,'').length!==10,addr:!f.addr.trim()};if(f.errs.name||f.errs.phone||f.errs.addr)return render();
+  const id='c'+(D.customers.length+1);D.customers.push({id,name:f.name.trim(),phone:f.phone,gst:f.gst,gstin:f.gstin.toUpperCase(),since:2026,sites:[{id:'s'+id,label:f.type==='Business'?'Main':'Home',addr:f.addr.trim(),land:f.land,acs:[]}]});const forJob=f.forJob;S.f.ac=null;
+  if(forJob&&S.f.nj){S.f.nj.cust=id;S.f.nj.site='s'+id;S.f.nj.acs=[];S.f.nj.errs={};back();toast('Customer added')}else{S.stack.pop();go('customer',{i:id});toast('Customer added')}},
+ aaRoom:v=>{S.f.aa.room=v;render()},aaType:v=>{S.f.aa.type=v;render()},aaBrand:v=>{S.f.aa.brand=v;render()},aaCap:v=>{S.f.aa.cap=v;render()},
+ saveAc:v=>{const [cid,sid,from]=v.split('|');const f=S.f.aa;f.errs={room:!f.room.trim()};if(f.errs.room)return render();const aid='a'+Date.now();site(C(cid),sid).acs.push({id:aid,room:f.room.trim(),type:f.type,brand:f.brand||'Other',cap:f.cap,last:''});S.f.aa=null;if(from==='nj'&&S.f.nj)S.f.nj.acs.push(aid);back();toast('AC added')},
+ /* billing */
+ pickBill:()=>{const items=D.jobs.filter(j=>j.status==='Completed'&&!j.billed).map(j=>({v:j.id,t:C(j.cust).name,s:'#'+j.no+' · '+j.service+' · '+j.day}));S.sheet={k:'pickJob',title:'Bill which job?',act:'createBill',items};render()},
+ pickPay:()=>{const items=D.bills.filter(b=>b.status!=='cancelled'&&billTotals(b).rem>0.5).map(b=>({v:b.id,t:C(b.cust).name,s:b.no+' · '+b.date,r:'<b style="color:var(--warn-ink)">'+fmt(billTotals(b).rem)+'</b>'}));S.sheet={k:'pickJob',title:'Payment for which bill?',act:'payFromPick',items};render()},
+ payFromPick:v=>{S.sheet=null;go('bill',{i:v});A.pay(v)},
+ createBill:v=>{S.sheet=null;S.f.bill=draftFromJob(J(v));go('createBill')},
+ billGst:()=>{S.f.bill.gst=!S.f.bill.gst;render()},
+ billDel:v=>{S.f.bill.lines.splice(+v,1);render()},
+ billAdd:()=>{S.sheet={k:'addLine'};render()},
+ billAddRate:v=>{const r=D.rates[+v];S.f.bill.lines.push(r?{d:r.d,q:1,u:r.u||'',r:r.r,tax:18,from:'Rate list'}:{d:'New item',q:1,u:'',r:0,tax:18});S.sheet=null;render()},
+ billDisc:()=>{S.sheet={k:'disc',v:S.f.bill.disc||''};render()},discQuick:v=>{S.sheet.v=v;render()},discSave:()=>{S.f.bill.disc=+String(S.sheet.v).replace(/\D/g,'')||0;S.sheet=null;render()},
+ saveBill:v=>{const b=S.f.bill;b.id='b'+D.nextBill;b.no=(b.gst?'KS-G-00':'KS-00')+D.nextBill++;b.status='issued';D.bills.push(b);if(b.job)J(b.job).billed=b.id;S.f.bill=null;S.stack.pop();go('bill',{i:b.id});toast(v==='share'?'Bill '+b.no+' saved · WhatsApp opens with the PDF':'Bill '+b.no+' saved')},
+ billMore:v=>{const b=B(v);S.sheet={k:'menu',title:'Bill '+b.no,items:[['Download PDF','fake','In the app this saves the PDF to the phone'],['Cancel bill','cancelBill',v,1]]};render()},
+ cancelBill:v=>{const b=B(v);S.sheet=null;S.dlg={title:'Cancel bill '+b.no+'?',text:'The bill stays in records as Cancelled. Payments already received stay with the customer. You can\'t undo this.',no:'Keep bill',yes:'Cancel bill',danger:true,yesFn:()=>{b.status='cancelled';if(b.job)J(b.job).billed=null;render();toast('Bill cancelled')}};render()},
+ pay:v=>{const b=B(v);S.sheet={k:'pay',b:v,amt:String(Math.round(billTotals(b).rem)),method:'UPI',note:''};render()},
+ payAmt:v=>{S.sheet.amt=String(v);S.sheet.err=null;render()},payMethod:v=>{S.sheet.method=v;render()},
+ savePay:()=>{const sh=S.sheet;const b=B(sh.b);const amt=+String(sh.amt).replace(/[^\d.]/g,'')||0;if(amt<=0){sh.err='Enter an amount';return render()}const p={amt,method:sh.method,date:'18 Nov',note:sh.note||'',by:'Sadik'};b.pays.push(p);S.sheet=null;undoFn=()=>{b.pays.splice(b.pays.indexOf(p),1)};toast('Payment saved · '+fmt(amt),true)},
+ undo:()=>{if(undoFn){undoFn();undoFn=null}S.toast=null;render()},
+ gstDef:()=>{D.settings.gstDefault=!D.settings.gstDefault;render()},photoReq:v=>{D.settings.photoReq=+v;render()},helperPhoto:()=>{D.settings.helperPhoto=!D.settings.helperPhoto;render()},
+ teamLeave:()=>{const tm=Tm(top().p.i);tm.leave=!tm.leave;render()},
+ stRole:v=>{S.f.st.role=v;render()},stTeam:v=>{S.f.st.team=v;render()},stLogin:()=>{if(S.f.st.role==='Helper'){S.f.st.login=!S.f.st.login;render()}},
+ saveStaff:()=>{const f=S.f.st;const needPhone=f.login||f.role!=='Helper';f.errs={name:!f.name.trim(),phone:needPhone&&f.phone.replace(/\D/g,'').length!==10};if(f.errs.name||f.errs.phone)return render();D.staff.push({name:f.name.trim(),role:f.role,team:f.team,login:needPhone,phone:f.phone});S.f.st=null;back();toast(needPhone?f.name+' added · SMS sent with app link':f.name+' added · no login needed')},
+ /* technician */
+ toggleTom:()=>{S.f.tom=!S.f.tom;render()},
+ stApptQuick:v=>{S.sheet={k:'status',j:v};A.stPick('appt')},
+ startWork:v=>{const j=J(v);const prev=j.status,ph=j.hold,ps=j.holdSide;j.status='In Progress';j.hold=null;j.holdSide=null;j.started='now';const u=addUpd(j,prev==='On Hold'?'start':'start',prev==='On Hold'?'Started again after hold':'Started work');undoFn=()=>{j.status=prev;j.hold=ph;j.holdSide=ps;j.updates.splice(j.updates.indexOf(u),1)};initFw(j);go('finish',{i:v});toast(t('start')+' ✓ · 2:35 PM',true)},
+ cantDo:v=>A.updStatus(v),
+ fwFound:v=>{const [id,x]=v.split('|');const a=S.f.fw[id].found;const i=a.indexOf(x);if(x==='All OK'){S.f.fw[id].found=i<0?['All OK']:[]}else{const k=a.indexOf('All OK');if(k>=0)a.splice(k,1);i<0?a.push(x):a.splice(i,1)}render()},
+ fwWork:v=>{const [id,ac,x]=v.split('|');const w=S.f.fw[id].work;w[ac]=w[ac]||[];const i=w[ac].indexOf(x);i<0?w[ac].push(x):w[ac].splice(i,1);S.f.fw[id].errWork=0;render()},
+ fwQty:v=>{const [id,i,d]=v.split('|');const p=S.f.fw[id].parts[+i];p.qty=Math.max(0,Math.round((p.qty+(+d)*(p.unit==='kg'?0.5:1))*10)/10);if(p.qty===0)S.f.fw[id].parts.splice(+i,1);render()},
+ fwAddPart:v=>{S.sheet={k:'part',j:v};render()},
+ fwPart:v=>{const [id,n,u]=v.split('|');S.f.fw[id].parts.push({name:n,unit:u,qty:1});S.sheet=null;render()},
+ fwPhoto:v=>{S.f.fw[v].photos++;render();toast('Photo added')},
+ fwNote:v=>{const [id,x]=v.split('|');const f=S.f.fw[id];f.note=(f.note?f.note+'. ':'')+x;render()},
+ fwMethod:v=>{const [id,m]=v.split('|');S.f.fw[id].method=m;render()},
+ fwResult:v=>{const [id,r]=v.split('|');S.f.fw[id].result=r;render()},
+ fwAgain:v=>{const [id,r]=v.split('|');S.f.fw[id].againWhy=r;render()},
+ fwHold:v=>{const [id,r]=v.split('|');S.f.fw[id].holdWhy=r;render()},
+ finishWork:v=>{const j=J(v);const f=S.f.fw[v];const any=Object.values(f.work).some(w=>w.length);
+  if(f.result!=='couldnt'&&!any){f.errWork=1;render();const el=app.querySelector('.errtxt');if(el)el.scrollIntoView({block:'center'});return}
+  j.report={found:f.found.slice(),work:JSON.parse(JSON.stringify(f.work)),parts:f.parts.map(p=>Object.assign({},p)),photos:f.photos,note:f.note,result:f.result,againWhy:f.againWhy,when:'2:35 PM – 3:40 PM'};
+  if(f.result==='couldnt'){j.status='On Hold';j.hold=f.holdWhy||'Could not finish';j.holdSide=CUST_WHY.includes(f.holdWhy)?'customer':'ours';addUpd(j,j.holdSide==='customer'?'holdC':'holdO','Could not finish · '+(j.holdSide==='customer'?'customer side':'our side')+': '+j.hold)}else{j.status='Completed';j.seen=false;addUpd(j,'done','Work completed'+(f.result==='again'?' · needs another visit':'')+(j.toCollect&&f.method!=='Not paid'&&f.amt>0?' · '+fmt(f.amt)+' '+f.method+' collected':''));if(j.toCollect&&f.method!=='Not paid'&&f.amt>0)j.cash={amt:f.amt,method:f.method,by:'Santosh Pawar',received:f.method!=='Cash'};
+   if(f.result==='again'){const id='j'+D.nextJob;D.jobs.push({id,no:D.nextJob++,cust:j.cust,site:j.site,acs:j.acs.slice(),service:j.service,problem:'Follow-up of #'+j.no+(f.againWhy?': '+f.againWhy:''),src:'Other',day:'Tomorrow',time:'Morning',team:null,status:'New',toCollect:0,sync:'sent',followOf:j.id});j.followUp=id}}
+  j.day=j.day==='Today'?'Today':j.day;
+  if(S.online){j.sync='sending';setTimeout(()=>{j.sync='sent';render()},1600)}else j.sync='saved';
+  S.stack=[{s:'myWork'},{s:'saved',p:{i:v}}];render(true)},
+ openNext:v=>{S.stack=[{s:'myWork'},{s:'techJob',p:{i:v}}];render(true)},
+ retry:v=>{J(v).sync='sending';render();setTimeout(()=>{J(v).sync='sent';render()},1500)},
+ helperPhoto:()=>toast(D.settings.helperPhoto?'Photo added to the job · Santosh sees it':'Owner has turned this off'),
+ /* sheets */
+ closeSheet:()=>{S.sheet=null;render()},
+ scrim:(v,i,e)=>{if(e.target.classList.contains('scrim')){S.sheet=null;render()}},
+ reasonPick:v=>{const fn=S.sheet.fn;fn(v)},
+ dlgNo:()=>{S.dlg=null;render()},dlgYes:()=>{const fn=S.dlg.yesFn;S.dlg=null;fn&&fn();render()},dlgScrim:(v,i,e)=>{if(e.target.classList.contains('scrim')){S.dlg=null;render()}}
+};
+function openAssign(id){const j=J(id);S.sheet={k:'assign',j:id,day:['Today','Tomorrow'].includes(j.day)?j.day:'Tomorrow',slot:['Morning','Afternoon','Evening'].includes(j.time)?j.time:'Morning',team:j.team&&!Tm(j.team).leave?j.team:null};render()}
+const CUST_WHY=['Customer not at home','Customer asked to come later','Customer said no','Customer not answering','Payment not ready','Society did not allow entry'];
+const OUR_WHY=['Part needed','Tool or gas missing','Need a second person','Job bigger than expected','Ran out of time','Vehicle problem'];
+function stDone(){S.sheet=null;render();toast(S.online?'✓ '+t('informed'):t('later'))}
+function initFw(j){S.f.fw=S.f.fw||{};if(!S.f.fw[j.id])S.f.fw[j.id]={found:[],work:{},parts:[],photos:0,note:'',method:'Cash',amt:j.toCollect,result:'done'}}
+
+document.addEventListener('click',e=>{const el=e.target.closest('[data-a]');if(!el)return;const a=el.dataset.a;
+ if(a==='scrim'||a==='dlgScrim'){if(el!==e.target)return}
+ if(el.disabled)return;e.preventDefault&&el.tagName!=='INPUT'&&el.tagName!=='TEXTAREA'&&e.preventDefault();
+ if(a==='swapHelper')e.stopPropagation();
+ const fn=A[a];if(fn){if(a==='go'&&el.dataset.v==='finish')initFw(J(el.dataset.i));fn(el.dataset.v,el.dataset.i,e)}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&(S.sheet||S.dlg)){S.sheet=null;S.dlg=null;render()}});
+
+/* boot */
+const h=(location.hash||'').slice(1);
+if(h==='technician')A.role('tech');else if(h==='helper')A.role('helper');else if(h==='login')A.restart();else render(true);
+window.addEventListener('hashchange',()=>{const h=(location.hash||'').slice(1);const r={owner:'owner',technician:'tech',helper:'helper'}[h];if(r&&r!==S.role)A.role(r)});
+})();
+</script>
+
+</body></html>
