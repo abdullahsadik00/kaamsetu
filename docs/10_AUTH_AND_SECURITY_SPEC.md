@@ -1,0 +1,73 @@
+# 10 — KaamSetu Authentication, Authorization and Security
+
+> **Source of truth for:** login, sessions, how role permissions are enforced, tenant isolation mechanics, and data protection.
+> The business permission table is in PRD §6; tenancy principles in doc 03. This document says how they are enforced.
+> **Status:** specification; nothing implemented.
+
+## 1. Authentication
+
+| Item | Decision |
+|---|---|
+| Login method | Phone number + **SMS OTP** (D-015). No passwords |
+| OTP | 6 digits, valid 5 minutes, max 5 attempts, max 3 sends per number per 15 minutes, IP rate limit |
+| OTP storage | Hashed, never logged, deleted after use or expiry |
+| SMS provider | **Open (Q-08).** Must support Indian DLT template registration. Compare cost per SMS, delivery rate, and a WhatsApp-OTP fallback. In `development` a stub prints OTPs to the local console only |
+| Access token | JWT, 15 minutes, holds `userId`, `organizationId`, `memberId`, `role`, `deviceId` |
+| Refresh token | Opaque random value, stored **hashed** per device, 60-day sliding expiry, rotated on every use; reuse of an old token revokes the device |
+| Phone storage | Tokens in Expo SecureStore only |
+| Logout | Revokes the device's refresh token and clears local data |
+| Lost phone | Owner can revoke an employee's devices from Employees; the next refresh fails |
+
+Field staff must not be logged out mid-job: an expired access token just waits for connectivity to refresh; queued work is never discarded because a token expired.
+
+## 2. Staff onboarding
+
+1. Owner adds an employee with name, phone and role, and puts them in a team.
+2. The employee gets an SMS with the app link (prototype copy).
+3. They log in with phone + OTP; the membership already exists, so there is no setup.
+4. A phone number belongs to one `User`, who may later belong to more than one organization (doc 03). The app shows one active organization at a time.
+
+## 3. Authorization
+
+Enforced on the server, in this order, for every request:
+
+1. **Authenticated?** Valid access token, device not revoked.
+2. **Active membership?** `OrganizationMember` active for the token's organization.
+3. **Role allowed?** Route-level guard, e.g. `@Roles('OWNER')`.
+4. **Record in scope?** Query scoped by `organizationId` **and**, for technicians/helpers, by team assignment.
+
+| Role | Record scope |
+|---|---|
+| Owner | All records of the organization |
+| Senior technician | Jobs currently or previously assigned to their team(s) or to them; the customer, site and ACs of those jobs only; their own cash collections. No bills, payments, reports, or customer lists |
+| Helper | Current/next job of their team: locality, job type, things to carry. Customer phone only if the owner allows it (Q-01) |
+| Platform support (internal) | No default access. Time-limited, audited access per support case |
+
+Implementation rules:
+- `organizationId` comes **only** from the token, never from the request body or URL.
+- A shared data-access helper adds `organizationId` to every business Prisma query; tests check every business query is scoped (doc 12).
+- Nested IDs in a request (customer, site, AC, team) are checked to belong to the same organization before use.
+- Return `404`, not `403`, for records outside the caller's scope, so IDs cannot be probed.
+- PostgreSQL row-level security is later defence in depth (Phase 7), not the primary control.
+
+## 4. Data protection
+
+India's **Digital Personal Data Protection Act, 2023 (DPDP)** applies: customer names, phones and addresses, and employee data are personal data. Roughly, each business decides what it collects about its customers and KaamSetu processes it for them; KaamSetu is directly responsible for its own users' data. Get Indian legal advice before commercial launch (doc 03 §9). Practical rules now:
+
+- Collect only what the workflow needs. No Aadhaar, no ID documents, no location tracking.
+- Encrypt in transit (HTTPS only) and at rest (managed database and storage encryption).
+- Private object storage; photos and PDFs only via signed URLs that expire in ≤ 15 minutes.
+- Logs never contain OTPs, tokens, full phone numbers (mask to last 4 digits), addresses, or request bodies.
+- Business data export for the owner (Phase 7) and a documented deletion process on account closure.
+- Breach response steps recorded in the operations runbook (doc 13).
+- Host data in an Indian region where practical (Q-09).
+
+## 5. Application security checklist
+
+- DTO validation on every endpoint (whitelist, reject unknown fields).
+- Rate limiting on auth and sync endpoints.
+- Security headers; CORS closed (the mobile app does not need it).
+- Dependency audit in CI; update Expo/NestJS/Prisma on a schedule.
+- Secrets only in environment variables or the host's secret store; `.env` never committed (already in `.gitignore`).
+- `AuditLog` (doc 05) for: role changes, employee deactivation, device revocation, bill issue/cancel, payment record/void, cash collection confirm/reject, data export.
+- Cross-tenant access tests in CI from the first business module; security review before pilot (Phase 5) and before launch (Phase 7).
