@@ -9,7 +9,11 @@
 - Correct financial records.
 - Easy to extend without premature complexity.
 
+> **Source of truth for:** system structure and technology choices. Offline detail is in `09_OFFLINE_AND_SYNC_SPEC.md`, security in `10_AUTH_AND_SECURITY_SPEC.md`, operations in `13_DEPLOYMENT_AND_OPERATIONS.md`.
+
 ## 2. Recommended stack
+
+**Installed today (19 Nov 2026):** Expo SDK 58 (React Native 0.88, React 19.3, TypeScript 6, Expo Router); NestJS 12 (ESM, Vitest, oxlint); Prisma 7.10 with `@prisma/adapter-pg`. Everything else below is **planned** and gets added in the task that first needs it.
 
 ### Mobile
 - React Native.
@@ -147,6 +151,8 @@ src/
 The exact route structure can change after wireframes. Keep feature logic separate from screen components.
 
 ## 6. Offline-first strategy
+
+Summary only. The detailed, binding rules (per-record conflict policy, ID generation, sync protocol, retention) are in `09_OFFLINE_AND_SYNC_SPEC.md`.
 
 ### Local data
 Cache only the data required by the logged-in role:

@@ -2,6 +2,15 @@
 
 This is the logical data model. Final Prisma syntax and field types should be generated after the workflow and UI decisions are validated.
 
+> **Source of truth for:** entities, relationships and data rules. `backend/prisma/schema.prisma` implements it and must not contradict it.
+> **Implemented so far:** `Organization`, `User`, `OrganizationMember` (schema only; no migration has run).
+
+**Global conventions (D-012, D-013):**
+- Primary keys are UUIDs. Records created offline get their UUID on the phone so the outbox can reference them before the server has seen them.
+- Money is stored as integer **paise** (`BigInt`/`Int`), currency `INR`. No floats anywhere in money code.
+- Every business table has `organizationId`, `createdAt`, `updatedAt`; mutable records that phones edit also have `version`.
+- Human-friendly numbers (job `#1048`, enquiry `E-213`, bill `KS-0085`) are per-organization sequences, assigned by the server. A phone shows "New job" until the number arrives.
+
 ## 1. Organization and identity
 
 ### Organization
@@ -139,8 +148,11 @@ Represents the original customer enquiry/complaint.
 - organizationId
 - customerId
 - siteId
+- requestNumber (per organization, shown as `E-213`)
 - source: WHATSAPP | PHONE | WALK_IN | OTHER
 - complaint
+- status: OPEN | CONVERTED | CLOSED
+- equipment (optional list of known ACs)
 - requestedAt
 - preferredVisitAt (optional)
 - status
@@ -158,9 +170,15 @@ Represents one actual visit/work order.
 - jobNumber
 - serviceCategory
 - complaintSnapshot
-- scheduledAt (optional)
+- scheduledDate (optional)
+- timeSlot (optional: MORNING | AFTERNOON | EVENING | exact time; final list from discovery, Q-06)
+- appointmentConfirmedAt (optional; set when "Appointment fixed")
 - assignedTeamId (optional)
-- status
+- status: NEW | ASSIGNED | IN_PROGRESS | ON_HOLD | COMPLETED | CANCELLED
+- holdSide (optional: CUSTOMER | OURS)
+- holdReason (optional short text / code)
+- amountToCollect (optional, paise)
+- followUpOfJobId (optional; links a follow-up visit to the earlier job)
 - outcome: COMPLETED | NEEDS_FOLLOW_UP | NOT_COMPLETED (optional)
 - createdByMemberId
 - startedAt (optional)
@@ -202,6 +220,19 @@ Optional individual assignment:
 
 Normally, the team membership supplies the senior/helper pairing. Store individual assignment only when a job-specific exception or explicit assignment is needed. Avoid duplicating team membership unnecessarily.
 
+### JobUpdate
+
+The field status feed (D-009). One row per update a technician or owner sends.
+- id (client-generated)
+- organizationId
+- jobId
+- type: APPOINTMENT_FIXED | STARTED | PART_NEEDED | PART_READY | CUSTOMER_HOLD | OUR_HOLD | NOTE | COMPLETED | RESUMED
+- payload (small JSON: part, quantity, canContinue, newDate, text)
+- createdByMemberId
+- createdAt (phone time) and receivedAt (server time)
+
+`JobStatusHistory` below stays the audit of status changes; a `JobUpdate` may or may not change status.
+
 ### JobStatusHistory
 - id
 - organizationId
@@ -218,6 +249,7 @@ Normally, the team membership supplies the senior/helper pairing. Store individu
 - id
 - organizationId
 - jobId
+- equipmentId (optional; work is recorded per AC in the prototype)
 - workType
 - description (optional)
 - createdByMemberId
@@ -337,7 +369,12 @@ Do not require signature/OTP until the business validates the need.
 - quantity
 - unit
 - unitRate
+- taxRate (optional, e.g. 18.00; only when the bill is a GST bill)
+- sacCode (optional; required only if the accountant confirms it, Q-04)
 - lineTotal
+- taxAmount
+
+Invoice also gets `isGstInvoice` and a `sellerGstinSnapshot`/`buyerGstin` (optional). Final GST fields are decided after Q-04.
 
 Line item descriptions and rates must be snapshots. Later changes to service catalogue or job data must not change issued invoices.
 
@@ -354,6 +391,22 @@ Line item descriptions and rates must be snapshots. Later changes to service cat
 - status
 - idempotencyKey
 - createdAt
+
+### CashCollection (*proposed*, D-008)
+
+Money a technician says they received on site. It is **not** a payment until the owner confirms it.
+- id (client-generated)
+- organizationId
+- jobId
+- collectedByMemberId
+- amount (paise)
+- method: CASH | UPI | OTHER
+- collectedAt
+- status: PENDING_HANDOVER | CONFIRMED | REJECTED
+- confirmedByMemberId (optional)
+- confirmedAt (optional)
+- paymentId (set when confirmed)
+- rejectionReason (optional)
 
 ### PaymentAllocation
 - id

@@ -1,5 +1,8 @@
 # 01 — KaamSetu Product Requirements Document (PRD)
 
+> **Source of truth for:** what the product does and why. Screen behaviour lives in 02, data in 05, decisions in `DECISION_LOG.md`.
+> **Status (19 Nov 2026):** requirements drafted and reflected in the clickable prototype. Not yet validated with the pilot business (Phase 1). Items marked *proposed* need discovery confirmation.
+
 ## 1. Product summary
 
 KaamSetu is a simple, Android-first SaaS application for small AC service and maintenance companies in India. It combines essential service operations with lightweight billing.
@@ -133,6 +136,9 @@ Use three practical role types:
 | Submit service report | Review | Yes | No by default |
 | View invoice/payment | Yes | No | No |
 | Record payment | Yes | No | No |
+| See amount to collect on own job | Yes | Yes (*proposed*) | No |
+| Record money collected from customer | Confirms handover | Yes (*proposed*, D-008) | No |
+| Send status update (appointment fixed, part needed, on hold, note) | Yes | Yes | No |
 | Manage employees/teams | Yes | No | No |
 | View business reports | Yes | No | No |
 
@@ -155,13 +161,14 @@ The data model should support a future optional team supervisor role without req
 9. Senior technician job workflow.
 10. Simple service completion record.
 11. Offline storage and sync for field work.
-12. Basic estimates/invoices.
+12. Basic invoices (called *bills* in the UI). Estimates moved to P1 (D-010).
 13. Payment recording and outstanding balance.
 14. Customer service history.
 
 ### P1 — After initial pilot
 
 1. Basic AMC contracts and visit tracking.
+1. Estimates/quotations (moved from P0, D-010).
 2. Expense tracking.
 3. Basic business reports.
 4. Marathi/Hindi localization refinement.
@@ -196,6 +203,8 @@ The data model should support a future optional team supervisor role without req
 
 Target: a repeat-customer job should be created in about one minute after the owner is familiar with the app.
 
+**Enquiry first (D-007).** When the customer has not yet booked (for example "send me the AMC price"), the owner saves an **enquiry** instead of a job: customer, ACs if known, what they asked, and source (WhatsApp/Call/Other). Open enquiries show on the owner's home screen. When the customer books, the owner converts the enquiry into a job without retyping anything. In the data model an enquiry is a `ServiceRequest`.
+
 ### 8.2 Team assignment
 
 1. Owner opens a new job.
@@ -224,6 +233,30 @@ Avoid requiring the owner to select both senior and helper for every job if team
 10. Submits the job.
 
 The helper does not need to duplicate the senior technician's report.
+
+### 8.3a Status updates from the field (from the prototype, D-009)
+
+Between assignment and completion the senior technician can send one-tap updates. Each update reaches the owner's "Latest from teams" feed and works offline.
+
+| Update | What it means | Effect |
+|---|---|---|
+| Appointment fixed | Spoke to the customer and agreed a day/time | Sets the appointment; job stays *Assigned* |
+| Started work | At the site and working | Status → *In Progress* |
+| Part needed | Names the part and quantity; says whether work can continue | Owner gets an "Arrange part" action. If work stopped: *On Hold* (our side) |
+| Customer not ready | Customer not home, asked for another date, etc. | *On Hold* (customer side), optional new date |
+| Can't continue | Problem on our side | *On Hold* (our side), reason required |
+| Note for owner | Information only | No status change |
+| Work completed | Opens the short finish page | Status → *Completed* when submitted |
+
+### 8.3b Money collected by the team (*proposed*, D-008)
+
+In many small AC businesses the technician collects cash or UPI on site. The prototype shows this; the pilot must confirm it (Q-03).
+
+1. When creating the job, the owner can set an **amount to collect** (optional).
+2. On the finish page the senior technician records money received: amount and method (Cash/UPI), or "Not paid".
+3. The owner sees "₹ with teams, to hand over" on the home screen.
+4. When the team hands over the cash (or the UPI credit is seen), the owner **confirms** it. Only then does it become a `Payment` against the bill.
+5. A technician cannot edit or delete a collection after it is sent; the owner can reject it with a reason.
 
 ### 8.4 Billing and payment
 
@@ -282,6 +315,11 @@ Keep the visible workflow small:
 
 Use additional internal events for rescheduling, report submission and review rather than exposing too many statuses.
 
+Extra detail is stored as fields, not statuses (D-009):
+- **Appointment:** fixed / not fixed, with day and time slot.
+- **Hold side and reason:** *customer side* (not home, postponed) or *our side* (part needed, can't continue).
+- **Part needed:** part description, quantity, and whether work continues.
+
 A job needing a follow-up should be marked as requiring another visit and linked to a new job/visit. Do not overwrite the previous completed service record.
 
 ## 11. Customer and equipment model
@@ -319,6 +357,14 @@ Invoice totals:
 - Grand total.
 - Amount received.
 - Amount remaining.
+
+GST (*proposed*, D-011, Q-04):
+- Organization setting "We give GST bills" with GSTIN.
+- GST can be switched off for an individual bill.
+- Tax rate is stored per line (for example 18 %).
+- Exact compliance rules (CGST/SGST vs IGST split, SAC code, invoice numbering and mandatory fields) must be confirmed with the pilot's accountant before GST bills are issued. Do not claim "GST compliant" before then.
+
+Sharing: the owner shares the bill PDF on WhatsApp through the phone's share sheet (no WhatsApp API).
 
 Payment methods:
 - Cash.

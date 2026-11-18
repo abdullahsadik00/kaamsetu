@@ -2,7 +2,7 @@
 
 ## 1. API conventions
 
-- REST API under `/api/v1`.
+- REST API under `/api/v1` (health check stays at `/health`, outside the version prefix, for load balancers).
 - JSON request/response.
 - HTTPS only.
 - Authenticated requests use access tokens.
@@ -83,6 +83,15 @@ Validate that the selected senior technician and helpers are active members of t
 
 Search should support customer name and phone number.
 
+## 5a. Enquiries (service requests)
+
+- `GET /enquiries?status=OPEN`
+- `POST /enquiries`
+- `GET /enquiries/:id`
+- `PATCH /enquiries/:id`
+- `POST /enquiries/:id/convert` (creates a job, copies customer/site/ACs/complaint)
+- `POST /enquiries/:id/close`
+
 ## 6. Jobs
 
 - `GET /jobs?status=&date=&teamId=`
@@ -96,6 +105,8 @@ Search should support customer name and phone number.
 - `POST /jobs/:id/complete`
 - `POST /jobs/:id/follow-up`
 - `GET /jobs/:id/history`
+- `POST /jobs/:id/updates` (field status feed: appointment fixed, part needed, hold, note; see doc 05 `JobUpdate`)
+- `GET /jobs/updates?since=` (owner's "Latest from teams")
 
 A job completion request should be idempotent and preserve the submitted service report.
 
@@ -123,6 +134,11 @@ Do not force every category to submit every possible field.
 - `POST /invoices/:id/payments`
 - `GET /payments`
 - `GET /customers/:id/outstanding`
+- `GET /cash-collections?status=PENDING_HANDOVER` (*proposed*)
+- `POST /cash-collections/:id/confirm` (creates the `Payment`)
+- `POST /cash-collections/:id/reject`
+
+Technicians create cash collections through the job completion request or the sync API, never through `/payments`.
 
 Invoice totals must be recalculated and validated by the server.
 
@@ -142,7 +158,7 @@ Potential endpoints:
 - `POST /sync/operations`
 - `POST /sync/attachments/complete`
 
-The exact protocol should be implemented only after the offline data model and conflict strategy are designed.
+The protocol is specified in `09_OFFLINE_AND_SYNC_SPEC.md`.
 
 Requirements:
 - Idempotency.

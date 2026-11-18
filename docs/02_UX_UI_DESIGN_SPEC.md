@@ -1,5 +1,21 @@
 # 02 — KaamSetu UX/UI Design Specification
 
+> **Source of truth for:** screens, navigation, interaction and visual design. The clickable prototype `design/KaamSetu Prototype.html` is the reference for screen layout; this document wins where they disagree.
+
+## 0. Design status (19 Nov 2026)
+
+| Process step (§2) | Status |
+|---|---|
+| 1. Workflow discovery | **Not done** with the real business. The prototype is based on assumptions |
+| 2. Information architecture | Done in the prototype (owner 4 tabs + More; technician My Work / History / Profile; helper Today's Work) |
+| 3. Low-fidelity wireframes | Skipped; went straight to a mid/high-fidelity prototype |
+| 4. Clickable prototype | **Done**: owner, senior technician and helper roles, online/offline toggle, English/Hindi/Marathi |
+| 5. Usability testing | **Not done.** This is the next gate |
+| 6. Visual design system | Tokens defined in the prototype (§6) |
+| 7. Design handoff | Not done; follows testing |
+
+What the prototype added beyond the original spec (now reflected in the PRD): enquiry inbox, one-tap field status updates with hold reasons and part requests, appointment fixing, "money from customer" on the finish page and "with teams, to hand over" on the owner home, one-day helper swap, per-AC work recording, GST switch on bills, WhatsApp sharing of bill PDFs, and follow-up jobs linked to the original job.
+
 ## 1. Design objective
 
 Design the user experience before building the application.
@@ -285,9 +301,26 @@ The backend must support multiple partial payments.
 - Consistent spacing.
 - Comfortable outdoor readability.
 
-### Suggested initial palette
+### Palette
 
-Treat these as starting tokens; test contrast and refine:
+Tokens used in the prototype (light theme only, by design):
+
+| Token | Value | Use |
+|---|---|---|
+| teal | `#0F766E` (dark `#115E59`, tint `#E6F2EF`) | Primary actions, brand |
+| saffron | `#E8891C` | Accent, used sparingly |
+| paper | `#F7F5F0` | App background |
+| surface | `#FFFFFF` | Cards |
+| ink | `#14213D` | Main text |
+| slate / muted | `#4A5468` / `#5B6576` | Secondary text |
+| ok | `#15803D` (tint `#E3F3E8`) | Done, paid |
+| warn | `#B45309` (tint `#FDEBD3`) | On hold, money pending |
+| bad | `#B42318` (tint `#FBE4E4`) | Errors, not paid |
+| info / assigned | `#1E4FBF` / `#5B32B4` | Status chips |
+
+Font: Noto Sans + Noto Sans Devanagari. Contrast still has to be checked on real devices outdoors.
+
+Original direction, kept for reference:
 - Primary: deep teal or blue-green.
 - Secondary: warm saffron accent used sparingly.
 - Background: warm off-white.
@@ -417,6 +450,8 @@ Record:
 - Whether users understood the result.
 
 ## 11. Design completion criteria
+
+These criteria are the **design gate** (milestone M2 in `PROJECT_ROADMAP.md`). Feature development (Phase 4) does not start until they are met.
 
 Do not begin full implementation until:
 - Main flows are clickable.

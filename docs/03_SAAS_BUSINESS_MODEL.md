@@ -69,6 +69,10 @@ Potential pricing dimensions to validate:
 
 Avoid pricing per job initially because it may discourage recording every service job.
 
+**Public commitment (D-014):** the build-in-public posts promise early-access businesses **30 days free at launch**. The trial length is therefore 30 days for early-access sign-ups. No prices or tiers have been announced; keep it that way until pricing is validated.
+
+**Pilot business:** uses KaamSetu free during the pilot. Terms after the pilot to be agreed in writing before Phase 7 (Q-13).
+
 A simple future plan structure could be:
 - Starter: one small team and core job/billing features.
 - Growth: multiple teams and more staff.
