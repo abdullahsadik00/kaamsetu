@@ -1,7 +1,6 @@
 # KaamSetu app
 
-Monorepo for the KaamSetu field-service app. Product docs live one folder up in
-`../KaamSetu_Product_Documentation`.
+Monorepo for the KaamSetu field-service app. Product docs live in [`docs/`](docs/README.md) (source of truth).
 
 | Folder     | Stack                                                        |
 | ---------- | ------------------------------------------------------------ |
