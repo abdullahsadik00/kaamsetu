@@ -38,6 +38,9 @@ jobs:
     env:
       NODE_ENV: test
       DATABASE_URL: postgresql://kaamsetu:ci-only-password@localhost:5432/kaamsetu_test?schema=public
+      # Test-only secrets, valid only inside this CI job.
+      JWT_ACCESS_SECRET: ci-only-jwt-secret-not-used-anywhere-else-000
+      OTP_HASH_SECRET: ci-only-otp-secret-not-used-anywhere-else-000
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5

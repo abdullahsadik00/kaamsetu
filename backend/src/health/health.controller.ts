@@ -1,8 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
+import { Public } from '../auth/auth.guard.js';
 import { RawResponse } from '../common/response-envelope.interceptor.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 /** Unversioned and un-enveloped on purpose: uptime checks read it directly (docs/13 §4). */
+@Public()
 @RawResponse()
 @Controller('health')
 export class HealthController {

@@ -11,12 +11,14 @@ import request from 'supertest';
 import { App } from 'supertest/types.js';
 import { z } from 'zod';
 import { AppModule } from './../src/app.module.js';
+import { Public } from './../src/auth/auth.guard.js';
 import { configureApp } from './../src/app.setup.js';
 import { ZodValidationPipe } from './../src/common/zod-validation.pipe.js';
 
 const EchoSchema = z.strictObject({ name: z.string().min(1) });
 
 /** Test-only routes that exercise the API conventions. */
+@Public()
 @Controller('test-echo')
 class EchoController {
   @Get() hello() {

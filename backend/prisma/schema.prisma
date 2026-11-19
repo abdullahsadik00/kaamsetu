@@ -46,8 +46,10 @@ model Organization {
 
 model User {
   id                String       @id @default(uuid()) @db.Uuid
+  /// E.164, e.g. +919876501234 (docs/10 §1)
   phone             String       @unique
-  name              String
+  /// Empty until the user completes onboarding (module 4.1)
+  name              String       @default("")
   email             String?
   preferredLanguage String       @default("en")
   status            RecordStatus @default(ACTIVE)
@@ -55,6 +57,52 @@ model User {
   updatedAt         DateTime     @updatedAt
 
   memberships OrganizationMember[]
+  devices     Device[]
+}
+
+// ---------- Authentication (docs/10 §1) ----------
+
+/// One SMS one-time password. Only a hash of the code is stored.
+model OtpChallenge {
+  id         String    @id @default(uuid()) @db.Uuid
+  phone      String
+  codeHash   String
+  attempts   Int       @default(0)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([phone, createdAt])
+}
+
+/// A phone the user logged in on. Revoking it ends that phone's session.
+model Device {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  platform   String
+  label      String?
+  lastSeenAt DateTime  @default(now())
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  user          User           @relation(fields: [userId], references: [id])
+  refreshTokens RefreshToken[]
+
+  @@index([userId])
+}
+
+/// Rotating refresh token. Only a SHA-256 hash is stored; each token works once.
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  deviceId  String    @db.Uuid
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  device Device @relation(fields: [deviceId], references: [id])
+
+  @@index([deviceId])
 }
 
 model OrganizationMember {

@@ -14,6 +14,10 @@ export const EnvSchema = z.object({
         message: 'must be a postgresql:// connection string',
       },
     ),
+  /** Signs access tokens (HS256). At least 32 random characters. */
+  JWT_ACCESS_SECRET: z.string().min(32),
+  /** Peppers OTP hashes so a database leak does not reveal codes. At least 32 random characters. */
+  OTP_HASH_SECRET: z.string().min(32),
   /** json in staging/production for log tooling; pretty for local work. */
   LOG_FORMAT: z.enum(['json', 'pretty']).optional(),
 });

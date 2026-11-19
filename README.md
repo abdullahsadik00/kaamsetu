@@ -23,6 +23,16 @@ npm run start:dev
 
 Open http://localhost:3000/health. It returns `"database":"down"` until PostgreSQL is set up.
 
+### Try login locally
+
+Ask for a code; in development it is printed in the backend console (no SMS is sent):
+
+```bash
+curl -X POST localhost:3000/api/v1/auth/request-otp -H "content-type: application/json" -d '{"phone":"9000000001"}'
+```
+
+Then exchange it for tokens at `POST /api/v1/auth/verify-otp` with `{"phone","code","device":{"platform":"android"}}`. New settings `JWT_ACCESS_SECRET` and `OTP_HASH_SECRET` must be in `backend/.env` (see `.env.example`).
+
 ## Run the mobile app
 
 ```bash

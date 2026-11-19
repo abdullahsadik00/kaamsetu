@@ -2,6 +2,14 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-19 — Login (phone + OTP)
+
+### Added
+- Backend auth (T3.4): request/verify OTP, access tokens (15 min) and rotating refresh tokens (60 days, reuse signs the device out), devices, logout, `GET /auth/me`. Deny-by-default guard with `@Public()`. Per-number OTP limits (3 sends / 15 min, 5 attempts, 5-minute expiry), per-IP throttling. Tables `OtpChallenge`, `Device`, `RefreshToken`. New required settings `JWT_ACCESS_SECRET`, `OTP_HASH_SECRET`.
+
+### Fixed
+- `npm start` failed because `main.ts` validated settings before loading `backend/.env` (introduced with the API conventions the same day; tests did not cover it).
+
 ## 2026-11-19 — Continuous integration
 
 ### Added
