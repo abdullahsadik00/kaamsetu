@@ -23,6 +23,15 @@ npm run start:dev
 
 Open http://localhost:3000/health. It returns `"database":"down"` until PostgreSQL is set up.
 
+### Demo data
+
+```bash
+cd backend
+npm run db:seed
+```
+
+Creates two made-up businesses. Log in as the demo owner with phone `9000002001`.
+
 ### Try login locally
 
 Ask for a code; in development it is printed in the backend console (no SMS is sent):

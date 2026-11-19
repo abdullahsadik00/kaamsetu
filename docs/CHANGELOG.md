@@ -2,6 +2,11 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-19 — Demo seed data
+
+### Added
+- `npm run db:seed` (`prisma/seed.ts`, run with `tsx`): two made-up demo businesses with owners, 6 senior technicians and 6 helpers (names from the prototype, fake numbers). Re-runnable; refuses production (T3.3).
+
 ## 2026-11-19 — Roles and tenant isolation
 
 ### Added

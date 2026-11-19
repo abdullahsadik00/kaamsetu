@@ -29,6 +29,8 @@
 - Seed script with a synthetic business that mirrors the prototype (6 teams, Pune localities, sample ACs). **No real customer data in tests or seeds.**
 - A second synthetic organization for isolation tests.
 
+Implemented (T3.3): `npm run db:seed` creates "Cool Care AC Services (demo)" (owner `+91 90000 02001`, 6 seniors `…02101–02106`, 6 helpers `…02201–02206`) and "Arctic Air (demo B)" (owner `…03001`). Re-running updates instead of duplicating; it refuses to run in production. Each module that adds tables extends the seed (teams, customers, ACs, jobs…).
+
 ## 4. Coverage targets
 
 Measure, don't chase: ≥ 80 % lines on backend domain services (money, status, permissions, sync); no target on controllers/UI. Every bug fix gets a regression test.
