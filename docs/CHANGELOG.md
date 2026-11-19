@@ -7,6 +7,7 @@ Meaningful product, documentation, architecture and implementation changes, newe
 ### Added
 - Local `kaamsetu` database on PostgreSQL 16 and the first Prisma migration (identity tables). `/health` reports the database up.
 - GitHub CLI installed for the private remote (Q-12).
+- Private GitHub repository `abdullahsadik00/kaamsetu`; `main` pushed.
 
 ## 2026-11-19 — Documentation audit and execution planning
 
