@@ -1,3 +1,5 @@
+// Load backend/.env before anything reads process.env (real env vars still win).
+import 'dotenv/config';
 import { ConsoleLogger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
