@@ -8,7 +8,7 @@
 
 | Item | Decision |
 |---|---|
-| Login method | Phone number + **SMS OTP** (D-015). No passwords |
+| Login method | **Pilot (D-025): Google sign-in**; staff are linked to their employee record by scanning the owner's QR invite (6-digit fallback). Phone number + SMS OTP (D-015) is implemented but unused until an SMS provider is chosen (Q-08). No passwords |
 | OTP | 6 digits, valid 5 minutes, max 5 attempts, max 3 sends per number per 15 minutes, IP rate limit |
 | OTP storage | Hashed, never logged, deleted after use or expiry |
 | SMS provider | **Open (Q-08).** Must support Indian DLT template registration. Compare cost per SMS, delivery rate, and a WhatsApp-OTP fallback. In `development` a stub prints OTPs to the local console only |
@@ -23,8 +23,8 @@ Field staff must not be logged out mid-job: an expired access token just waits f
 ## 2. Staff onboarding
 
 1. Owner adds an employee with name, phone and role, and puts them in a team.
-2. The employee gets an SMS with the app link (prototype copy).
-3. They log in with phone + OTP; the membership already exists, so there is no setup.
+2. Pilot (D-025): the owner shows the employee a QR invite (single use, 24 h, stored hashed), or sends the 6-digit code on WhatsApp.
+3. The employee signs in with Google and scans the QR (or types the code); this links their Google account to the existing membership. The owner can reset the link from Employees (new phone, lost account). With SMS later: the employee gets an SMS with the app link and logs in with phone + OTP.
 4. A phone number belongs to one `User`, who may later belong to more than one organization (doc 03). The app shows one active organization at a time.
 
 ## 3. Authorization

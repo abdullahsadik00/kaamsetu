@@ -2,6 +2,11 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-19 — Pilot login decision
+
+### Changed
+- D-025: the free pilot uses Google sign-in, with staff linked by the owner's QR invite (6-digit fallback), instead of SMS OTP (D-015, now superseded for the pilot). Q-08 deferred. New task T3.11. Docs 10 §1–§2 updated.
+
 ## 2026-11-19 — Mobile app shell
 
 ### Added

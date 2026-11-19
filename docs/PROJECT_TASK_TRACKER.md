@@ -59,6 +59,7 @@
 | T3.7 | Mobile login + role-based navigation shell (owner / technician / helper) | Critical | Completed 19 Nov 2026 (phone → OTP, `Stack.Protected` per role, placeholder tabs, "Set up your business", language switch on Profile/More) | T3.4, T3.6, T2.8 | Screens | Each role lands on its home | 02 §3 | Component + manual |
 | T3.8 | Mobile SQLite schema/migrations + outbox table and sender loop | Critical | Completed 19 Nov 2026 (`src/db` per-user DB, `user_version` migrations; `src/features/sync` outbox + sender with backoff; 11 Jest tests on Node SQLite) | T3.6 | `src/db`, `src/features/sync` | Outbox survives app kill; retries with backoff | 09 | Unit |
 | T3.9 | CI: lint, type-check, tests both apps; Postgres service | High | Completed 19 Nov 2026 (`.github/workflows/ci.yml`; first run green; mobile lint, type-check and unit tests blocking since T3.6–T3.8) | T0.6 | Workflow file | Green on `main` | 13 | CI |
+| T3.11 | Pilot login (D-025): Google sign-in (owner and staff) + owner QR / 6-digit invite to link staff; reset link from Employees | Critical | Not Started | T3.7 | Backend Google ID-token check, invite table; mobile Google sign-in + QR scan; EAS dev build | Each seeded role logs in with Google and lands on its home; invite single-use and expiring | 10, 05, 06 | Unit + integration + device |
 | T3.10 | Hosting decision; staging API + DB + bucket; EAS build profile | High | Not Started | Q-09 | Staging URL, APK | Login works on a phone against staging | 13 | Smoke test |
 
 ## Phase 4 — Core MVP modules (M4–M8)
