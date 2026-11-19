@@ -2,6 +2,16 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-19 — Pre-interview discovery answers
+
+### Added
+- Discovery findings from Sadik's answers: job sources (brand service-centre tickets, B2B), paste-to-auto-fill tickets, money collection, GST, time slots, helper login, owner offline, parts process, attendance.
+- Decisions D-019 to D-024; open questions Q-14 (who pays for service-centre jobs) and Q-15 (charges per source).
+- Data model: ticket number, source partner, brand-portal closure; task T4.5a (ticket paste) and T1.9 (ticket samples).
+
+### Changed
+- Estimates back in P0 (D-020 supersedes D-010). Owner basic offline (D-021 narrows D-018). Cash collection accepted (D-008). Attendance moved from non-goal to P1 (D-023).
+
 ## 2026-11-19 — Phase 1 discovery started
 
 ### Added

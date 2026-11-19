@@ -17,9 +17,11 @@
 |---|---|---|
 | Senior technician | Their team's assigned jobs (today, tomorrow, and open on-hold jobs), customer name/phone/address, ACs on the job, last service summary for those ACs; start work, status updates, finish page, photos, money collected | Seeing newly assigned jobs, full customer history |
 | Helper (if they log in, Q-01) | Current team job: locality, job type, what to carry | Everything else |
-| Owner | Read: recent jobs, customers and bills already loaded. Write: **save an enquiry** offline (*proposed*, Q-07) | Creating jobs, assigning teams, bills, payments, confirming cash handovers (all need fresh server data) |
+| Owner (D-021) | Read: recent jobs, customers and ACs already loaded. Write: save enquiries, create and assign jobs, add customers and ACs | Bills, quotations, payments, confirming cash handovers |
 
-Financial writes (bills, payments, cash handover confirmation) are **online-only for the owner** in MVP. This removes the hardest conflict cases. Revisit after the pilot if the owner often works without internet.
+Financial writes (bills, quotations, payments, cash handover confirmation) are **online-only** in MVP. This removes the hardest conflict cases.
+
+Owner offline writes: a job created offline shows "Will reach the team when your phone is online" until it syncs; the job number arrives then. A customer added offline may duplicate one added elsewhere; the server warns on matching phone numbers at sync and the owner can merge (merge tool: P1).
 
 ## 3. Local storage
 

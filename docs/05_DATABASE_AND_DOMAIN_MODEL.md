@@ -149,7 +149,11 @@ Represents the original customer enquiry/complaint.
 - customerId
 - siteId
 - requestNumber (per organization, shown as `E-213`)
-- source: WHATSAPP | PHONE | WALK_IN | OTHER
+- source: WHATSAPP | PHONE | WALK_IN | SERVICE_CENTRE | B2B | OTHER
+- sourcePartnerId (optional; brand service centre or builder, see SourcePartner)
+- externalTicketNumber (optional; brand's ticket number, unique per organization + partner)
+- listedCharges (optional; charges named in the ticket, paise)
+- rawTicketText (optional; pasted text kept for audit, deleted after 90 days)
 - complaint
 - status: OPEN | CONVERTED | CLOSED
 - equipment (optional list of known ACs)
@@ -179,6 +183,11 @@ Represents one actual visit/work order.
 - holdReason (optional short text / code)
 - amountToCollect (optional, paise)
 - followUpOfJobId (optional; links a follow-up visit to the earlier job)
+- externalTicketNumber (optional; copied from the request)
+- brandPortalClosedAt (optional; owner ticks "Closed in brand portal")
+
+### SourcePartner (D-019)
+- id, organizationId, name (e.g. a brand service centre or builder), type: SERVICE_CENTRE | BUILDER | DEALER | OTHER, ticketFormat (optional parser key), active
 - outcome: COMPLETED | NEEDS_FOLLOW_UP | NOT_COMPLETED (optional)
 - createdByMemberId
 - startedAt (optional)

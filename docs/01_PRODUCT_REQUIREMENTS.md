@@ -46,7 +46,7 @@ These are the initial pilot assumptions. Validate the actual daily workflow befo
 Do not build these into the first release unless pilot evidence proves they are essential:
 
 - Full accounting or ERP.
-- Payroll and employee attendance.
+- Payroll and employee attendance (wanted after the pilot, D-023).
 - GPS/live tracking.
 - Route optimization.
 - In-app chat.
@@ -119,7 +119,7 @@ Design requirements:
 - No billing or customer administration.
 - Access only to the current/assigned team's relevant job information.
 
-**Important:** The pilot must validate whether helpers need their own login. If they do not use the app directly, the senior technician can submit the job report for the team. Do not require an account for every helper merely because they are part of a team.
+**Decision (D-022):** helpers get a simple login showing today's team job, customer name/phone/address, job type, and their senior technician. Previously: the pilot must validate whether helpers need their own login. If they do not use the app directly, the senior technician can submit the job report for the team. Do not require an account for every helper merely because they are part of a team.
 
 ## 6. Roles and permissions
 
@@ -161,14 +161,15 @@ The data model should support a future optional team supervisor role without req
 9. Senior technician job workflow.
 10. Simple service completion record.
 11. Offline storage and sync for field work.
-12. Basic invoices (called *bills* in the UI). Estimates moved to P1 (D-010).
+12. Basic invoices (called *bills* in the UI) and written quotations for big jobs (D-020).
+15. Brand service-centre tickets: ticket number, source, paste-to-auto-fill (D-019).
 13. Payment recording and outstanding balance.
 14. Customer service history.
 
 ### P1 — After initial pilot
 
 1. Basic AMC contracts and visit tracking.
-1. Estimates/quotations (moved from P0, D-010).
+1. Attendance linked to salary (D-023).
 2. Expense tracking.
 3. Basic business reports.
 4. Marathi/Hindi localization refinement.
@@ -202,6 +203,8 @@ The data model should support a future optional team supervisor role without req
 10. Save job.
 
 Target: a repeat-customer job should be created in about one minute after the owner is familiar with the app.
+
+**Service-centre tickets (D-019).** Many jobs arrive as WhatsApp texts from brand service centres, in a few fixed formats (ticket number, customer, phone, address, pincode, product, job type, charges). The owner taps **Paste ticket**; the app fills the customer, site, job type, ticket number and listed charges, and the owner checks before saving. The ticket number is shown on the job and the bill. Closing the ticket in the brand's portal stays manual; the job has a "Closed in brand portal" tick so it isn't forgotten. Builders and companies (B2B) are another regular source.
 
 **Enquiry first (D-007).** When the customer has not yet booked (for example "send me the AMC price"), the owner saves an **enquiry** instead of a job: customer, ACs if known, what they asked, and source (WhatsApp/Call/Other). Open enquiries show on the owner's home screen. When the customer books, the owner converts the enquiry into a job without retyping anything. In the data model an enquiry is a `ServiceRequest`.
 
@@ -250,7 +253,7 @@ Between assignment and completion the senior technician can send one-tap updates
 
 ### 8.3b Money collected by the team (*proposed*, D-008)
 
-In many small AC businesses the technician collects cash or UPI on site. The prototype shows this; the pilot must confirm it (Q-03).
+The technician collects cash or UPI on site (confirmed by Sadik, D-008). UPI goes to the **owner's UPI/QR**, so the owner confirms it on seeing the credit; cash is confirmed on handover.
 
 1. When creating the job, the owner can set an **amount to collect** (optional).
 2. On the finish page the senior technician records money received: amount and method (Cash/UPI), or "Not paid".

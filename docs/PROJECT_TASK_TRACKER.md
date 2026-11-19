@@ -22,13 +22,14 @@
 
 | ID | Task | Pri | Status | Depends | Deliverable | Acceptance criteria | Docs | Testing |
 |---|---|---|---|---|---|---|---|---|
-| T1.1 | Owner interview using `discovery/INTERVIEW_KIT.md` Part A | Critical | In Progress (kit ready; interview to be booked) | — | Notes in `docs/discovery/` | All guide topics covered; real examples collected | Plan Ph1 | — |
+| T1.1 | Owner interview using `discovery/INTERVIEW_KIT.md` Part A, focused on "Still to ask" in the findings | Critical | In Progress (most answers given by Sadik 19 Nov; Q-14, Q-15, Q-04 details and confirmation remain) | — | Notes in `docs/discovery/` | All guide topics covered; real examples collected | Plan Ph1 | — |
 | T1.2 | Senior technician interview + ride-along on one job | Critical | Not Started | — | Notes, photos of current process (no personal data) | Field steps, parts, money, network gaps recorded | Plan Ph1 | — |
 | T1.3 | Helper conversation | High | Not Started | — | Notes | Q-01 answerable | 02 §3 | — |
 | T1.4 | Collect artefacts (WhatsApp enquiries, bill, price list, GST bill) with data hidden | High | Not Started | T1.1 | Files in `docs/discovery/artefacts/` | No customer names/phones visible | — | — |
 | T1.5 | Ask the owner's accountant about GST bill requirements | High | Not Started | T1.1 | Written answer | Q-04 resolved | 01 §12 | — |
-| T1.6 | Write discovery findings; resolve Q-01, Q-03, Q-04, Q-06, Q-07, Q-10, Q-11 | Critical | Not Started | T1.1–T1.5 | `DISCOVERY_FINDINGS.md`; decision log updated | Each question has an answer or a planned test | DECISION_LOG | — |
+| T1.6 | Write discovery findings; resolve Q-01, Q-03, Q-04, Q-06, Q-07, Q-10, Q-11, Q-14, Q-15 | Critical | In Progress (pre-interview answers recorded) | T1.1–T1.5 | `DISCOVERY_FINDINGS.md`; decision log updated | Each question has an answer or a planned test | DECISION_LOG | — |
 | T1.7 | Update PRD/UX/DB docs from findings | High | Not Started | T1.6 | Doc commits | No contradiction with findings | 01, 02, 05 | Consistency review |
+| T1.9 | Collect 5 anonymised samples of each service-centre ticket format | High | Not Started | T1.1 | `discovery/artefacts/ticket-formats.md` | Every known format covered; no real names/phones | 01 | Used as parser test cases |
 | T1.8 | Owner signs off prioritised P0 list | Critical | Not Started | T1.7 | Written OK (WhatsApp fine) | Each P0 item marked must / later / not needed | 01 §7 | — |
 
 ## Phase 2 — UX/UI design (M2)
@@ -108,6 +109,11 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Tests:** conversion copies data and links job; numbering per org unique under concurrency.
 - **Acceptance:** enquiry → job in one tap with no retyping.
 
+### T4.5a Service-centre ticket paste — High — Not Started — depends T4.5, T1.9
+- **Objective:** turn a pasted ticket message into an enquiry/job in seconds (D-019).
+- **Work:** parser per known format (pure function, fully unit-tested against T1.9 samples); review screen; ticket number, source partner; duplicate-ticket warning; "Closed in brand portal" tick.
+- **Acceptance:** every sample format fills name, phone, address, pincode, job type, ticket number and charges correctly; unknown text falls back to manual entry without losing what was pasted.
+
 ### T4.6 Job creation and assignment — Critical — Not Started — depends T4.4, T4.5, T4.2
 - **Objective:** create and assign a job in about a minute.
 - **Stories:** create job with ACs, service type, complaint, day and slot, team, amount to collect; reassign; one-day helper swap; cancel with reason; follow-up job linked.
@@ -139,9 +145,9 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Tests:** all 12 scenarios in doc 09 §10, automated where possible, plus real-phone run.
 - **Acceptance:** 3 days offline with 5 jobs and 20 photos syncs with zero loss and zero duplicates.
 
-### T4.10 Invoicing — Critical — Not Started — depends T4.8 (and Q-04 for GST)
+### T4.10 Invoicing and quotations — Critical — Not Started — depends T4.8 (and Q-04 for GST)
 - **Objective:** bill from a completed job in under 2 minutes.
-- **Stories:** create bill from job (prefilled parts/services); add lines; discount; GST per line if enabled; issue; PDF; share on WhatsApp; cancel with reason.
+- **Stories:** create a written quotation for big jobs, share as PDF, convert to bill (D-020); create bill from job (prefilled parts/services and ticket charges); add lines; discount; GST per line if enabled; issue; PDF; share on WhatsApp; cancel with reason.
 - **DB:** Invoice, InvoiceItem, numbering. **API:** doc 06 §8.
 - **Validation:** server recalculates totals in paise; issued bill immutable; cancellation keeps record.
 - **Tests:** money suite (doc 12 §2); numbering under concurrency; PDF contains required fields.
