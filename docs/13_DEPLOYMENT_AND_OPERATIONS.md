@@ -28,7 +28,7 @@ Any choice must be recorded in `DECISION_LOG.md` with cost per month.
 
 ## 3. CI/CD
 
-Phase 3 foundation (task T3.9):
+Phase 3 foundation (task T3.9). **Implemented 19 Nov 2026** in `.github/workflows/ci.yml` for the push/PR checks below; deploy steps come with staging (T3.10). Mobile lint and type-check are non-blocking until the shell replaces the Expo demo template (T3.6).
 - On every push: install, lint, type-check, unit tests for mobile and backend; backend integration tests against a PostgreSQL service container.
 - On merge to `main`: build the backend image, run migrations against staging, deploy to staging.
 - Production deploy: manual trigger from a tagged release, after staging check.

@@ -2,6 +2,12 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-19 — Continuous integration
+
+### Added
+- GitHub Actions CI on every push and pull request: backend install, migrations against Postgres 16, build, lint, unit and e2e tests (blocking); mobile lint and type-check (non-blocking until T3.6). First run passed.
+- Mobile ESLint flat config (`eslint-config-expo`).
+
 ## 2026-11-19 — Phase 3 foundation: API conventions and configuration
 
 ### Added

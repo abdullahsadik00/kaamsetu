@@ -16,7 +16,7 @@
 | T0.4 | Update docs; add specs 09–13; plan, roadmap, tracker, logs | High | Completed | T0.3 | Docs commits of 19 Nov 2026 | No contradictions left unrecorded | all | Consistency review |
 | T0.5 | Install PostgreSQL 16+ locally (or Docker) | Critical | Completed (PostgreSQL 16.14 was already installed; DB `kaamsetu` + migration `20261119035740_init`, commit `19cdc2e`) | — | Running DB, `DATABASE_URL` set | `/health` reports `database: up`; first migration applies | README, 13 | `npx prisma migrate dev` |
 | T0.6 | Private remote repository + push | High | Completed (private repo github.com/abdullahsadik00/kaamsetu, `main` tracks `origin/main`) | — | Remote `origin` | `main` pushed; history intact | 11 | — |
-| T0.8 | Local lint: Windows Application Control blocks oxlint's native binary | Low | Blocked (system security setting; lint runs in CI on Linux, T3.9) | — | Lint runs locally or in CI | `npm run lint` passes somewhere on every push | 11 | — |
+| T0.8 | Local lint: Windows Application Control blocks oxlint's native binary | Low | Worked around (lint runs and passes in CI on every push; local lint still blocked) | — | Lint runs locally or in CI | `npm run lint` passes somewhere on every push | 11 | — |
 | T0.7 | Decide the uncommitted formatting change in `backend/src/prisma/prisma.service.ts` | Low | Completed (committed `586e934`) | — | Commit or discard by you | Working tree clean | — | Build passes |
 
 ## Phase 1 — Discovery (M1)
@@ -58,7 +58,7 @@
 | T3.6 | Mobile libraries, theme from tokens, i18n (en/hi/mr), API client with refresh | Critical | Not Started | T2.6 | Mobile commit | App runs on device in 3 languages | 04, 02 | Component tests |
 | T3.7 | Mobile login + role-based navigation shell (owner / technician / helper) | Critical | Not Started | T3.4, T3.6, T2.8 | Screens | Each role lands on its home | 02 §3 | Component + manual |
 | T3.8 | Mobile SQLite schema/migrations + outbox table and sender loop | Critical | Not Started | T3.6 | `src/db`, `src/features/sync` | Outbox survives app kill; retries with backoff | 09 | Unit |
-| T3.9 | CI: lint, type-check, tests both apps; Postgres service | High | Not Started | T0.6 | Workflow file | Green on `main` | 13 | CI |
+| T3.9 | CI: lint, type-check, tests both apps; Postgres service | High | Completed 19 Nov 2026 (`.github/workflows/ci.yml`; first run green; mobile checks non-blocking until T3.6) | T0.6 | Workflow file | Green on `main` | 13 | CI |
 | T3.10 | Hosting decision; staging API + DB + bucket; EAS build profile | High | Not Started | Q-09 | Staging URL, APK | Login works on a phone against staging | 13 | Smoke test |
 
 ## Phase 4 — Core MVP modules (M4–M8)
