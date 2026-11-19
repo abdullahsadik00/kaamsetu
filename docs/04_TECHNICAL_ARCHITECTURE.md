@@ -13,7 +13,7 @@
 
 ## 2. Recommended stack
 
-**Installed today (19 Nov 2026):** Expo SDK 58 (React Native 0.88, React 19.3, TypeScript 6, Expo Router); NestJS 12 (ESM, Vitest, oxlint); Prisma 7.10 with `@prisma/adapter-pg`. Everything else below is **planned** and gets added in the task that first needs it.
+**Installed today (19 Nov 2026):** Expo SDK 58 (React Native 0.88, React 19.3, TypeScript 6, Expo Router); NestJS 12 (ESM, Vitest, oxlint); Prisma 7.10 with `@prisma/adapter-pg`. Mobile shell (T3.6–T3.8): TanStack Query, Zustand, React Hook Form, Zod, i18next, Expo SQLite, Expo SecureStore, Expo Localization, Jest (`jest-expo`). Everything else below is **planned** and gets added in the task that first needs it.
 
 ### Mobile
 - React Native.

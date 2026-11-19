@@ -2,6 +2,14 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-19 — Mobile app shell
+
+### Added
+- Mobile foundation (T3.6): Expo template replaced by `src/app` thin routes, `src/features`, `src/theme` (doc 02 tokens, Noto Sans / Noto Sans Devanagari by language), `src/localization` (en/hi/mr; technician/helper labels from the prototype, login/owner labels translated and awaiting review), `src/api` client for the `{ data, meta }` / `{ error }` envelope with single-flight token refresh; tokens only in SecureStore.
+- Login and navigation (T3.7): phone → 6-digit OTP against the backend; owner → Home/Jobs/Customers/Billing/More, senior technician → My Work/History/Profile, helper → Today's work, no business → "Set up your business" (placeholders). A saved session opens offline; only a 401 on refresh logs out. Language switch on Profile/More.
+- On-phone storage (T3.8): one SQLite database per user with versioned migrations, the doc 09 §5 outbox and a sender with backoff (5 s → 10 min), NEEDS_ATTENTION on 4xx/conflict, resend after an app kill. Logout warns about unsent changes and deletes the local database.
+- Mobile unit tests (Jest) for the outbox; CI mobile lint, type-check and tests are now blocking.
+
 ## 2026-11-19 — Demo seed data
 
 ### Added
