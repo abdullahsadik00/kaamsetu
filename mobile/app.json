@@ -15,7 +15,8 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.kaamsetu.app"
     },
     "web": {
       "output": "single",
@@ -34,7 +35,16 @@
       "expo-sqlite",
       "expo-secure-store",
       "expo-localization",
-      "expo-font"
+      "expo-font",
+      "@react-native-google-signin/google-signin",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "KaamSetu uses the camera to scan the invite QR code from your business owner.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

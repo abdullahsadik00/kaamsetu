@@ -4,10 +4,11 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { restoreSession, useSession } from '@/features/auth/session';
 import { SyncEngine } from '@/features/sync/sync-engine';
-import { initI18n } from '@/localization/i18n';
+import { i18n, initI18n } from '@/localization/i18n';
 import { fontFiles } from '@/theme/fonts';
 import { colors } from '@/theme/tokens';
 
@@ -23,6 +24,7 @@ const queryClient = new QueryClient({
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(fontFiles);
   const [i18nReady, setI18nReady] = useState(false);
+  const { t } = useTranslation(undefined, { i18n });
   const status = useSession((s) => s.status);
   const role = useSession((s) => s.profile?.membership?.role ?? null);
   const userId = useSession((s) => s.profile?.user.id ?? null);
@@ -40,6 +42,13 @@ export default function RootLayout() {
   if (!ready) return null;
 
   const signedIn = status === 'signedIn';
+  /** Screens opened on top of a home, with a back arrow. */
+  const pushed = {
+    headerShown: true,
+    headerStyle: { backgroundColor: colors.paper },
+    headerTintColor: colors.ink,
+    headerShadowVisible: false,
+  };
   return (
     <QueryClientProvider client={queryClient}>
       <StatusBar style="dark" />
@@ -50,8 +59,11 @@ export default function RootLayout() {
         <Stack.Protected guard={!signedIn}>
           <Stack.Screen name="(auth)" />
         </Stack.Protected>
+        <Stack.Screen name="join" />
         <Stack.Protected guard={signedIn && role === 'OWNER'}>
           <Stack.Screen name="(owner)" />
+          <Stack.Screen name="employees/index" options={{ ...pushed, title: t('employees.title') }} />
+          <Stack.Screen name="employees/[id]" options={{ ...pushed, title: '' }} />
         </Stack.Protected>
         <Stack.Protected guard={signedIn && role === 'SENIOR_TECHNICIAN'}>
           <Stack.Screen name="(field)" />
@@ -60,7 +72,8 @@ export default function RootLayout() {
           <Stack.Screen name="(helper)" />
         </Stack.Protected>
         <Stack.Protected guard={signedIn && role === null}>
-          <Stack.Screen name="setup-business" />
+          <Stack.Screen name="join-business" />
+          <Stack.Screen name="scan" options={{ ...pushed, title: t('join.scanTitle') }} />
         </Stack.Protected>
       </Stack>
     </QueryClientProvider>

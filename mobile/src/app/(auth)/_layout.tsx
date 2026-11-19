@@ -15,6 +15,7 @@ export default function AuthLayout() {
       }}
     >
       <Stack.Screen name="login" options={{ headerShown: false }} />
+      <Stack.Screen name="phone" options={{ title: t('auth.loginTitle') }} />
       <Stack.Screen name="otp" options={{ title: t('auth.otpTitle') }} />
     </Stack>
   );

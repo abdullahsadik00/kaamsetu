@@ -7,17 +7,22 @@ import { apiBaseUrl } from '@/api/config';
 import { ApiError } from '@/api/errors';
 import { secureTokenStore, type Role, type SessionProfile } from '@/api/token-store';
 
+import { googleIdToken, googleSignOut } from './google';
+
 type SessionState = {
   status: 'loading' | 'signedOut' | 'signedIn';
   profile: SessionProfile | null;
   /** Phone typed on the login screen, kept for the code screen. Not persisted. */
   pendingPhone: string | null;
+  /** Invite token from a `kaamsetu://join` link opened before joining. Not persisted. */
+  pendingInvite: string | null;
 };
 
 export const useSession = create<SessionState>(() => ({
   status: 'loading',
   profile: null,
   pendingPhone: null,
+  pendingInvite: null,
 }));
 
 const signedOut = () => useSession.setState({ status: 'signedOut', profile: null });
@@ -67,15 +72,53 @@ export async function verifyOtp(phone: string, code: string): Promise<void> {
     {
       phone,
       code,
-      device: {
-        platform: Platform.OS === 'ios' ? 'ios' : 'android',
-        ...(Device.modelName ? { label: Device.modelName.slice(0, 60) } : {}),
-      },
+      device: device(),
     },
     { auth: false },
   );
   const profile = await api.saveSession(session);
   useSession.setState({ status: 'signedIn', profile, pendingPhone: null });
+}
+
+function device() {
+  return {
+    platform: Platform.OS === 'ios' ? 'ios' : 'android',
+    ...(Device.modelName ? { label: Device.modelName.slice(0, 60) } : {}),
+  };
+}
+
+/**
+ * Pilot login (D-025). Returns false if the user closed Google's picker.
+ * A new Google account arrives without a business and sees "Join your business".
+ */
+export async function googleLogin(): Promise<boolean> {
+  const idToken = await googleIdToken();
+  if (!idToken) return false;
+  const session = await api.post<SessionResponse>(
+    '/auth/google',
+    { idToken, device: device() },
+    { auth: false },
+  );
+  const profile = await api.saveSession(session);
+  useSession.setState({ status: 'signedIn', profile });
+  return true;
+}
+
+export type InviteAnswer = { token: string } | { phone: string; code: string };
+
+/** Links this Google login to the employee the owner invited; the app then opens that role's home. */
+export async function acceptInvite(answer: InviteAnswer): Promise<void> {
+  const session = await api.post<SessionResponse>('/auth/accept-invite', answer);
+  const profile = await api.saveSession(session);
+  useSession.setState({ status: 'signedIn', profile, pendingInvite: null });
+}
+
+/** Reads the invite token from a scanned QR (`kaamsetu://join?t=…`) or a bare token. */
+export function inviteTokenFrom(text: string): string | null {
+  const trimmed = text.trim();
+  const m = trimmed.match(/^kaamsetu:\/\/join\?(?:.*&)?t=([A-Za-z0-9_-]{20,100})/);
+  if (m) return m[1];
+  return /^[A-Za-z0-9_-]{30,100}$/.test(trimmed) ? trimmed : null;
 }
 
 /** Revokes this phone's session on the server when online, then clears everything local. */
@@ -87,11 +130,12 @@ export async function logout(): Promise<void> {
     if (!(error instanceof ApiError)) throw error;
   }
   for (const handler of logoutHandlers) await handler();
+  await googleSignOut();
   await secureTokenStore.clear();
   signedOut();
 }
 
-export type HomeRoute = '/login' | '/home' | '/my-work' | '/today' | '/setup-business';
+export type HomeRoute = '/login' | '/home' | '/my-work' | '/today' | '/join-business';
 
 /** Where each role lands (docs/02 §3). */
 export function homeRoute(state: Pick<SessionState, 'status' | 'profile'>): HomeRoute {
@@ -105,6 +149,6 @@ export function homeRoute(state: Pick<SessionState, 'status' | 'profile'>): Home
     case 'HELPER':
       return '/today';
     default:
-      return '/setup-business';
+      return '/join-business';
   }
 }

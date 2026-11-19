@@ -26,7 +26,7 @@ export function ProfileSection() {
   };
 
   const role = profile?.membership?.role;
-  const phone = profile?.user.phone.replace(/^\+91/, '+91 ') ?? '';
+  const phone = profile?.user.phone?.replace(/^\+91/, '+91 ') ?? profile?.user.email ?? '';
 
   return (
     <View style={styles.wrap}>

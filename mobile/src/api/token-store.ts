@@ -4,7 +4,14 @@ import * as SecureStore from 'expo-secure-store';
 export type Role = 'OWNER' | 'SENIOR_TECHNICIAN' | 'HELPER';
 
 export type SessionProfile = {
-  user: { id: string; phone: string; name: string | null; preferredLanguage: string };
+  /** `phone` is null for a Google user who has not joined a business yet (D-025). */
+  user: {
+    id: string;
+    phone: string | null;
+    email: string | null;
+    name: string | null;
+    preferredLanguage: string;
+  };
   membership: { organizationId: string; memberId: string; role: Role } | null;
 };
 
