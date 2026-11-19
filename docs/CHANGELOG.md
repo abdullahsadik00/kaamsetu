@@ -2,6 +2,15 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-19 — Google sign-in and owner invites (T3.11, in progress)
+
+### Added
+- Backend: `POST /auth/google` (Google ID token, `GOOGLE_CLIENT_IDS`), `POST /employees/:id/invite` (QR token + 6-digit code, single use, 24 h, hashed), `POST /auth/accept-invite` (QR token or phone + code, 5 tries), `POST /employees/:id/reset-login`; employees list shows `loginLinked`. `User.phone` optional, `User.googleSubject`, `MemberInvite` table. Seed prints a 7-day invite code per demo owner.
+- App: "Continue with Google", "Join your business" (scan QR or enter code), owner More › Employees with invite QR and reset login; Android package `com.kaamsetu.app`; needs our own build (not Expo Go). Phone OTP remains a development-only path.
+
+### Pending
+- On-phone test once the Google OAuth client IDs exist.
+
 ## 2026-11-19 — Pilot login decision
 
 ### Changed
