@@ -2,6 +2,12 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-19 — Local database
+
+### Added
+- Local `kaamsetu` database on PostgreSQL 16 and the first Prisma migration (identity tables). `/health` reports the database up.
+- GitHub CLI installed for the private remote (Q-12).
+
 ## 2026-11-19 — Documentation audit and execution planning
 
 ### Added

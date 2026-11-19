@@ -31,7 +31,7 @@
 | ID | Question | Why it matters | Resolve by | How |
 |---|---|---|---|---|
 | Q-01 | Do helpers get their own login, and what may they see? | Accounts, permissions, SMS cost, UI scope | G2 | Helper conversation + prototype test |
-| Q-02 | Install PostgreSQL natively or use Docker for local development? | Blocks migrations and all backend work | Before Phase 3 | Your choice (you asked to approve software installs) |
+| Q-02 | ~~Install PostgreSQL natively or use Docker?~~ **Resolved 19 Nov 2026:** native PostgreSQL 16 (already installed) | Blocks migrations and all backend work | Before Phase 3 | Your choice (you asked to approve software installs) |
 | Q-03 | Do technicians collect money on site, and how is it handed over? | D-008, payment model | G1 | Owner + technician interview |
 | Q-04 | Does the pilot issue GST bills; what format, SAC code, tax split? | Invoice fields and PDF | G1 (before T4.10 at the latest) | Ask the owner's accountant |
 | Q-05 | Are estimates/quotations needed before the pilot? | D-010 | G1 | Owner interview |
@@ -41,5 +41,5 @@
 | Q-09 | Which hosting provider and region? | Cost, latency, data location | Before T3.10 | Compare against doc 13 §2 criteria |
 | Q-10 | Are technicians worried about mobile data use (photos)? | Upload policy | G1 | Technician interview |
 | Q-11 | Which phones/Android versions does the team use? | Minimum device target | G1 | Ride-along |
-| Q-12 | Which remote Git host (private GitHub suggested)? | Backup, CI | Before T3.9 | Your choice |
+| Q-12 | ~~Which remote Git host?~~ **Resolved 19 Nov 2026:** private GitHub repository | Backup, CI | Before T3.9 | Your choice |
 | Q-13 | Commercial terms for the pilot business after the pilot | Trust, Phase 7 | Before G6 | Conversation with owner, in writing |

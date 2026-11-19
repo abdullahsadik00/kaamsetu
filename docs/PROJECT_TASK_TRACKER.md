@@ -14,8 +14,8 @@
 | T0.2 | Bring docs into the repo | High | Completed | — | `docs/` (commit `10375c0`) | All docs versioned | README | — |
 | T0.3 | Documentation audit | High | Completed | T0.2 | `DOCUMENTATION_AUDIT.md` | Lists docs, contradictions, missing docs, open decisions | — | — |
 | T0.4 | Update docs; add specs 09–13; plan, roadmap, tracker, logs | High | Completed | T0.3 | Docs commits of 19 Nov 2026 | No contradictions left unrecorded | all | Consistency review |
-| T0.5 | Install PostgreSQL 16+ locally (or Docker) | Critical | **Blocked** (your OK to install software, Q-02) | — | Running DB, `DATABASE_URL` set | `/health` reports `database: up`; first migration applies | README, 13 | `npx prisma migrate dev` |
-| T0.6 | Private remote repository + push | High | **Blocked** (Q-12) | — | Remote `origin` | `main` pushed; history intact | 11 | — |
+| T0.5 | Install PostgreSQL 16+ locally (or Docker) | Critical | Completed (PostgreSQL 16.14 was already installed; DB `kaamsetu` + migration `20261119035740_init`, commit `19cdc2e`) | — | Running DB, `DATABASE_URL` set | `/health` reports `database: up`; first migration applies | README, 13 | `npx prisma migrate dev` |
+| T0.6 | Private remote repository + push | High | **Blocked** (private GitHub chosen; GitHub CLI installed; waiting for `gh auth login`) | — | Remote `origin` | `main` pushed; history intact | 11 | — |
 | T0.7 | Decide the uncommitted formatting change in `backend/src/prisma/prisma.service.ts` | Low | Not Started | — | Commit or discard by you | Working tree clean | — | Build passes |
 
 ## Phase 1 — Discovery (M1)
