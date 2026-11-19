@@ -6,21 +6,18 @@ import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
 import { LanguagePicker } from '@/components/ui/language-picker';
 import { logout, useSession } from '@/features/auth/session';
+import { unsentCount } from '@/features/sync/sync-engine';
 import { colors, radius, space } from '@/theme/tokens';
 
-type Props = {
-  /** Number of saved changes not yet sent; logging out would lose them. */
-  unsentCount?: () => Promise<number>;
-};
-
 /** Who is logged in, language switch, and log out. Shared by every role. */
-export function ProfileSection({ unsentCount }: Props) {
+export function ProfileSection() {
   const { t } = useTranslation();
   const profile = useSession((s) => s.profile);
   const out = useMutation({ mutationFn: logout });
 
   const onLogout = async () => {
-    const count = unsentCount ? await unsentCount() : 0;
+    // Logging out deletes the phone's database, so warn about work not yet sent.
+    const count = await unsentCount();
     if (count === 0) return out.mutate();
     Alert.alert(t('profile.logoutTitle'), t('profile.logoutUnsent', { count }), [
       { text: t('common.cancel'), style: 'cancel' },

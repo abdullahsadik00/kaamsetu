@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 
 import { restoreSession, useSession } from '@/features/auth/session';
+import { SyncEngine } from '@/features/sync/sync-engine';
 import { initI18n } from '@/localization/i18n';
 import { fontFiles } from '@/theme/fonts';
 import { colors } from '@/theme/tokens';
@@ -24,6 +25,7 @@ export default function RootLayout() {
   const [i18nReady, setI18nReady] = useState(false);
   const status = useSession((s) => s.status);
   const role = useSession((s) => s.profile?.membership?.role ?? null);
+  const userId = useSession((s) => s.profile?.user.id ?? null);
 
   useEffect(() => {
     initI18n().finally(() => setI18nReady(true));
@@ -41,6 +43,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <StatusBar style="dark" />
+      {signedIn && userId ? <SyncEngine userId={userId} /> : null}
       {/* Each role only has its own screens; index.tsx sends people to their home. */}
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper } }}>
         <Stack.Screen name="index" />
