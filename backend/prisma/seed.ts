@@ -14,6 +14,12 @@ import {
   PrismaClient,
   type MemberRole,
 } from '../src/generated/prisma/client.js';
+import {
+  hashInviteValue,
+  inviteQrPayload,
+  newInviteCode,
+  newInviteToken,
+} from '../src/auth/invite-codes.js';
 
 if (process.env.NODE_ENV === 'production') {
   console.error('Refusing to seed demo data in production.');
@@ -68,20 +74,49 @@ async function upsertMember(
   organizationId: string,
   person: { name: string; phone: string },
   role: MemberRole,
-): Promise<void> {
+): Promise<string> {
   const user = await prisma.user.upsert({
     where: { phone: person.phone },
     create: { phone: person.phone, name: person.name },
     update: { name: person.name },
   });
-  await prisma.organizationMember.upsert({
+  const member = await prisma.organizationMember.upsert({
     where: { organizationId_userId: { organizationId, userId: user.id } },
     create: { organizationId, userId: user.id, role },
     update: { role, status: 'ACTIVE', deactivatedAt: null },
   });
+  return member.id;
 }
 
-async function seedBusiness(b: DemoBusiness): Promise<number> {
+/**
+ * Google login (D-025) needs an invite to claim an employee record. The demo
+ * owner gets one here (7 days, demo data only); staff invites come from the
+ * owner in the app.
+ */
+async function ownerInvite(organizationId: string, memberId: string) {
+  const secret = process.env.OTP_HASH_SECRET;
+  if (!secret) throw new Error('OTP_HASH_SECRET missing in backend/.env');
+  const token = newInviteToken();
+  const code = newInviteCode();
+  await prisma.memberInvite.updateMany({
+    where: { memberId, usedAt: null, revokedAt: null },
+    data: { revokedAt: new Date() },
+  });
+  await prisma.memberInvite.create({
+    data: {
+      organizationId,
+      memberId,
+      tokenHash: hashInviteValue(secret, token),
+      codeHash: hashInviteValue(secret, code),
+      expiresAt: new Date(Date.now() + 7 * 24 * 3600_000),
+    },
+  });
+  return { code, qr: inviteQrPayload(token) };
+}
+
+async function seedBusiness(
+  b: DemoBusiness,
+): Promise<{ people: number; invite: { code: string; qr: string } }> {
   const existing = await prisma.organization.findFirst({
     where: { phone: b.phone },
   });
@@ -95,7 +130,7 @@ async function seedBusiness(b: DemoBusiness): Promise<number> {
     ? await prisma.organization.update({ where: { id: existing.id }, data })
     : await prisma.organization.create({ data });
 
-  await upsertMember(org.id, b.owner, 'OWNER');
+  const ownerId = await upsertMember(org.id, b.owner, 'OWNER');
   for (const [i, team] of b.teams.entries()) {
     const n = String(i + 1).padStart(2, '0');
     await upsertMember(
@@ -109,19 +144,24 @@ async function seedBusiness(b: DemoBusiness): Promise<number> {
       'HELPER',
     );
   }
-  return 1 + b.teams.length * 2;
+  return {
+    people: 1 + b.teams.length * 2,
+    invite: await ownerInvite(org.id, ownerId),
+  };
 }
 
 async function main(): Promise<void> {
   for (const b of BUSINESSES) {
-    const people = await seedBusiness(b);
+    const { people, invite } = await seedBusiness(b);
     console.log(
-      `✓ ${b.name}: ${people} people (owner login: ${b.owner.phone})`,
+      `✓ ${b.name}: ${people} people. Owner invite (7 days): phone ${b.owner.phone} + code ${invite.code}`,
     );
   }
   console.log(
-    '\nLog in locally: request an OTP for the owner number; in development the code\n' +
-      'is printed in the backend console. Seniors are +91 9000002101…106, helpers 201…206.',
+    '\nGoogle login (D-025): sign in with any Google account, choose "Enter code" and type the\n' +
+      "owner's phone + code above; then invite staff from More › Employees. Running the seed\n" +
+      'again makes new owner codes. Phone OTP still works in development (seniors\n' +
+      '+91 9000002101…106, helpers 201…206; the code is printed in the backend console).',
   );
 }
 

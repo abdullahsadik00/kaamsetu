@@ -18,6 +18,11 @@ export const EnvSchema = z.object({
   JWT_ACCESS_SECRET: z.string().min(32),
   /** Peppers OTP hashes so a database leak does not reveal codes. At least 32 random characters. */
   OTP_HASH_SECRET: z.string().min(32),
+  /**
+   * Google OAuth client IDs accepted as ID-token audience (D-025), comma-separated:
+   * the Web client ID the app passes to Google Sign-In. Empty: Google login refused.
+   */
+  GOOGLE_CLIENT_IDS: z.string().optional(),
   /** json in staging/production for log tooling; pretty for local work. */
   LOG_FORMAT: z.enum(['json', 'pretty']).optional(),
 });

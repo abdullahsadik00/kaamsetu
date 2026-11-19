@@ -12,11 +12,21 @@ import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CurrentAuth, Public } from './auth.guard.js';
 import {
+  AcceptInviteSchema,
+  GoogleLoginSchema,
   RefreshSchema,
   RequestOtpSchema,
   VerifyOtpSchema,
 } from './auth.schemas.js';
-import type { Refresh, RequestOtp, VerifyOtp } from './auth.schemas.js';
+import type {
+  AcceptInvite,
+  GoogleLogin,
+  Refresh,
+  RequestOtp,
+  VerifyOtp,
+} from './auth.schemas.js';
+import { GoogleVerifier } from './google-verifier.js';
+import { InviteService } from './invite.service.js';
 import { OtpService } from './otp.service.js';
 import { TokenService } from './token.service.js';
 import type { AuthContext, IssuedTokens } from './token.service.js';
@@ -30,7 +40,53 @@ export class AuthController {
     private readonly otp: OtpService,
     private readonly tokens: TokenService,
     private readonly prisma: PrismaService,
+    private readonly google: GoogleVerifier,
+    private readonly invites: InviteService,
   ) {}
+
+  /**
+   * Pilot login (D-025): Google ID token from the app. A new Google account
+   * gets a user without a business; it joins one by accepting an invite.
+   */
+  @Public()
+  @Throttle(AUTH_THROTTLE)
+  @Post('google')
+  @HttpCode(HttpStatus.OK)
+  async googleLogin(
+    @Body(new ZodValidationPipe(GoogleLoginSchema)) body: GoogleLogin,
+  ) {
+    const id = await this.google.verify(body.idToken);
+    const user =
+      (await this.prisma.user.findUnique({
+        where: { googleSubject: id.subject },
+      })) ??
+      (await this.prisma.user.create({
+        data: {
+          googleSubject: id.subject,
+          email: id.email,
+          name: id.name ?? '',
+        },
+      }));
+    if (user.status !== 'ACTIVE') {
+      throw new AppError(
+        HttpStatus.FORBIDDEN,
+        'ACCOUNT_DISABLED',
+        'This account is not active. Contact the business owner.',
+      );
+    }
+    return this.session(await this.tokens.loginNewDevice(user.id, body.device));
+  }
+
+  /** Links the signed-in Google user to the employee record the owner invited (QR or phone + code). */
+  @Throttle(AUTH_THROTTLE)
+  @Post('accept-invite')
+  @HttpCode(HttpStatus.OK)
+  async acceptInvite(
+    @CurrentAuth() auth: AuthContext,
+    @Body(new ZodValidationPipe(AcceptInviteSchema)) body: AcceptInvite,
+  ) {
+    return this.session(await this.invites.accept(auth, body));
+  }
 
   @Public()
   @Throttle(AUTH_THROTTLE)
@@ -89,6 +145,7 @@ export class AuthController {
       user: {
         id: user.id,
         phone: user.phone,
+        email: user.email,
         name: user.name,
         preferredLanguage: user.preferredLanguage,
       },
@@ -114,6 +171,7 @@ export class AuthController {
       user: {
         id: user.id,
         phone: user.phone,
+        email: user.email,
         name: user.name,
         preferredLanguage: user.preferredLanguage,
       },

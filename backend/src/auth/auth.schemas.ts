@@ -22,6 +22,27 @@ export const VerifyOtpSchema = z.strictObject({
 });
 export type VerifyOtp = z.infer<typeof VerifyOtpSchema>;
 
+const Device = z.strictObject({
+  platform: z.enum(['android', 'ios', 'web']),
+  label: z.string().trim().max(60).optional(),
+});
+
+export const GoogleLoginSchema = z.strictObject({
+  idToken: z.string().min(20).max(4096),
+  device: Device,
+});
+export type GoogleLogin = z.infer<typeof GoogleLoginSchema>;
+
+/** QR token, or the fallback: the employee's phone + the 6-digit code. */
+export const AcceptInviteSchema = z.union([
+  z.strictObject({ token: z.string().min(20).max(100) }),
+  z.strictObject({
+    phone: IndianMobile,
+    code: z.string().regex(/^\d{6}$/, 'The code has 6 digits'),
+  }),
+]);
+export type AcceptInvite = z.infer<typeof AcceptInviteSchema>;
+
 export const RefreshSchema = z.strictObject({
   refreshToken: z.string().min(20).max(200),
 });

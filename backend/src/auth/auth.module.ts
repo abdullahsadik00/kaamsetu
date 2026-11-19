@@ -5,6 +5,12 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthController } from './auth.controller.js';
 import { AuthGuard } from './auth.guard.js';
 import {
+  GoogleAuthLibraryVerifier,
+  GoogleNotConfiguredVerifier,
+  GoogleVerifier,
+} from './google-verifier.js';
+import { InviteService } from './invite.service.js';
+import {
   CapturingOtpSender,
   DevConsoleOtpSender,
   OtpSender,
@@ -28,6 +34,20 @@ import { TokenService } from './token.service.js';
   providers: [
     OtpService,
     TokenService,
+    InviteService,
+    {
+      provide: GoogleVerifier,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService): GoogleVerifier => {
+        const ids = (config.get<string>('GOOGLE_CLIENT_IDS') ?? '')
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean);
+        return ids.length
+          ? new GoogleAuthLibraryVerifier(ids)
+          : new GoogleNotConfiguredVerifier();
+      },
+    },
     {
       provide: OtpSender,
       inject: [ConfigService],
@@ -45,6 +65,6 @@ import { TokenService } from './token.service.js';
     // Every route needs a valid token unless marked @Public() (docs/10 §3).
     { provide: APP_GUARD, useClass: AuthGuard },
   ],
-  exports: [TokenService],
+  exports: [TokenService, InviteService],
 })
 export class AuthModule {}

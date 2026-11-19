@@ -46,8 +46,10 @@ model Organization {
 
 model User {
   id                String       @id @default(uuid()) @db.Uuid
-  /// E.164, e.g. +919876501234 (docs/10 §1)
-  phone             String       @unique
+  /// E.164, e.g. +919876501234 (docs/10 §1). Empty for a Google user who has not joined a business yet.
+  phone             String?      @unique
+  /// Google account id ("sub" claim) once linked (D-025). Never reused for another user.
+  googleSubject     String?      @unique
   /// Empty until the user completes onboarding (module 4.1)
   name              String       @default("")
   email             String?
@@ -58,6 +60,28 @@ model User {
 
   memberships OrganizationMember[]
   devices     Device[]
+}
+
+/// Owner's invitation linking a person's Google login to an employee record (D-025, docs/10 §2).
+/// The QR carries a long random token; the manual fallback is phone + 6-digit code.
+/// Both are stored only as HMAC hashes. Single use, expires after 24 h.
+model MemberInvite {
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @db.Uuid
+  memberId       String    @db.Uuid
+  tokenHash      String    @unique
+  codeHash       String
+  attempts       Int       @default(0)
+  expiresAt      DateTime
+  usedAt         DateTime?
+  revokedAt      DateTime?
+  createdById    String?   @db.Uuid
+  createdAt      DateTime  @default(now())
+
+  member OrganizationMember @relation(fields: [memberId], references: [id])
+
+  @@index([memberId, createdAt])
+  @@index([organizationId])
 }
 
 // ---------- Authentication (docs/10 §1) ----------
@@ -116,6 +140,7 @@ model OrganizationMember {
 
   organization Organization @relation(fields: [organizationId], references: [id])
   user         User         @relation(fields: [userId], references: [id])
+  invites      MemberInvite[]
 
   @@unique([organizationId, userId])
   @@index([organizationId, status])
