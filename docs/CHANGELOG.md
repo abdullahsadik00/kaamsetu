@@ -2,6 +2,14 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-19 — Prototype updated (Phase 2 start)
+
+### Added
+- Prototype: paste service-centre ticket, ticket number and brand-portal tick, Service centre / Builder sources, quotations, UPI confirmation, owner offline job creation and assignment, helper sees customer with call button. Test hook `window.__ks` for automated checks.
+
+### Fixed
+- Prototype: new job number clashed with the last demo job (#1053).
+
 ## 2026-11-19 — Pre-interview discovery answers
 
 ### Added

@@ -9,12 +9,23 @@
 | 1. Workflow discovery | **Not done** with the real business. The prototype is based on assumptions |
 | 2. Information architecture | Done in the prototype (owner 4 tabs + More; technician My Work / History / Profile; helper Today's Work) |
 | 3. Low-fidelity wireframes | Skipped; went straight to a mid/high-fidelity prototype |
-| 4. Clickable prototype | **Done**: owner, senior technician and helper roles, online/offline toggle, English/Hindi/Marathi |
+| 4. Clickable prototype | **Done**: owner, senior technician and helper roles, online/offline toggle, English/Hindi/Marathi. **Updated 19 Nov 2026** with discovery answers (see below) |
 | 5. Usability testing | **Not done.** This is the next gate |
 | 6. Visual design system | Tokens defined in the prototype (§6) |
 | 7. Design handoff | Not done; follows testing |
 
 What the prototype added beyond the original spec (now reflected in the PRD): enquiry inbox, one-tap field status updates with hold reasons and part requests, appointment fixing, "money from customer" on the finish page and "with teams, to hand over" on the owner home, one-day helper swap, per-AC work recording, GST switch on bills, WhatsApp sharing of bill PDFs, and follow-up jobs linked to the original job.
+
+Prototype update of 19 Nov 2026 (T2.1, from pre-interview answers):
+- **Paste ticket from WhatsApp** on New job: reads the two known service-centre ticket formats (made-up samples via "Use a sample ticket"), fills customer, address, job type, ticket number and charges to collect; unreadable text shows an error and keeps manual entry.
+- "Came from" adds *Service centre* and *Builder/company*; ticket number field for service-centre jobs; ticket shown on enquiry and job.
+- **Closed in brand portal** tick on completed ticket jobs.
+- **Quotations**: Make quotation from an enquiry, Billing › Quotations tab, Turn into bill.
+- **UPI to owner's QR**: owner confirms with "I see it in my account"; cash keeps "I received this cash".
+- **Owner offline**: jobs can be created and assigned offline ("sends when online"); bills, quotations and payments still need internet.
+- **Helper view** shows the customer's name with a call button, besides the senior technician.
+- Parts: "I ordered it" → "Ordered from service centre" (D-024).
+- Fixed: new job number clashed with the last demo job.
 
 ## 1. Design objective
 
