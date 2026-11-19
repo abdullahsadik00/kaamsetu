@@ -2,6 +2,12 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-19 — Roles and tenant isolation
+
+### Added
+- `@Roles()` checks in the global guard (`NO_ORGANIZATION`, `FORBIDDEN_ROLE`), `scoped()`/`requireOrg()` tenant helpers, and a two-business test harness (T3.5).
+- Read-only `GET /api/v1/organization`, `GET /api/v1/employees`, `GET /api/v1/employees/:id` (owner only for employees), used to prove isolation: other businesses' records return 404, smuggled `organizationId` is ignored, deactivated members are rejected at once.
+
 ## 2026-11-19 — Login (phone + OTP)
 
 ### Added

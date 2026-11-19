@@ -2,7 +2,7 @@
 
 > **Source of truth for:** login, sessions, how role permissions are enforced, tenant isolation mechanics, and data protection.
 > The business permission table is in PRD §6; tenancy principles in doc 03. This document says how they are enforced.
-> **Status (19 Nov 2026):** §1 login is implemented in `backend/src/auth/` (T3.4): `POST /api/v1/auth/request-otp`, `verify-otp`, `refresh`, `logout`, `GET /auth/me`. Every route needs a token unless marked `@Public()`. Phones are stored in E.164 (`+91…`). OTP delivery: console stub in development, captured in tests, and `503 SMS_NOT_CONFIGURED` in staging/production until Q-08 is decided. Per-IP rate limits via `@nestjs/throttler` (120/min default, 20/min on login routes). Role guards and tenant scoping (§3 steps 3–4) are next (T3.5).
+> **Status (19 Nov 2026):** §1 login is implemented in `backend/src/auth/` (T3.4): `POST /api/v1/auth/request-otp`, `verify-otp`, `refresh`, `logout`, `GET /auth/me`. Every route needs a token unless marked `@Public()`. Phones are stored in E.164 (`+91…`). OTP delivery: console stub in development, captured in tests, and `503 SMS_NOT_CONFIGURED` in staging/production until Q-08 is decided. Per-IP rate limits via `@nestjs/throttler` (120/min default, 20/min on login routes). Role guards and tenant scoping (§3 steps 2–4) are implemented (T3.5): `@Roles(...)` on every business route (no business → `403 NO_ORGANIZATION`, wrong role → `403 FORBIDDEN_ROLE`), `scoped(auth, where)` adds the token's `organizationId` to every business query, other businesses' records return `404`. Team-level scope for technicians ("their team's jobs") arrives with the jobs module (T4.6–T4.7).
 
 ## 1. Authentication
 

@@ -22,6 +22,8 @@
 4. **Idempotency:** the same operation or payment sent twice creates one record.
 5. **State machine:** every allowed and forbidden job status transition.
 
+**How to write isolation tests (from T3.5):** use `TenantFactory` in `backend/test/helpers/tenants.ts` to create two synthetic businesses with an owner, senior technician and helper each, already logged in (`tenant.tokens.OWNER`, …). For every new endpoint, assert that business A gets `404` for business B's record IDs, that disallowed roles get `403 FORBIDDEN_ROLE`, and that an `organizationId` sent by the client is ignored. See `backend/test/tenancy.e2e-spec.ts`.
+
 ## 3. Test data
 
 - Seed script with a synthetic business that mirrors the prototype (6 teams, Pune localities, sample ACs). **No real customer data in tests or seeds.**

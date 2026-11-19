@@ -8,6 +8,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { AppError } from '../common/app-error.js';
+import { ROLES_KEY, type Role } from './roles.js';
 import { TokenService } from './token.service.js';
 import type { AuthContext } from './token.service.js';
 
@@ -48,7 +49,26 @@ export class AuthGuard implements CanActivate {
     if (scheme !== 'Bearer' || !token) {
       throw new AppError(401, 'UNAUTHENTICATED', 'Please log in again.');
     }
-    req.auth = await this.tokens.authenticate(token);
+    const auth = await this.tokens.authenticate(token);
+    req.auth = auth;
+
+    // Steps 2–3 of docs/10 §3: business membership and role.
+    const roles = this.reflector.getAllAndOverride<Role[] | undefined>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+    if (roles) {
+      if (!auth.organizationId || !auth.role) {
+        throw new AppError(
+          403,
+          'NO_ORGANIZATION',
+          'Set up or join a business first.',
+        );
+      }
+      if (!roles.includes(auth.role)) {
+        throw new AppError(403, 'FORBIDDEN_ROLE', 'Your role cannot do this.');
+      }
+    }
     return true;
   }
 }
