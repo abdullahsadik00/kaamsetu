@@ -24,7 +24,7 @@ M3 work that does not depend on design (database, CI, auth backend) can run in p
 | ID | Milestone | Depends on | Done when | Status |
 |---|---|---|---|---|
 | M0 | Foundation | — | Docs audited and consistent; repo committed and backed up remotely; dev environment incl. PostgreSQL ready | **Completed** 19 Nov 2026 (only T0.7, an optional cleanup, remains) |
-| M1 | Discovery | M0 | Workflow confirmed by owner + senior technician; Q-01, Q-03, Q-04, Q-06 answered; P0 list signed off | Not started |
+| M1 | Discovery | M0 | Workflow confirmed by owner + senior technician; Q-01, Q-03, Q-04, Q-06 answered; P0 list signed off | **In progress** (discovery kit ready) |
 | M2 | Design gate | M1 | Seven core workflows completed by real users in the prototype; design approved; helper decision made | Not started (prototype exists) |
 | M3 | Technical foundation | M0 (design-independent parts), M2 (mobile shell) | Login on a real phone against staging; isolation tests pass; CI green | Not started (scaffold exists) |
 | M4 | Business records | M2, M3 | Owner can onboard, add teams/staff, customers, sites, ACs (modules 4.1–4.4) | Not started |

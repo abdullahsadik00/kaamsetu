@@ -16,13 +16,13 @@
 | T0.4 | Update docs; add specs 09–13; plan, roadmap, tracker, logs | High | Completed | T0.3 | Docs commits of 19 Nov 2026 | No contradictions left unrecorded | all | Consistency review |
 | T0.5 | Install PostgreSQL 16+ locally (or Docker) | Critical | Completed (PostgreSQL 16.14 was already installed; DB `kaamsetu` + migration `20261119035740_init`, commit `19cdc2e`) | — | Running DB, `DATABASE_URL` set | `/health` reports `database: up`; first migration applies | README, 13 | `npx prisma migrate dev` |
 | T0.6 | Private remote repository + push | High | Completed (private repo github.com/abdullahsadik00/kaamsetu, `main` tracks `origin/main`) | — | Remote `origin` | `main` pushed; history intact | 11 | — |
-| T0.7 | Decide the uncommitted formatting change in `backend/src/prisma/prisma.service.ts` | Low | Not Started | — | Commit or discard by you | Working tree clean | — | Build passes |
+| T0.7 | Decide the uncommitted formatting change in `backend/src/prisma/prisma.service.ts` | Low | Completed (committed `586e934`) | — | Commit or discard by you | Working tree clean | — | Build passes |
 
 ## Phase 1 — Discovery (M1)
 
 | ID | Task | Pri | Status | Depends | Deliverable | Acceptance criteria | Docs | Testing |
 |---|---|---|---|---|---|---|---|---|
-| T1.1 | Owner interview using the guide in the execution plan | Critical | Not Started | — | Notes in `docs/discovery/` | All guide topics covered; real examples collected | Plan Ph1 | — |
+| T1.1 | Owner interview using `discovery/INTERVIEW_KIT.md` Part A | Critical | In Progress (kit ready; interview to be booked) | — | Notes in `docs/discovery/` | All guide topics covered; real examples collected | Plan Ph1 | — |
 | T1.2 | Senior technician interview + ride-along on one job | Critical | Not Started | — | Notes, photos of current process (no personal data) | Field steps, parts, money, network gaps recorded | Plan Ph1 | — |
 | T1.3 | Helper conversation | High | Not Started | — | Notes | Q-01 answerable | 02 §3 | — |
 | T1.4 | Collect artefacts (WhatsApp enquiries, bill, price list, GST bill) with data hidden | High | Not Started | T1.1 | Files in `docs/discovery/artefacts/` | No customer names/phones visible | — | — |

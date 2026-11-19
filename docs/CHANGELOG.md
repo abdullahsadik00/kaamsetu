@@ -2,6 +2,12 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-19 — Phase 1 discovery started
+
+### Added
+- `discovery/INTERVIEW_KIT.md`: consent message (EN/HI/MR), owner interview, technician ride-along, helper conversation, artefact list, accountant questions, each tied to open decisions.
+- `discovery/DISCOVERY_FINDINGS.md`: template for findings, answers to Q-01…Q-11 and the owner's P0 sign-off.
+
 ## 2026-11-19 — Local database
 
 ### Added
