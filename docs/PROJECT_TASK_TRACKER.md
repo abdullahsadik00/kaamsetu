@@ -16,6 +16,7 @@
 | T0.4 | Update docs; add specs 09–13; plan, roadmap, tracker, logs | High | Completed | T0.3 | Docs commits of 19 Nov 2026 | No contradictions left unrecorded | all | Consistency review |
 | T0.5 | Install PostgreSQL 16+ locally (or Docker) | Critical | Completed (PostgreSQL 16.14 was already installed; DB `kaamsetu` + migration `20261119035740_init`, commit `19cdc2e`) | — | Running DB, `DATABASE_URL` set | `/health` reports `database: up`; first migration applies | README, 13 | `npx prisma migrate dev` |
 | T0.6 | Private remote repository + push | High | Completed (private repo github.com/abdullahsadik00/kaamsetu, `main` tracks `origin/main`) | — | Remote `origin` | `main` pushed; history intact | 11 | — |
+| T0.8 | Local lint: Windows Application Control blocks oxlint's native binary | Low | Blocked (system security setting; lint runs in CI on Linux, T3.9) | — | Lint runs locally or in CI | `npm run lint` passes somewhere on every push | 11 | — |
 | T0.7 | Decide the uncommitted formatting change in `backend/src/prisma/prisma.service.ts` | Low | Completed (committed `586e934`) | — | Commit or discard by you | Working tree clean | — | Build passes |
 
 ## Phase 1 — Discovery (M1)
@@ -49,8 +50,8 @@
 
 | ID | Task | Pri | Status | Depends | Deliverable | Acceptance criteria | Docs | Testing |
 |---|---|---|---|---|---|---|---|---|
-| T3.1 | API conventions: `/api/v1`, validation pipe, error filter/shape, request ID | Critical | Not Started | T0.5 | Backend commit | Unknown fields rejected; errors match doc 06 | 06, 11 | Unit + e2e |
-| T3.2 | Structured logging with redaction; config validation | High | Not Started | T3.1 | Backend commit | No phone/OTP/token in logs; missing config fails startup | 10, 11 | Unit |
+| T3.1 | API conventions: `/api/v1`, validation pipe, error filter/shape, request ID | Critical | Completed 19 Nov 2026 (`src/app.setup.ts`, `src/common/`; e2e tests) | T0.5 | Backend commit | Unknown fields rejected; errors match doc 06 | 06, 11 | Unit + e2e |
+| T3.2 | Structured logging with redaction; config validation | High | Completed 19 Nov 2026 (`src/config/env.ts`; JSON logs in staging/production; per-request line without bodies) | T3.1 | Backend commit | No phone/OTP/token in logs; missing config fails startup | 10, 11 | Unit |
 | T3.3 | Seed script (synthetic business like the prototype + second org) | High | Not Started | T0.5 | `prisma/seed.ts` | Re-runnable; no real data | 12 | Runs in CI |
 | T3.4 | Auth: OTP request/verify (dev stub), JWT, rotating refresh tokens, devices, logout | Critical | Not Started | T3.1 | `auth` module + schema (Device, OtpChallenge, RefreshToken) | Rate limits; token reuse revokes device | 10 | Unit + integration |
 | T3.5 | Membership + role guards; organization-scoped data helper; isolation test harness | Critical | Not Started | T3.4 | Guards, helper, test utilities | Cross-org request returns 404 | 03, 10, 12 | Integration |

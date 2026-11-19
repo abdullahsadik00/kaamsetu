@@ -2,6 +2,17 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-19 — Phase 3 foundation: API conventions and configuration
+
+### Added
+- Backend: `/api/v1` prefix (`/health` stays outside), `{ data, meta }` response envelope, `{ error: { code, message, details? } }` error shape, request IDs (`X-Request-Id`), Zod validation pipe rejecting unknown fields, environment validation at startup, JSON logs in staging/production with one redacted line per request. Unit and e2e tests.
+
+### Removed
+- Scaffold "Hello World" controller and service.
+
+### Known issue
+- `npm run lint` cannot run on this PC: Windows Application Control blocks oxlint's native binary. Lint will run in CI (T0.8, T3.9).
+
 ## 2026-11-19 — Prototype updated (Phase 2 start)
 
 ### Added

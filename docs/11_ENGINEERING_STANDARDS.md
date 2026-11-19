@@ -47,6 +47,8 @@ From doc 06, binding: prefix `/api/v1`; JSON; response `{ data, meta }`; errors 
 
 Error codes are `UPPER_SNAKE`, stable, and documented next to the endpoint (e.g. `JOB_NOT_ACCESSIBLE`, `INVALID_STATUS_TRANSITION`, `VERSION_CONFLICT`). The mobile app maps codes to translated, plain-language messages (doc 08 §7).
 
+Implementation (19 Nov 2026): `configureApp()` in `backend/src/app.setup.ts` applies the prefix, `HttpExceptionFilter`, `ResponseEnvelopeInterceptor` and the request-ID middleware. Validate input with `ZodValidationPipe` and `z.strictObject` schemas; it returns `VALIDATION_FAILED` with per-field details. (Nest also ships `StandardSchemaValidationPipe`; we use our own small pipe so validation errors keep our documented shape.) Mark endpoints that must not be wrapped with `@RawResponse()`.
+
 ## 5. Error handling
 
 - Backend: throw typed domain errors; one global exception filter maps them to the error shape. Unknown errors → `500 INTERNAL_ERROR` with a `requestId`, never a stack trace.
