@@ -10,7 +10,7 @@ type TabOptions = NonNullable<ComponentProps<typeof Tabs>['screenOptions']>;
 /** Bottom tabs for owner and technician. Technicians get taller tabs and bigger labels. */
 export function tabScreenOptions(
   language: Language,
-  { large = false }: { large?: boolean } = {},
+  { large = false, bottomInset = 0 }: { large?: boolean; bottomInset?: number } = {},
 ): TabOptions {
   return {
     headerStyle: { backgroundColor: colors.paper },
@@ -23,7 +23,10 @@ export function tabScreenOptions(
     tabBarStyle: {
       backgroundColor: colors.surface,
       borderTopColor: colors.line,
-      height: large ? 72 : 64,
+      // Fixed height must include the phone's own navigation bar, or it covers the labels.
+      height: (large ? 72 : 64) + bottomInset,
+      paddingBottom: bottomInset + 6,
+      paddingTop: 6,
     },
     tabBarLabelStyle: { fontFamily: fontFamily(language, 'semibold'), fontSize: large ? 14 : 12 },
   };

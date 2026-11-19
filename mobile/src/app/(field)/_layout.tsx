@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { tabScreenOptions } from '@/components/navigation/tab-options';
 import { useLanguage } from '@/localization/i18n';
@@ -17,8 +18,9 @@ const TABS: { name: string; label: string; icon: IconName }[] = [
 export default function FieldLayout() {
   const { t } = useTranslation();
   const language = useLanguage();
+  const insets = useSafeAreaInsets();
   return (
-    <Tabs screenOptions={tabScreenOptions(language, { large: true })}>
+    <Tabs screenOptions={tabScreenOptions(language, { large: true, bottomInset: insets.bottom })}>
       {TABS.map((tab) => (
         <Tabs.Screen
           key={tab.name}
