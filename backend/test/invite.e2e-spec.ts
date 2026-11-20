@@ -17,7 +17,11 @@ class FakeGoogleVerifier extends GoogleVerifier {
   async verify(idToken: string): Promise<GoogleIdentity> {
     const m = idToken.match(/^test-google:(test-g-[\w-]+)$/);
     if (!m) throw new AppError(401, 'GOOGLE_TOKEN_INVALID', 'bad token');
-    return { subject: m[1], email: `${m[1]}@example.test`, name: 'Google Name' };
+    return {
+      subject: m[1],
+      email: `${m[1]}@example.test`,
+      name: 'Google Name',
+    };
   }
 }
 
@@ -53,18 +57,31 @@ describe('Google login + owner invites (e2e, D-025)', () => {
       .post(`/api/v1/employees/${memberId}/invite`)
       .set(bearer(owner))
       .expect(201);
-    const data = res.body.data as { qr: string; code: string; expiresAt: string };
+    const data = res.body.data as {
+      qr: string;
+      code: string;
+      expiresAt: string;
+    };
     return { ...data, token: new URL(data.qr).searchParams.get('t') as string };
   }
 
   async function removeGoogleUsers() {
     const users = await prisma.user.findMany({
-      where: { OR: [{ googleSubject: { startsWith: 'test-g-' } }, { email: { endsWith: '@example.test' } }] },
+      where: {
+        OR: [
+          { googleSubject: { startsWith: 'test-g-' } },
+          { email: { endsWith: '@example.test' } },
+        ],
+      },
     });
     const ids = users.map((u) => u.id);
-    await prisma.refreshToken.deleteMany({ where: { device: { userId: { in: ids } } } });
+    await prisma.refreshToken.deleteMany({
+      where: { device: { userId: { in: ids } } },
+    });
     await prisma.device.deleteMany({ where: { userId: { in: ids } } });
-    await prisma.user.deleteMany({ where: { id: { in: ids }, memberships: { none: {} } } });
+    await prisma.user.deleteMany({
+      where: { id: { in: ids }, memberships: { none: {} } },
+    });
   }
 
   beforeAll(async () => {
@@ -72,7 +89,9 @@ describe('Google login + owner invites (e2e, D-025)', () => {
       .overrideProvider(GoogleVerifier)
       .useValue(new FakeGoogleVerifier())
       .compile();
-    app = configureApp(moduleRef.createNestApplication()) as INestApplication<App>;
+    app = configureApp(
+      moduleRef.createNestApplication(),
+    ) as INestApplication<App>;
     await app.init();
     prisma = app.get(PrismaService);
     factory = new TenantFactory(app);
@@ -93,7 +112,10 @@ describe('Google login + owner invites (e2e, D-025)', () => {
     expect(s.membership).toBeNull();
     expect(s.refreshToken).toBeTruthy();
     // Business routes stay closed until an invite is accepted.
-    await http().get('/api/v1/organization').set(bearer(s.accessToken)).expect(403);
+    await http()
+      .get('/api/v1/organization')
+      .set(bearer(s.accessToken))
+      .expect(403);
   });
 
   it('rejects a bad Google token', async () => {
@@ -120,7 +142,10 @@ describe('Google login + owner invites (e2e, D-025)', () => {
       memberId: a.memberIds.SENIOR_TECHNICIAN,
     });
     // The temporary Google-only session is ended.
-    await http().get('/api/v1/auth/me').set(bearer(tech.accessToken)).expect(401);
+    await http()
+      .get('/api/v1/auth/me')
+      .set(bearer(tech.accessToken))
+      .expect(401);
     // Next Google login goes straight to the employee record.
     const again = await google('test-g-senior');
     expect(again.membership?.role).toBe('SENIOR_TECHNICIAN');
@@ -135,8 +160,15 @@ describe('Google login + owner invites (e2e, D-025)', () => {
   });
 
   it('shows the owner which employees have a linked login, without Google ids', async () => {
-    const res = await http().get('/api/v1/employees').set(bearer(a.tokens.OWNER)).expect(200);
-    const rows = res.body.data as { id: string; loginLinked: boolean; user: object }[];
+    const res = await http()
+      .get('/api/v1/employees')
+      .set(bearer(a.tokens.OWNER))
+      .expect(200);
+    const rows = res.body.data as {
+      id: string;
+      loginLinked: boolean;
+      user: object;
+    }[];
     const senior = rows.find((r) => r.id === a.memberIds.SENIOR_TECHNICIAN);
     expect(senior?.loginLinked).toBe(true);
     expect(JSON.stringify(rows)).not.toContain('test-g-');
@@ -180,6 +212,17 @@ describe('Google login + owner invites (e2e, D-025)', () => {
       .send({ phone: helperPhone, code: inv.code })
       .expect(200);
     expect((ok.body.data as Session).membership?.role).toBe('HELPER');
+  });
+
+  it('says when the typed mobile number has no invite (T3.13)', async () => {
+    await invite(a.tokens.OWNER, a.memberIds.HELPER);
+    const user = await google('test-g-typo');
+    const res = await http()
+      .post('/api/v1/auth/accept-invite')
+      .set(bearer(user.accessToken))
+      .send({ phone: `+91${PREFIX_A}09`, code: '123456' }) // nobody has this number
+      .expect(400);
+    expect(res.body.error.code).toBe('INVITE_NOT_FOR_THIS_PHONE');
   });
 
   it('rejects an expired invite', async () => {

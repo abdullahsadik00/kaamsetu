@@ -16,8 +16,11 @@ import type { AuthContext, IssuedTokens } from './token.service.js';
 
 export type AcceptInput = { token: string } | { phone: string; code: string };
 
-const inviteError = (code: string, message: string, status = HttpStatus.BAD_REQUEST) =>
-  new AppError(status, code, message);
+const inviteError = (
+  code: string,
+  message: string,
+  status = HttpStatus.BAD_REQUEST,
+) => new AppError(status, code, message);
 
 /**
  * Owner invites that link a Google login to an employee record (D-025):
@@ -75,7 +78,10 @@ export class InviteService {
     });
     if (!member) throw AppError.notFound('EMPLOYEE_NOT_FOUND');
     if (member.id === auth.memberId) {
-      throw inviteError('CANNOT_RESET_SELF', 'You cannot reset your own login.');
+      throw inviteError(
+        'CANNOT_RESET_SELF',
+        'You cannot reset your own login.',
+      );
     }
     await this.prisma.$transaction([
       this.prisma.user.update({
@@ -96,7 +102,9 @@ export class InviteService {
    * for that record, and the temporary Google-only user is retired.
    */
   async accept(auth: AuthContext, input: AcceptInput): Promise<IssuedTokens> {
-    const caller = await this.prisma.user.findUniqueOrThrow({ where: { id: auth.userId } });
+    const caller = await this.prisma.user.findUniqueOrThrow({
+      where: { id: auth.userId },
+    });
     if (!caller.googleSubject) {
       throw inviteError('GOOGLE_LOGIN_REQUIRED', 'Sign in with Google first.');
     }
@@ -109,7 +117,10 @@ export class InviteService {
     const target = member.user;
 
     if (target.id !== caller.id) {
-      if (target.googleSubject && target.googleSubject !== caller.googleSubject) {
+      if (
+        target.googleSubject &&
+        target.googleSubject !== caller.googleSubject
+      ) {
         throw inviteError(
           'EMPLOYEE_ALREADY_LINKED',
           'This employee already uses another Google account. Ask the owner to reset the login.',
@@ -128,7 +139,9 @@ export class InviteService {
       }
     }
 
-    const device = await this.prisma.device.findUniqueOrThrow({ where: { id: auth.deviceId } });
+    const device = await this.prisma.device.findUniqueOrThrow({
+      where: { id: auth.deviceId },
+    });
     await this.prisma.$transaction(async (tx) => {
       const used = await tx.memberInvite.updateMany({
         where: { id: invite.id, usedAt: null, revokedAt: null },
@@ -176,19 +189,36 @@ export class InviteService {
       });
       if (!invite || invite.usedAt || invite.revokedAt) throw this.invalid();
       if (invite.expiresAt <= now) {
-        throw inviteError('INVITE_EXPIRED', 'This invite has expired. Ask the owner for a new one.');
+        throw inviteError(
+          'INVITE_EXPIRED',
+          'This invite has expired. Ask the owner for a new one.',
+        );
       }
       return invite;
     }
 
     // Phone + code: the newest open invite for that phone's employee records.
     const invite = await this.prisma.memberInvite.findFirst({
-      where: { member: { user: { phone: input.phone } }, usedAt: null, revokedAt: null },
+      where: {
+        member: { user: { phone: input.phone } },
+        usedAt: null,
+        revokedAt: null,
+      },
       orderBy: { createdAt: 'desc' },
     });
-    if (!invite) throw this.invalid();
+    if (!invite) {
+      // Usually a mistyped number (T3.13). Says only that this number has no
+      // open invite; trying numbers is limited by the login rate limit.
+      throw inviteError(
+        'INVITE_NOT_FOR_THIS_PHONE',
+        'There is no invite for this mobile number. Check the number, or ask the owner for a new code.',
+      );
+    }
     if (invite.expiresAt <= now) {
-      throw inviteError('INVITE_EXPIRED', 'This invite has expired. Ask the owner for a new one.');
+      throw inviteError(
+        'INVITE_EXPIRED',
+        'This invite has expired. Ask the owner for a new one.',
+      );
     }
     if (invite.attempts >= INVITE_MAX_ATTEMPTS) {
       throw inviteError(
@@ -201,7 +231,10 @@ export class InviteService {
         where: { id: invite.id },
         data: { attempts: { increment: 1 } },
       });
-      throw inviteError('INVITE_CODE_WRONG', 'Wrong code. Please check and try again.');
+      throw inviteError(
+        'INVITE_CODE_WRONG',
+        'Wrong code. Please check and try again.',
+      );
     }
     return invite;
   }

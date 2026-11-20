@@ -6,7 +6,8 @@ export const INVITE_TTL_HOURS = 24;
 export const INVITE_MAX_ATTEMPTS = 5;
 
 /** Long random value carried in the QR code. */
-export const newInviteToken = (): string => randomBytes(24).toString('base64url');
+export const newInviteToken = (): string =>
+  randomBytes(24).toString('base64url');
 
 /** 6-digit fallback code, always used together with the employee's phone. */
 export const newInviteCode = (): string =>
@@ -17,4 +18,5 @@ export const hashInviteValue = (secret: string, value: string): string =>
   createHmac('sha256', secret).update(`invite:${value}`).digest('hex');
 
 /** What the QR encodes; the app also accepts a bare token. */
-export const inviteQrPayload = (token: string): string => `kaamsetu://join?t=${token}`;
+export const inviteQrPayload = (token: string): string =>
+  `kaamsetu://join?t=${token}`;

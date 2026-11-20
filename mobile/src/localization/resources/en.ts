@@ -114,6 +114,7 @@ export const en = {
     INVITE_INVALID: 'This invite does not work. Ask the owner for a new one.',
     INVITE_EXPIRED: 'This invite has expired. Ask the owner for a new one.',
     INVITE_CODE_WRONG: 'Wrong code. Please check and try again.',
+    INVITE_NOT_FOR_THIS_PHONE: 'There is no invite for this mobile number. Check the number, or ask the owner for a new code.',
     INVITE_TOO_MANY_ATTEMPTS: 'Too many wrong codes. Ask the owner for a new invite.',
     EMPLOYEE_ALREADY_LINKED: 'This employee already uses another Google account. Ask the owner to reset the login.',
     ALREADY_IN_BUSINESS: 'This Google account already belongs to a business.',
