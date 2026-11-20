@@ -23,6 +23,10 @@ export const EnvSchema = z.object({
    * the Web client ID the app passes to Google Sign-In. Empty: Google login refused.
    */
   GOOGLE_CLIENT_IDS: z.string().optional(),
+  /** Contact shown on the public pages for privacy requests and support. */
+  SUPPORT_EMAIL: z.email().optional(),
+  /** Google Search Console HTML-tag code, put on the homepage to verify the domain. */
+  GOOGLE_SITE_VERIFICATION: z.string().max(200).optional(),
   /**
    * Number of reverse proxies in front of the API (Render: 1). 0 = none, the
    * socket address is the caller. Never higher than the real hop count, or

@@ -37,3 +37,8 @@ services:
       # Google sign-in Web client (not secret; also built into the app).
       - key: GOOGLE_CLIENT_IDS
         value: 525894824865-3k5qab6i2c0aclcs0pas1k12d1be43a9.apps.googleusercontent.com
+      # Public pages (/, /privacy, /terms) for Google publishing; set in the dashboard.
+      - key: SUPPORT_EMAIL
+        sync: false
+      - key: GOOGLE_SITE_VERIFICATION
+        sync: false

@@ -7,6 +7,7 @@ import { validateEnv } from './config/env.js';
 import { HealthController } from './health/health.controller.js';
 import { OrganizationModule } from './organization/organization.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { SiteController } from './site/site.controller.js';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
     AuthModule,
     OrganizationModule,
   ],
-  controllers: [HealthController],
+  controllers: [HealthController, SiteController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}
