@@ -47,6 +47,9 @@ model Organization {
   subscription Subscription?
   customers    Customer[]
   teams        Team[]
+  jobs         ServiceJob[]
+  /// Next job number for this business (#1001, #1002, …).
+  nextJobNumber Int         @default(1001)
 }
 
 enum SubscriptionStatus {
@@ -300,4 +303,106 @@ model TeamMember {
 
   @@index([teamId, leftAt])
   @@index([organizationMemberId, leftAt])
+}
+
+// ---------- Jobs (docs/05 §5, T4.6, D-030) ----------
+
+enum JobType {
+  SERVICE
+  REPAIR
+  INSTALLATION
+  UNINSTALLATION
+  GAS_FILLING
+  OTHER
+}
+
+enum JobStatus {
+  NEW
+  ASSIGNED
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum TimeSlot {
+  MORNING
+  AFTERNOON
+  EVENING
+}
+
+/// One visit / work order. Status changes go through the state machine (jobs.state.ts).
+model ServiceJob {
+  id                   String     @id @default(uuid()) @db.Uuid
+  organizationId       String     @db.Uuid
+  jobNumber            Int
+  customerId           String     @db.Uuid
+  siteId               String     @db.Uuid
+  type                 JobType    @default(SERVICE)
+  complaint            String?
+  /// Day of the visit (calendar date, organization time zone).
+  scheduledDate        DateTime?  @db.Date
+  timeSlot             TimeSlot?
+  assignedTeamId       String?    @db.Uuid
+  status               JobStatus  @default(NEW)
+  /// Paise (docs/11 §3).
+  amountToCollect      Int?
+  cancelReason         String?
+  followUpOfJobId      String?    @db.Uuid
+  createdByMemberId    String     @db.Uuid
+  version              Int        @default(1)
+  completedAt          DateTime?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+
+  organization Organization       @relation(fields: [organizationId], references: [id])
+  equipment    JobEquipment[]
+  assignments  JobAssignment[]
+  history      JobStatusHistory[]
+
+  @@unique([organizationId, jobNumber])
+  @@index([organizationId, status, scheduledDate])
+  @@index([organizationId, assignedTeamId])
+  @@index([organizationId, customerId])
+}
+
+model JobEquipment {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  jobId          String @db.Uuid
+  equipmentId    String @db.Uuid
+
+  job ServiceJob @relation(fields: [jobId], references: [id])
+
+  @@unique([jobId, equipmentId])
+}
+
+/// Team assignment history; the current one has unassignedAt = null.
+model JobAssignment {
+  id                 String    @id @default(uuid()) @db.Uuid
+  organizationId     String    @db.Uuid
+  jobId              String    @db.Uuid
+  teamId             String    @db.Uuid
+  assignedByMemberId String    @db.Uuid
+  assignedAt         DateTime  @default(now())
+  unassignedAt       DateTime?
+
+  job ServiceJob @relation(fields: [jobId], references: [id])
+
+  @@index([jobId])
+}
+
+model JobStatusHistory {
+  id             String     @id @default(uuid()) @db.Uuid
+  organizationId String     @db.Uuid
+  jobId          String     @db.Uuid
+  fromStatus     JobStatus?
+  toStatus       JobStatus
+  byMemberId     String     @db.Uuid
+  note           String?
+  at             DateTime   @default(now())
+
+  job ServiceJob @relation(fields: [jobId], references: [id])
+
+  @@index([jobId, at])
 }

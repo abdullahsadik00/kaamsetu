@@ -9,6 +9,7 @@ import { HealthController } from './health/health.controller.js';
 import { OrganizationModule } from './organization/organization.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { SiteController } from './site/site.controller.js';
+import { JobsModule } from './jobs/jobs.controller.js';
 import { TeamsModule } from './teams/teams.controller.js';
 
 @Module({
@@ -21,6 +22,7 @@ import { TeamsModule } from './teams/teams.controller.js';
     OrganizationModule,
     CustomersModule,
     TeamsModule,
+    JobsModule,
   ],
   controllers: [HealthController, SiteController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
