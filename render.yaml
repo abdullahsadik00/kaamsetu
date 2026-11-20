@@ -1,6 +1,6 @@
 # Render Blueprint for KaamSetu staging (T3.10, D-026). Free plan.
-# Secrets are never in this file: Render generates the two auth secrets, and
-# DATABASE_URL is entered once in the Render dashboard (sync: false).
+# Secrets are never in this file: Render generates JWT_ACCESS_SECRET, and
+# DATABASE_URL and OTP_HASH_SECRET are entered in the dashboard (sync: false).
 services:
   - type: web
     name: kaamsetu-api-staging
@@ -30,8 +30,10 @@ services:
         sync: false
       - key: JWT_ACCESS_SECRET
         generateValue: true
+      # Entered in the dashboard: the seed (run from a PC) must hash the first
+      # owner invite with the same secret the server uses.
       - key: OTP_HASH_SECRET
-        generateValue: true
+        sync: false
       # Google sign-in Web client (not secret; also built into the app).
       - key: GOOGLE_CLIENT_IDS
         value: 525894824865-3k5qab6i2c0aclcs0pas1k12d1be43a9.apps.googleusercontent.com
