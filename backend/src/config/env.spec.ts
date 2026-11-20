@@ -12,8 +12,18 @@ describe('validateEnv', () => {
       NODE_ENV: 'development',
       PORT: 3000,
       DATABASE_URL: DB,
+      TRUST_PROXY: 0,
       ...SECRETS,
     });
+  });
+
+  it('reads TRUST_PROXY as a small hop count', () => {
+    expect(
+      validateEnv({ DATABASE_URL: DB, ...SECRETS, TRUST_PROXY: '1' }).TRUST_PROXY,
+    ).toBe(1);
+    expect(() =>
+      validateEnv({ DATABASE_URL: DB, ...SECRETS, TRUST_PROXY: 'true' }),
+    ).toThrow(/TRUST_PROXY/);
   });
 
   it('coerces PORT from a string', () => {

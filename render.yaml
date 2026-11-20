@@ -1,0 +1,37 @@
+# Render Blueprint for KaamSetu staging (T3.10, D-026). Free plan.
+# Secrets are never in this file: Render generates the two auth secrets, and
+# DATABASE_URL is entered once in the Render dashboard (sync: false).
+services:
+  - type: web
+    name: kaamsetu-api-staging
+    runtime: node
+    plan: free
+    region: singapore # closest Render region to India
+    rootDir: backend
+    branch: main
+    autoDeploy: true # every push to main that passes the build
+    buildCommand: npm ci && npm run build
+    # The free plan has no pre-deploy step, so migrations run at start.
+    # Prisma Migrate is forward-only and skips migrations already applied.
+    startCommand: npx prisma migrate deploy && node dist/main
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: staging
+      - key: LOG_FORMAT
+        value: json
+      # Render's proxy appends one X-Forwarded-For hop (docs/13 §2).
+      - key: TRUST_PROXY
+        value: "1"
+      # Supabase session pooler URL (IPv4), entered in the dashboard.
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: OTP_HASH_SECRET
+        generateValue: true
+      # Google sign-in Web client (not secret; also built into the app).
+      - key: GOOGLE_CLIENT_IDS
+        value: 525894824865-3k5qab6i2c0aclcs0pas1k12d1be43a9.apps.googleusercontent.com

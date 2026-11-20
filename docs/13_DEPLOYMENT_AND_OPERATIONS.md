@@ -1,7 +1,7 @@
 # 13 — KaamSetu Deployment, Operations and Release Management
 
 > **Source of truth for:** environments, CI/CD, hosting, monitoring, backups, and how releases are made.
-> **Status:** plan. Nothing is deployed. Hosting provider is undecided (Q-09).
+> **Status (20 Nov 2026):** pilot staging hosting decided (D-026): Render free web service (Singapore) + Supabase free PostgreSQL (Mumbai), defined in `render.yaml`; nightly encrypted backup in `.github/workflows/backup-staging.yml`; uptime ping from an external monitor. App builds run on EAS (`mobile/eas.json`; local Windows builds hit the 260-character path limit). Production hosting is still open (Q-09).
 
 ## 1. Environments
 
@@ -11,7 +11,20 @@
 | staging | Production-like; test builds for you and pilot testers | Synthetic + test accounts | Before the first technician uses a build (M6) |
 | production | Pilot business, then paying tenants | Real | Pilot start (M9) |
 
-## 2. Hosting (proposal, decide in Phase 3: Q-09)
+## 2. Hosting
+
+### Pilot staging (D-026, ₹0/month)
+
+| Component | Choice | Notes |
+|---|---|---|
+| API | Render free web service `kaamsetu-api-staging`, Singapore, from `render.yaml` | Deploys on every push to `main`; start command runs `prisma migrate deploy` first; `TRUST_PROXY=1`; sleeps after 15 min without traffic |
+| Database | Supabase free, Mumbai (`ap-south-1`) | Use the **session pooler** connection string (IPv4); 500 MB; pauses after 7 idle days |
+| Keep-alive and uptime | External monitor (UptimeRobot free) on `GET /health` every 5 min | `/health` touches the database, so it keeps both Render and Supabase awake and alerts by email when down |
+| Backups | GitHub Actions nightly `pg_dump` → GPG AES-256 → artifact, 14 days | Secrets `STAGING_BACKUP_DATABASE_URL`, `STAGING_BACKUP_PASSPHRASE`; restore steps in the workflow header; test a restore before the pilot (T5.7) |
+| Files | Cloudflare R2 free (10 GB) | Added with photos (T4.8) |
+| App builds | EAS Build, `preview` profile (APK pointing at staging) | Same EAS signing key as development builds |
+
+### Production (proposal, decide before paying customers: Q-09)
 
 Criteria: Indian or nearby region, managed PostgreSQL with automated backups and point-in-time recovery, low fixed cost for a solo developer, simple deploys.
 

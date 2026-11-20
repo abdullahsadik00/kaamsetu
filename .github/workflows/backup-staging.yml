@@ -1,0 +1,53 @@
+# Nightly encrypted backup of the staging/pilot database (T3.10, D-026).
+# The free Supabase plan has no downloadable backups, so we keep our own:
+# pg_dump -> GPG (AES-256, passphrase) -> workflow artifact kept 14 days.
+# Restore: download the artifact, `gpg -d kaamsetu-*.dump.gpg > db.dump`,
+# then `pg_restore --clean --no-owner -d "$TARGET_URL" db.dump` (docs/13 §5).
+name: Backup staging database
+
+on:
+  schedule:
+    - cron: '30 20 * * *' # 02:00 IST
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backup-staging
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Direct libpq URL with sslmode=require (no Prisma-only parameters).
+      DB_URL: ${{ secrets.STAGING_BACKUP_DATABASE_URL }}
+      PASSPHRASE: ${{ secrets.STAGING_BACKUP_PASSPHRASE }}
+    steps:
+      - name: Check secrets are set
+        run: |
+          if [ -z "$DB_URL" ] || [ -z "$PASSPHRASE" ]; then
+            echo "::error::Set STAGING_BACKUP_DATABASE_URL and STAGING_BACKUP_PASSPHRASE in the repository secrets."
+            exit 1
+          fi
+      - name: Dump (custom format, compressed)
+        run: |
+          mkdir -p out
+          docker run --rm -e DB_URL -v "$PWD/out:/out" postgres:17-alpine \
+            sh -c 'pg_dump "$DB_URL" --format=custom --no-owner --no-privileges --file=/out/db.dump'
+          ls -l out
+      - name: Encrypt
+        run: |
+          name="kaamsetu-staging-$(date -u +%Y%m%dT%H%MZ).dump.gpg"
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" \
+            --symmetric --cipher-algo AES256 --output "out/$name" out/db.dump
+          rm out/db.dump
+          echo "NAME=$name" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v5
+        with:
+          name: ${{ env.NAME }}
+          path: out/${{ env.NAME }}
+          retention-days: 14
+          if-no-files-found: error
