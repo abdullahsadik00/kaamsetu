@@ -113,6 +113,27 @@ export async function acceptInvite(answer: InviteAnswer): Promise<void> {
   useSession.setState({ status: 'signedIn', profile, pendingInvite: null });
 }
 
+export type NewBusiness = {
+  name: string;
+  ownerName: string;
+  /** E.164, e.g. +919876501234. */
+  phone: string;
+  city?: string;
+  gstBills: boolean;
+  gstin?: string;
+};
+
+/**
+ * "Your business" (T4.1, D-027): creates the business with this user as
+ * owner, then refreshes the token so the session carries the OWNER role.
+ */
+export async function createBusiness(input: NewBusiness): Promise<void> {
+  await api.post('/organizations', input);
+  await api.refresh();
+  const profile = await secureTokenStore.getProfile();
+  if (profile) useSession.setState({ status: 'signedIn', profile });
+}
+
 /** Reads the invite token from a scanned QR (`kaamsetu://join?t=…`) or a bare token. */
 export function inviteTokenFrom(text: string): string | null {
   const trimmed = text.trim();

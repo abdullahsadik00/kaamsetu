@@ -26,10 +26,20 @@ export function EmployeesScreen() {
       </Screen>
     );
   }
-  if (list.data.length === 0) return <Placeholder title={t('employees.empty')} body="" />;
+  const addButton = (
+    <Button label={t('employees.add')} onPress={() => router.push('/employees/new')} />
+  );
+  if (list.data.length === 0) {
+    return (
+      <Screen>
+        <Placeholder title={t('employees.empty')} body="" />
+        {addButton}
+      </Screen>
+    );
+  }
 
   return (
-    <Screen>
+    <Screen footer={addButton}>
       {list.data.map((e) => (
         <Pressable
           key={e.id}

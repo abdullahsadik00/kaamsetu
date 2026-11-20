@@ -110,9 +110,16 @@ export function JoinScreen() {
         </AppText>
       ) : null}
 
-      <AppText variant="support" color={colors.muted}>
-        {t('join.ownBusinessLater')}
-      </AppText>
+      <View style={{ gap: space.xs, paddingTop: space.md }}>
+        <Button
+          variant="secondary"
+          label={t('join.newBusiness')}
+          onPress={() => router.push('/setup-business')}
+        />
+        <AppText variant="support" color={colors.muted}>
+          {t('join.newBusinessHint')}
+        </AppText>
+      </View>
       <ProfileSection />
     </Screen>
   );

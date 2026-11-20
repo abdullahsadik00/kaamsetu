@@ -65,6 +65,7 @@ export default function RootLayout() {
           <Stack.Screen name="(owner)" />
           <Stack.Screen name="employees/index" options={{ ...pushed, title: t('employees.title') }} />
           <Stack.Screen name="employees/[id]" options={{ ...pushed, title: '' }} />
+          <Stack.Screen name="employees/new" options={{ ...pushed, title: t('employees.addTitle') }} />
         </Stack.Protected>
         <Stack.Protected guard={signedIn && role === 'SENIOR_TECHNICIAN'}>
           <Stack.Screen name="(field)" />
@@ -75,6 +76,7 @@ export default function RootLayout() {
         <Stack.Protected guard={signedIn && role === null}>
           <Stack.Screen name="join-business" />
           <Stack.Screen name="scan" options={{ ...pushed, title: t('join.scanTitle') }} />
+          <Stack.Screen name="setup-business" options={{ ...pushed, title: t('onboarding.title') }} />
         </Stack.Protected>
       </Stack>
     </QueryClientProvider>

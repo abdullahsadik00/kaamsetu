@@ -1,1 +1,1 @@
-export { Placeholder as default } from '@/components/ui/placeholder';
+export { OwnerHomeScreen as default } from '@/features/owner/home-screen';

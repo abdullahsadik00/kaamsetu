@@ -16,6 +16,8 @@ export type Employee = {
 
 export type Invite = { qr: string; code: string; expiresAt: string };
 
+export type StaffRole = Exclude<Role, 'OWNER'>;
+
 export const EMPLOYEES_KEY = ['employees'] as const;
 
 export const useEmployees = () =>
@@ -31,6 +33,10 @@ export const useEmployee = (id: string) =>
   });
 
 export const createInvite = (id: string) => api.post<Invite>(`/employees/${id}/invite`);
+
+/** Owner adds a senior technician or helper (D-027). Phone in E.164. */
+export const addEmployee = (body: { name: string; phone: string; role: StaffRole }) =>
+  api.post<Employee>('/employees', body);
 
 export const resetLogin = (id: string) =>
   api.post<{ reset: boolean }>(`/employees/${id}/reset-login`);
