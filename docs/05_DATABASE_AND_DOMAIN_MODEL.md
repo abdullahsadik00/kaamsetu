@@ -479,6 +479,8 @@ AMC visit should use the normal ServiceJob and field completion workflow.
 ## 10. SaaS and synchronization
 
 ### Subscription
+> Implemented minimal (D-027, 20 Nov 2026): `plan` is a text name (`TRIAL`) instead of `planId` until plans exist; `status` TRIALING/ACTIVE/PAST_DUE/CANCELLED; one per organization. Organization also has `gstBills` (default for new bills).
+
 - id
 - organizationId
 - planId

@@ -48,10 +48,11 @@ Authentication provider and OTP delivery method should be selected after compari
 
 ## 3. Organization and employees
 
-- `GET /organization`
+- `POST /organizations` — **implemented (D-027)**: a signed-in user without a business creates one (`name`, `ownerName`, `phone`, `city?`, `gstBills`, `gstin?`) and becomes OWNER with a 30-day trial; `409 ALREADY_IN_BUSINESS`. The app then calls `/auth/refresh` for the new role.
+- `GET /organization` (implemented; includes `gstBills`, `gstin`)
 - `PATCH /organization`
 - `GET /employees`
-- `POST /employees`
+- `POST /employees` — **implemented (D-027)**: owner adds `name`, `phone`, `role` (SENIOR_TECHNICIAN/HELPER); `409 EMPLOYEE_EXISTS`, `409 PHONE_IN_OTHER_BUSINESS`. Staff link their Google login with `POST /employees/:id/invite` + `POST /auth/accept-invite` (D-025)
 - `GET /employees/:id`
 - `PATCH /employees/:id`
 - `POST /employees/:id/deactivate`

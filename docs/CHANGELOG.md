@@ -9,6 +9,17 @@ Meaningful product, documentation, architecture and implementation changes, newe
 - `docs/design/STITCH_PROMPTS.md`: a strict base prompt plus 83 numbered, ready-to-paste Stitch prompts (all owner, technician, helper, sign-in, setup and settings screens, sheets, dialogs and offline/empty/error/language variants). Sample data matches the prototype; open decisions appear as visible placeholders.
 - `docs/design/STITCH_PROTOTYPE_PROMPTS.md`: prompts that link the Stitch screens into one clickable prototype (base rules, 12 link prompts following flows F1–F17, a check prompt, fix prompts and a full link table for wiring by hand or in Figma). No new screens.
 
+## 2026-11-20 — Business onboarding and adding staff (T4.1, early under D-027)
+
+### Added
+- A Google-signed-in user without a business can **set up a new business** (name, owner name, business mobile, city, GST bills on/off + optional GSTIN); it starts a **30-day trial** (D-014). `POST /organizations`.
+- Owners can **add employees** (name, mobile, senior technician/helper) in More › Employees and then show the invite QR. `POST /employees`.
+- Owner Home shows a "Get started" card; the pilot script's `create-business` also starts the trial.
+- `Organization.gstBills`, minimal `Subscription` table (migration applied on staging by the start command).
+
+### Notes
+- Built before the design gate as a one-module exception (D-027); screens may change after the usability tests (T2.5).
+
 ## 2026-11-20 — Usability test kit
 
 ### Added
