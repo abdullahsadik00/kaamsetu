@@ -37,6 +37,8 @@ export async function googleIdToken(): Promise<string | null> {
     return res.data.idToken;
   } catch (error) {
     const code = (error as { code?: string }).code;
+    // Google's own code (e.g. DEVELOPER_ERROR = SHA-1/package/client mismatch) shows in the Metro log.
+    if (__DEV__) console.warn('Google sign-in error', code, String(error));
     if (code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
       throw new ApiError(0, 'GOOGLE_PLAY_SERVICES', 'Play services missing');
     }

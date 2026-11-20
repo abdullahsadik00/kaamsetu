@@ -24,7 +24,8 @@ const queryClient = new QueryClient({
 export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(fontFiles);
   const [i18nReady, setI18nReady] = useState(false);
-  const { t } = useTranslation(undefined, { i18n });
+  // No suspending: this runs before i18n is initialised; `ready` gates the UI instead.
+  const { t } = useTranslation(undefined, { i18n, useSuspense: false });
   const status = useSession((s) => s.status);
   const role = useSession((s) => s.profile?.membership?.role ?? null);
   const userId = useSession((s) => s.profile?.user.id ?? null);

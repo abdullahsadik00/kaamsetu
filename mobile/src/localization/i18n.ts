@@ -35,6 +35,8 @@ export function initI18n(): Promise<void> {
       fallbackLng: 'en',
       interpolation: { escapeValue: false }, // React already escapes.
       returnNull: false,
+      // Resources are bundled, so there is nothing to wait for; never suspend.
+      react: { useSuspense: false },
     });
   });
   return ready;
