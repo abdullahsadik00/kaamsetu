@@ -6,6 +6,7 @@ import { requireOrg } from '../tenancy/tenant.js';
 import type {
   CreateEmployee,
   CreateOrganization,
+  UpdateOrganization,
 } from './organization.schemas.js';
 
 /** Trial length promised to early-access businesses (D-014). */
@@ -72,6 +73,64 @@ export class OrganizationService {
       });
       return { ...org, trialEndsAt: trialEnd };
     });
+  }
+
+  /** Owner edits the business details (D-027). */
+  async update(auth: AuthContext, input: UpdateOrganization) {
+    return this.prisma.organization.update({
+      where: { id: requireOrg(auth) },
+      data: {
+        ...input,
+        ...(input.city !== undefined ? { city: input.city || null } : {}),
+      },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        city: true,
+        currencyCode: true,
+        timezone: true,
+        gstBills: true,
+        gstin: true,
+      },
+    });
+  }
+
+  /**
+   * Owner removes someone who left (D-027). Their membership becomes
+   * INACTIVE, so the auth guard rejects their very next request; their
+   * phones are signed out and any open invite is cancelled. Adding the same
+   * mobile again later reactivates them. The record stays for history.
+   */
+  async deactivateEmployee(auth: AuthContext, memberId: string) {
+    const organizationId = requireOrg(auth);
+    const member = await this.prisma.organizationMember.findFirst({
+      where: { id: memberId, organizationId },
+    });
+    if (!member) throw AppError.notFound('EMPLOYEE_NOT_FOUND');
+    if (member.id === auth.memberId || member.role === 'OWNER') {
+      throw new AppError(
+        HttpStatus.BAD_REQUEST,
+        'CANNOT_REMOVE_OWNER',
+        'The owner cannot be removed.',
+      );
+    }
+    const now = new Date();
+    await this.prisma.$transaction([
+      this.prisma.organizationMember.update({
+        where: { id: member.id },
+        data: { status: 'INACTIVE', deactivatedAt: member.deactivatedAt ?? now },
+      }),
+      this.prisma.memberInvite.updateMany({
+        where: { memberId: member.id, usedAt: null, revokedAt: null },
+        data: { revokedAt: now },
+      }),
+      this.prisma.device.updateMany({
+        where: { userId: member.userId, revokedAt: null },
+        data: { revokedAt: now },
+      }),
+    ]);
+    return { removed: true };
   }
 
   /**

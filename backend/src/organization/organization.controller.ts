@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  Patch,
   HttpCode,
   HttpStatus,
   Param,
@@ -20,10 +21,12 @@ import { requireOrg, scoped } from '../tenancy/tenant.js';
 import {
   CreateEmployeeSchema,
   CreateOrganizationSchema,
+  UpdateOrganizationSchema,
 } from './organization.schemas.js';
 import type {
   CreateEmployee,
   CreateOrganization,
+  UpdateOrganization,
 } from './organization.schemas.js';
 import { OrganizationService } from './organization.service.js';
 
@@ -74,6 +77,28 @@ export class OrganizationController {
     body: CreateOrganization,
   ) {
     return this.organizations.create(auth, body);
+  }
+
+  /** Owner edits the business details (D-027). */
+  @Roles('OWNER')
+  @Patch('organization')
+  updateOrganization(
+    @CurrentAuth() auth: AuthContext,
+    @Body(new ZodValidationPipe(UpdateOrganizationSchema))
+    body: UpdateOrganization,
+  ) {
+    return this.organizations.update(auth, body);
+  }
+
+  /** Owner removes someone who left: inactive at once, phones signed out (D-027). */
+  @Roles('OWNER')
+  @Post('employees/:id/deactivate')
+  @HttpCode(HttpStatus.OK)
+  deactivateEmployee(
+    @CurrentAuth() auth: AuthContext,
+    @Param('id', new ZodValidationPipe(z.uuid())) id: string,
+  ) {
+    return this.organizations.deactivateEmployee(auth, id);
   }
 
   /** Owner adds a senior technician or helper (D-027); they join by invite. */

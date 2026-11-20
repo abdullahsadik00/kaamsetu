@@ -36,7 +36,7 @@ describe('Business onboarding and adding staff (e2e, T4.1 / D-027)', () => {
   type Session = {
     accessToken: string;
     refreshToken: string;
-    membership: { role: string; organizationId: string } | null;
+    membership: { role: string; organizationId: string; memberId: string } | null;
   };
 
   async function google(sub: string): Promise<Session> {
@@ -106,6 +106,8 @@ describe('Business onboarding and adding staff (e2e, T4.1 / D-027)', () => {
   });
 
   let owner: Session;
+  let senior: Session;
+  let seniorId: string;
 
   it('a Google user without a business creates one, with a 30-day trial', async () => {
     const s = await google('test-o-owner');
@@ -182,6 +184,7 @@ describe('Business onboarding and adding staff (e2e, T4.1 / D-027)', () => {
       .post(`/api/v1/employees/${add.body.data.id}/invite`)
       .set(bearer(owner.accessToken))
       .expect(201);
+    seniorId = add.body.data.id as string;
     const tech = await google('test-o-senior');
     const joined = await http()
       .post('/api/v1/auth/accept-invite')
@@ -189,6 +192,7 @@ describe('Business onboarding and adding staff (e2e, T4.1 / D-027)', () => {
       .send({ phone: `${PREFIX_NEW}11`, code: inv.body.data.code })
       .expect(200);
     expect(joined.body.data.membership.role).toBe('SENIOR_TECHNICIAN');
+    senior = joined.body.data as Session;
   });
 
   it('refuses duplicates, numbers from other businesses, and non-owners', async () => {
@@ -211,5 +215,63 @@ describe('Business onboarding and adding staff (e2e, T4.1 / D-027)', () => {
       .set(bearer(other.tokens.SENIOR_TECHNICIAN))
       .send({ name: 'Nope', phone: `${PREFIX_NEW}12`, role: 'HELPER' })
       .expect(403);
+  });
+
+  it('the owner edits the business details', async () => {
+    const res = await http()
+      .patch('/api/v1/organization')
+      .set(bearer(owner.accessToken))
+      .send({ name: 'Test Cool Air Pune', city: 'Pimpri', gstin: null, gstBills: false })
+      .expect(200);
+    expect(res.body.data).toMatchObject({
+      name: 'Test Cool Air Pune',
+      city: 'Pimpri',
+      gstin: null,
+      gstBills: false,
+    });
+    await http()
+      .patch('/api/v1/organization')
+      .set(bearer(owner.accessToken))
+      .send({})
+      .expect(400);
+    await http()
+      .patch('/api/v1/organization')
+      .set(bearer(senior.accessToken))
+      .send({ name: 'Hijack' })
+      .expect(403);
+  });
+
+  it('removing an employee locks them out at once; re-adding brings them back', async () => {
+    await http()
+      .post(`/api/v1/employees/${seniorId}/deactivate`)
+      .set(bearer(owner.accessToken))
+      .expect(200);
+    // Their current token and their refresh token both stop working.
+    await http().get('/api/v1/auth/me').set(bearer(senior.accessToken)).expect(401);
+    await http()
+      .post('/api/v1/auth/refresh')
+      .send({ refreshToken: senior.refreshToken })
+      .expect(401);
+    const list = await http()
+      .get('/api/v1/employees')
+      .set(bearer(owner.accessToken))
+      .expect(200);
+    expect(
+      (list.body.data as { id: string; status: string }[]).find((e) => e.id === seniorId)
+        ?.status,
+    ).toBe('INACTIVE');
+
+    const self = await http()
+      .post(`/api/v1/employees/${owner.membership?.memberId}/deactivate`)
+      .set(bearer(owner.accessToken))
+      .expect(400);
+    expect(self.body.error.code).toBe('CANNOT_REMOVE_OWNER');
+
+    const back = await http()
+      .post('/api/v1/employees')
+      .set(bearer(owner.accessToken))
+      .send({ name: 'New Senior', phone: `${PREFIX_NEW}11`, role: 'SENIOR_TECHNICIAN' })
+      .expect(201);
+    expect(back.body.data).toMatchObject({ id: seniorId, status: 'ACTIVE' });
   });
 });
