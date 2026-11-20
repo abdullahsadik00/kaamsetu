@@ -99,6 +99,8 @@ Search should support customer name and phone number.
 
 ## 6. Jobs
 
+**Implemented 21 Nov 2026 (D-030), owner only:** `GET /jobs?status=OPEN|NEW|…&date=YYYY-MM-DD&teamId=&customerId=`, `POST /jobs`, `GET /jobs/:id`, `PATCH /jobs/:id` (needs `version`; `409 VERSION_CONFLICT`), `POST /jobs/:id/assign-team`, `POST /jobs/:id/cancel` (`reason`), `POST /jobs/:id/follow-up`. Invalid moves: `409 INVALID_STATUS_TRANSITION` (state machine in `backend/src/jobs/jobs.state.ts`). Technician actions (start, hold, complete, updates) come with T4.7.
+
 - `GET /jobs?status=&date=&teamId=`
 - `POST /jobs`
 - `GET /jobs/:id`

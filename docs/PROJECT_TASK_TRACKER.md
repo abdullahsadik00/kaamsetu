@@ -119,7 +119,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Work:** parser per known format (pure function, fully unit-tested against T1.9 samples); review screen; ticket number, source partner; duplicate-ticket warning; "Closed in brand portal" tick.
 - **Acceptance:** every sample format fills name, phone, address, pincode, job type, ticket number and charges correctly; unknown text falls back to manual entry without losing what was pasted.
 
-### T4.6 Job creation and assignment — Critical — Not Started — depends T4.4, T4.5, T4.2
+### T4.6 Job creation and assignment — Critical — In Progress (owner side built early under D-030: create with ACs/type/day/slot/team/amount, assign and change team with history, reschedule with version check, cancel with reason, follow-up; backend 7c86feb; helper swap and enquiry link later; phone test pending) — depends T4.4, T4.5, T4.2
 - **Objective:** create and assign a job in about a minute.
 - **Stories:** create job with ACs, service type, complaint, day and slot, team, amount to collect; reassign; one-day helper swap; cancel with reason; follow-up job linked.
 - **DB:** ServiceJob, JobEquipment, JobAssignment, JobTechnician, JobStatusHistory, job number sequence. **API:** doc 06 §6.

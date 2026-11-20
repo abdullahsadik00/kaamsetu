@@ -9,6 +9,12 @@ Meaningful product, documentation, architecture and implementation changes, newe
 - `docs/design/STITCH_PROMPTS.md`: a strict base prompt plus 83 numbered, ready-to-paste Stitch prompts (all owner, technician, helper, sign-in, setup and settings screens, sheets, dialogs and offline/empty/error/language variants). Sample data matches the prototype; open decisions appear as visible placeholders.
 - `docs/design/STITCH_PROTOTYPE_PROMPTS.md`: prompts that link the Stitch screens into one clickable prototype (base rules, 12 link prompts following flows F1–F17, a check prompt, fix prompts and a full link table for wiring by hand or in Figma). No new screens.
 
+## 2026-11-21 — Jobs, owner side (T4.6, early under D-030)
+
+### Added
+- Owner creates numbered jobs (#1001…) for a customer's address and ACs with job type, problem, day + morning/afternoon, team and amount to collect; gives them to a team or changes team (history kept), changes day or time, cancels with a reason, and creates a follow-up visit. Jobs tab by day and status. "New job" on the customer page.
+- Job state machine with an exhaustive test; stale edits refused (`VERSION_CONFLICT`).
+
 ## 2026-11-21 — Teams (T4.2, early under D-029)
 
 ### Added
