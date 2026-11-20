@@ -406,3 +406,22 @@ model JobStatusHistory {
 
   @@index([jobId, at])
 }
+
+// ---------- Sync (docs/09 §5–6, T4.7, D-031) ----------
+
+/// An outbox operation the server has processed. Same id again = duplicate
+/// (the stored result is returned); kept at least 30 days (docs/09 §6).
+model SyncOperation {
+  id             String   @id @db.Uuid
+  organizationId String   @db.Uuid
+  memberId       String   @db.Uuid
+  operation      String
+  entityId       String   @db.Uuid
+  /// Hash of the operation body, to reject the same id with different content.
+  payloadHash    String
+  result         String
+  errorCode      String?
+  receivedAt     DateTime @default(now())
+
+  @@index([organizationId, receivedAt])
+}

@@ -199,6 +199,7 @@ async function purgeClosed() {
   await prisma.$transaction([
     prisma.memberInvite.deleteMany({ where: { organizationId: { in: ids } } }),
     prisma.subscription.deleteMany({ where: { organizationId: { in: ids } } }),
+    prisma.syncOperation.deleteMany({ where: { organizationId: { in: ids } } }),
     prisma.jobEquipment.deleteMany({ where: { organizationId: { in: ids } } }),
     prisma.jobAssignment.deleteMany({ where: { organizationId: { in: ids } } }),
     prisma.jobStatusHistory.deleteMany({ where: { organizationId: { in: ids } } }),
