@@ -2,6 +2,11 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-20 — Design brief for Google Stitch
+
+### Added
+- `docs/design/STITCH_DESIGN_BRIEF.md`: one brief for designing the app in Google Stitch, compiled from docs 01, 02, 08, 09, the decision log, discovery answers, the prototype and the app theme/strings. Covers the design system (colours, type, spacing, radius, shadows, icons), every screen, user flows, components, states, microcopy in three languages and 23 open gaps (G-1 to G-23). Each item is tagged FINAL, PROPOSED, OPEN or OUT. No new decisions.
+
 ## 2026-11-19 — Google sign-in and owner invites (T3.11)
 
 ### Added
