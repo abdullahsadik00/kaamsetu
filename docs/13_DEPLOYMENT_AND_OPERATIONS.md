@@ -68,6 +68,8 @@ From `backend/`, with `DATABASE_URL` (Supabase session pooler) and `OTP_HASH_SEC
 
 The script prints the target database host and changes nothing without `--yes`.
 
+**Monthly:** `npm run pilot -- purge-closed` (dry run), then with `--yes`, permanently removes businesses closed by "Delete my account" more than 30 days ago, as the privacy policy promises.
+
 
 - Automated daily database backup + point-in-time recovery, retained ≥ 14 days in pilot, ≥ 30 days at launch.
 - Object storage versioning on.

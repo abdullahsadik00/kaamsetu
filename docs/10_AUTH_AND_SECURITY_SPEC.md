@@ -52,6 +52,8 @@ Implementation rules:
 
 ## 4. Data protection
 
+Account deletion (20 Nov 2026): in the app (Profile/More › Delete my account, `POST /auth/delete-account`) and at `/delete-account` on the web. Personal details are erased at once and phones signed out; an owner's business is closed and purged after 30 days with `npm run pilot -- purge-closed` (run monthly, see doc 13 §5).
+
 Public privacy notice and terms (20 Nov 2026): `/privacy` and `/terms` on the API host, text in `backend/src/site/pages.ts`; keep them true to what the code collects and which processors it uses.
 
 India's **Digital Personal Data Protection Act, 2023 (DPDP)** applies: customer names, phones and addresses, and employee data are personal data. Roughly, each business decides what it collects about its customers and KaamSetu processes it for them; KaamSetu is directly responsible for its own users' data. Get Indian legal advice before commercial launch (doc 03 §9). Practical rules now:

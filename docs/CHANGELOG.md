@@ -9,6 +9,13 @@ Meaningful product, documentation, architecture and implementation changes, newe
 - `docs/design/STITCH_PROMPTS.md`: a strict base prompt plus 83 numbered, ready-to-paste Stitch prompts (all owner, technician, helper, sign-in, setup and settings screens, sheets, dialogs and offline/empty/error/language variants). Sample data matches the prototype; open decisions appear as visible placeholders.
 - `docs/design/STITCH_PROTOTYPE_PROMPTS.md`: prompts that link the Stitch screens into one clickable prototype (base rules, 12 link prompts following flows F1–F17, a check prompt, fix prompts and a full link table for wiring by hand or in Figma). No new screens.
 
+## 2026-11-20 — Delete my account
+
+### Added
+- In-app **Delete my account** (Profile; owners: More) with a clear confirmation; owners are warned the business closes for everyone. `POST /auth/delete-account`.
+- Web page `/delete-account` (Google Play requirement) and privacy policy text on deletion.
+- `npm run pilot -- purge-closed`: removes businesses closed more than 30 days ago (monthly task, doc 13 §5).
+
 ## 2026-11-20 — Offline foundation finished
 
 ### Added
