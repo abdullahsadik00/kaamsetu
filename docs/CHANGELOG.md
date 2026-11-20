@@ -2,14 +2,21 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
-## 2026-11-19 — Google sign-in and owner invites (T3.11, in progress)
+## 2026-11-19 — Google sign-in and owner invites (T3.11)
 
 ### Added
 - Backend: `POST /auth/google` (Google ID token, `GOOGLE_CLIENT_IDS`), `POST /employees/:id/invite` (QR token + 6-digit code, single use, 24 h, hashed), `POST /auth/accept-invite` (QR token or phone + code, 5 tries), `POST /employees/:id/reset-login`; employees list shows `loginLinked`. `User.phone` optional, `User.googleSubject`, `MemberInvite` table. Seed prints a 7-day invite code per demo owner.
 - App: "Continue with Google", "Join your business" (scan QR or enter code), owner More › Employees with invite QR and reset login; Android package `com.kaamsetu.app`; needs our own build (not Expo Go). Phone OTP remains a development-only path.
 
-### Pending
-- On-phone test once the Google OAuth client IDs exist.
+### Verified (20 Nov 2026)
+- On a real Android phone (EAS development build, project `@vyapaar-labs-team/kaamsetu`): owner, senior technician and helper each signed in with Google, joined with phone + 6-digit code and landed on their home. Google Cloud needs a **Web** client (its ID goes in `GOOGLE_CLIENT_IDS` and `EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID`) plus one Android client per signing key (this PC's debug key, EAS key); a missing Web client shows as `DEVELOPER_ERROR`.
+- Local Windows builds hit the 260-character path limit; app builds run on EAS.
+
+### Fixed
+- Dev build could stay blank: the root layout suspended on translations before i18n was ready.
+
+### Still to try
+- Joining by scanning the QR (needs a second phone).
 
 ## 2026-11-19 — Pilot login decision
 
