@@ -6,11 +6,13 @@ import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module.js';
 import { configureApp } from './app.setup.js';
+import { initErrorReporting } from './common/error-reporting.js';
 import { useJsonLogs, validateEnv } from './config/env.js';
 
 async function bootstrap() {
   // Validate early so the logger format is known before Nest starts logging.
   const env = validateEnv(process.env);
+  initErrorReporting(env);
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: new ConsoleLogger({
       json: useJsonLogs(env),

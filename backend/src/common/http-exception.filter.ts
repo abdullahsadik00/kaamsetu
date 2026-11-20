@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { AppError } from './app-error.js';
+import { reportError } from './error-reporting.js';
 import { requestIdOf } from './request-context.middleware.js';
 
 export interface ErrorBody {
@@ -42,6 +43,11 @@ export class HttpExceptionFilter implements ExceptionFilter {
         `${body.meta.requestId} ${req.method} ${req.path} failed`,
         exception instanceof Error ? exception.stack : String(exception),
       );
+      reportError(exception, {
+        requestId: body.meta.requestId,
+        method: req.method,
+        route: req.route?.path ?? req.path,
+      });
     }
     res.status(status).json(body);
   }

@@ -70,7 +70,8 @@ describe('Google login + owner invites (e2e, D-025)', () => {
       where: {
         OR: [
           { googleSubject: { startsWith: 'test-g-' } },
-          { email: { endsWith: '@example.test' } },
+          // Only this file's users: e2e files run in parallel on one database.
+          { email: { startsWith: 'test-g-' } },
         ],
       },
     });
