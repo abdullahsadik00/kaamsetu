@@ -1,7 +1,7 @@
 # 09 — KaamSetu Offline and Synchronization Specification
 
 > **Source of truth for:** what works offline, how phone data reaches the server, and what happens on conflicts.
-> **Status (19 Nov 2026):** §3 storage and §5 outbox are implemented in `mobile/src/db` and `mobile/src/features/sync` (T3.8): per-user SQLite, outbox with backoff and NEEDS_ATTENTION, no business operations queued yet. The sync endpoints (§6) do not exist yet; connectivity-regained triggering waits for a network-status library. Several details depend on discovery (marked Q-xx, see `DECISION_LOG.md`).
+> **Status (19 Nov 2026):** §3 storage and §5 outbox are implemented in `mobile/src/db` and `mobile/src/features/sync` (T3.8): per-user SQLite, outbox with backoff and NEEDS_ATTENTION, no business operations queued yet. Since 20 Nov 2026 the sender also runs when the internet comes back (NetInfo), an offline banner tells staff to keep working, and sent operations older than 7 days are pruned. The sync endpoints (§6) do not exist yet. Several details depend on discovery (marked Q-xx, see `DECISION_LOG.md`).
 
 ## 1. Principles
 
