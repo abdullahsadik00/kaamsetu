@@ -2,10 +2,11 @@ import { useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { Alert, StyleSheet, View } from 'react-native';
 
+import { errorMessage } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
 import { LanguagePicker } from '@/components/ui/language-picker';
-import { logout, useSession } from '@/features/auth/session';
+import { deleteAccount, logout, useSession } from '@/features/auth/session';
 import { unsentCount } from '@/features/sync/sync-engine';
 import { colors, radius, space } from '@/theme/tokens';
 
@@ -14,6 +15,7 @@ export function ProfileSection() {
   const { t } = useTranslation();
   const profile = useSession((s) => s.profile);
   const out = useMutation({ mutationFn: logout });
+  const remove = useMutation({ mutationFn: deleteAccount });
 
   const onLogout = async () => {
     // Logging out deletes the phone's database, so warn about work not yet sent.
@@ -26,6 +28,15 @@ export function ProfileSection() {
   };
 
   const role = profile?.membership?.role;
+  const onDelete = () =>
+    Alert.alert(
+      t('profile.deleteTitle'),
+      role === 'OWNER' ? t('profile.deleteBodyOwner') : t('profile.deleteBody'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('profile.deleteConfirm'), style: 'destructive', onPress: () => remove.mutate() },
+      ],
+    );
   const phone = profile?.user.phone?.replace(/^\+91/, '+91 ') ?? profile?.user.email ?? '';
 
   return (
@@ -42,6 +53,18 @@ export function ProfileSection() {
         onPress={onLogout}
         loading={out.isPending}
       />
+      <Button
+        variant="text"
+        label={t('profile.deleteAccount')}
+        onPress={onDelete}
+        loading={remove.isPending}
+        testID="delete-account"
+      />
+      {remove.error ? (
+        <AppText color={colors.bad} accessibilityLiveRegion="polite">
+          {errorMessage(t, remove.error)}
+        </AppText>
+      ) : null}
     </View>
   );
 }

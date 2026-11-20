@@ -150,10 +150,25 @@ export async function logout(): Promise<void> {
     // Offline or already revoked: still log out locally.
     if (!(error instanceof ApiError)) throw error;
   }
+  await clearLocalSession();
+}
+
+/** Removes everything this account left on the phone (database, tokens, Google choice). */
+async function clearLocalSession(): Promise<void> {
   for (const handler of logoutHandlers) await handler();
   await googleSignOut();
   await secureTokenStore.clear();
   signedOut();
+}
+
+/**
+ * "Delete my account": the server wipes the person's details (and closes
+ * the business for an owner); then the phone is cleared like a logout.
+ * Needs internet; on failure nothing local is removed.
+ */
+export async function deleteAccount(): Promise<void> {
+  await api.post('/auth/delete-account', { confirm: true });
+  await clearLocalSession();
 }
 
 export type HomeRoute = '/login' | '/home' | '/my-work' | '/today' | '/join-business';

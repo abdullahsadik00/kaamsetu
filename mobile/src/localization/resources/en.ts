@@ -64,6 +64,11 @@ export const en = {
     helperNote: "Your senior fills in the job report. You don't need to fill anything.",
   },
   profile: {
+    deleteAccount: 'Delete my account',
+    deleteTitle: 'Delete your account?',
+    deleteBody: 'Your name, mobile number and email will be erased and you will be logged out on all phones. Work you did stays with the business. This cannot be undone.',
+    deleteBodyOwner: 'Your business will be closed for everyone: all staff are logged out at once, and its data is permanently deleted after 30 days. Your own details are erased now. This cannot be undone.',
+    deleteConfirm: 'Delete',
     title: 'Profile',
     me: 'Me',
     logout: 'Log out',
