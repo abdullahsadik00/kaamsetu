@@ -428,6 +428,8 @@ Test language choice with actual technicians. Do not assume their preferred lang
 
 ## 10. Prototype test tasks
 
+Ready-to-run session script, task cards in English/Hindi/Marathi and observation sheet: [discovery/USABILITY_TEST_KIT.md](discovery/USABILITY_TEST_KIT.md) (tasks updated for enquiries, ticket paste, partial payment, cash with teams and offline finish). Results go in [discovery/USABILITY_TEST_1.md](discovery/USABILITY_TEST_1.md).
+
 Give users these tasks without coaching:
 
 Owner:

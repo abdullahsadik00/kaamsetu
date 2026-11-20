@@ -9,6 +9,12 @@ Meaningful product, documentation, architecture and implementation changes, newe
 - `docs/design/STITCH_PROMPTS.md`: a strict base prompt plus 83 numbered, ready-to-paste Stitch prompts (all owner, technician, helper, sign-in, setup and settings screens, sheets, dialogs and offline/empty/error/language variants). Sample data matches the prototype; open decisions appear as visible placeholders.
 - `docs/design/STITCH_PROTOTYPE_PROMPTS.md`: prompts that link the Stitch screens into one clickable prototype (base rules, 12 link prompts following flows F1–F17, a check prompt, fix prompts and a full link table for wiring by hand or in Figma). No new screens.
 
+## 2026-11-20 — Usability test kit
+
+### Added
+- `discovery/USABILITY_TEST_KIT.md`: session script, consent text, hint ladder, task cards for owner (8), senior technician (7, incl. offline) and helper (3, closes Q-01) in English/Hindi/Marathi, how to open the prototype on a phone, scoring and severity.
+- `discovery/USABILITY_TEST_1.md`: results template (per-task outcomes, closing answers, issues with severity, decisions for T2.5).
+
 ## 2026-11-20 — Pre-pilot readiness
 
 ### Added

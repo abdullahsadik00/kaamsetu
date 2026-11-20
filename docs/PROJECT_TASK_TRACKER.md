@@ -38,9 +38,9 @@
 | ID | Task | Pri | Status | Depends | Deliverable | Acceptance criteria | Docs | Testing |
 |---|---|---|---|---|---|---|---|---|
 | T2.1 | Update prototype with discovery findings | Critical | In Progress (pre-interview answers applied 19 Nov; Q-14, Q-15, GST details pending) | T1.8 | Updated `design/KaamSetu Prototype.html` | Reflects all resolved questions | 02 | Self-review |
-| T2.2 | Usability test: owner (tasks 1–3, 6–7) | Critical | Not Started | T2.1 | Test notes | Times, wrong taps, help needed recorded | 02 §10 | Moderated test |
-| T2.3 | Usability test: senior technician (tasks 4–5, with internet off) | Critical | Not Started | T2.1 | Test notes | Completes a job with at most minor help | 02 §10 | Moderated test |
-| T2.4 | Usability test: helper | High | Not Started | T2.1 | Test notes; helper login decision | Q-01 closed | 02 §5.7 | Moderated test |
+| T2.2 | Usability test: owner (tasks 1–3, 6–7) | Critical | Not Started (kit ready: `discovery/USABILITY_TEST_KIT.md`, results in `USABILITY_TEST_1.md`) | T2.1 | Test notes | Times, wrong taps, help needed recorded | 02 §10 | Moderated test |
+| T2.3 | Usability test: senior technician (tasks 4–5, with internet off) | Critical | Not Started (kit ready: `discovery/USABILITY_TEST_KIT.md`, results in `USABILITY_TEST_1.md`) | T2.1 | Test notes | Completes a job with at most minor help | 02 §10 | Moderated test |
+| T2.4 | Usability test: helper | High | Not Started (kit ready: `discovery/USABILITY_TEST_KIT.md`, results in `USABILITY_TEST_1.md`) | T2.1 | Test notes; helper login decision | Q-01 closed | 02 §5.7 | Moderated test |
 | T2.5 | Fix top usability issues; re-test the worst flow | Critical | Not Started | T2.2–T2.4 | Prototype v2, `USABILITY_TEST_1.md` | Previously failing task now passes | 02 | Re-test |
 | T2.6 | Finalise design system: tokens, components, states | High | Not Started | T2.5 | Doc 02 §6 updated; component list with states | Every core screen has empty/loading/offline/error state | 02 | Review |
 | T2.7 | Hindi/Marathi and outdoor contrast check on a real Android phone | High | Not Started | T2.5 | Notes, screenshots | No clipped Devanagari; readable in sunlight | 02 §8 | Device check |
