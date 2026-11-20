@@ -1,0 +1,189 @@
+/**
+ * Pilot setup, until the app has business signup (T4.1) and "Add staff" (T4.2).
+ * Works on whichever database DATABASE_URL points at, so it prints the
+ * target and changes nothing without --yes.
+ *
+ *   npm run pilot -- create-business --name "Cool Care AC" --phone 98xxxxxxxx --city Pune \
+ *       --owner-name "Owner Name" --owner-phone 98xxxxxxxx --yes
+ *   npm run pilot -- add-staff --business-phone 98xxxxxxxx --name "Name" --phone 98xxxxxxxx \
+ *       --role senior|helper --yes
+ *   npm run pilot -- owner-invite --business-phone 98xxxxxxxx --yes
+ *   npm run pilot -- list --business-phone 98xxxxxxxx
+ *
+ * Needs DATABASE_URL and, for invites, the server's OTP_HASH_SECRET.
+ * Staff are invited by the owner in the app (More › Employees).
+ */
+import 'dotenv/config';
+import { parseArgs } from 'node:util';
+import { PrismaPg } from '@prisma/adapter-pg';
+import {
+  PrismaClient,
+  type MemberRole,
+} from '../src/generated/prisma/client.js';
+import { normalizeIndianMobile } from '../src/auth/phone.js';
+import { issueInvite } from './invite-tools.js';
+
+const { positionals, values } = parseArgs({
+  allowPositionals: true,
+  options: {
+    name: { type: 'string' },
+    phone: { type: 'string' },
+    city: { type: 'string' },
+    'owner-name': { type: 'string' },
+    'owner-phone': { type: 'string' },
+    'business-phone': { type: 'string' },
+    role: { type: 'string' },
+    yes: { type: 'boolean', default: false },
+  },
+});
+
+const ROLES: Record<string, MemberRole> = {
+  senior: 'SENIOR_TECHNICIAN',
+  helper: 'HELPER',
+};
+
+class UsageError extends Error {}
+
+function need(key: keyof typeof values): string {
+  const v = values[key];
+  if (typeof v !== 'string' || !v.trim()) throw new UsageError(`Missing --${key}`);
+  return v.trim();
+}
+
+function mobile(key: keyof typeof values): string {
+  const e164 = normalizeIndianMobile(need(key));
+  if (!e164) throw new UsageError(`--${key} must be a 10-digit Indian mobile number`);
+  return e164;
+}
+
+function target(): string {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new UsageError('DATABASE_URL is not set');
+  try {
+    const u = new URL(url);
+    return `${u.hostname}${u.pathname}`; // never print the password
+  } catch {
+    return '(unparsable DATABASE_URL)';
+  }
+}
+
+function confirmWrite(what: string) {
+  console.log(`Target database: ${target()}`);
+  if (!values.yes) {
+    throw new UsageError(`Would ${what}. Check the target above, then add --yes to do it.`);
+  }
+}
+
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+});
+
+async function businessByPhone() {
+  const phone = mobile('business-phone');
+  const org = await prisma.organization.findFirst({ where: { phone } });
+  if (!org) throw new UsageError(`No business with phone ${phone}`);
+  return org;
+}
+
+async function upsertPerson(phone: string, name: string) {
+  return prisma.user.upsert({
+    where: { phone },
+    create: { phone, name },
+    update: { name },
+  });
+}
+
+function printInvite(phone: string, inv: { code: string; expiresAt: Date }) {
+  console.log(
+    `\nOwner invite: in the app, Continue with Google › Join your business › Enter code instead\n` +
+      `  mobile ${phone.replace(/^\+91/, '')}  code ${inv.code}  (works once, until ${inv.expiresAt.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST)`,
+  );
+}
+
+async function createBusiness() {
+  const name = need('name');
+  const phone = mobile('phone');
+  const city = need('city');
+  const ownerName = need('owner-name');
+  const ownerPhone = mobile('owner-phone');
+  confirmWrite(`create business "${name}" (${phone}) with owner ${ownerName} (${ownerPhone})`);
+
+  if (await prisma.organization.findFirst({ where: { phone } })) {
+    throw new UsageError(`A business with phone ${phone} already exists. Use owner-invite or add-staff.`);
+  }
+  const org = await prisma.organization.create({ data: { name, phone, city } });
+  const owner = await upsertPerson(ownerPhone, ownerName);
+  const member = await prisma.organizationMember.create({
+    data: { organizationId: org.id, userId: owner.id, role: 'OWNER' },
+  });
+  console.log(`✓ Created business "${org.name}" with owner ${ownerName}`);
+  printInvite(ownerPhone, await issueInvite(prisma, org.id, member.id));
+}
+
+async function addStaff() {
+  const org = await businessByPhone();
+  const name = need('name');
+  const phone = mobile('phone');
+  const role = ROLES[need('role')];
+  if (!role) throw new UsageError('--role must be senior or helper');
+  confirmWrite(`add ${name} (${phone}) as ${role} to "${org.name}"`);
+
+  const user = await upsertPerson(phone, name);
+  await prisma.organizationMember.upsert({
+    where: { organizationId_userId: { organizationId: org.id, userId: user.id } },
+    create: { organizationId: org.id, userId: user.id, role },
+    update: { role, status: 'ACTIVE', deactivatedAt: null },
+  });
+  console.log(
+    `✓ ${name} is ${role} in "${org.name}". The owner invites them in the app: More › Employees › ${name} › Show invite QR.`,
+  );
+}
+
+async function ownerInvite() {
+  const org = await businessByPhone();
+  confirmWrite(`issue a new owner invite for "${org.name}" (cancels the previous one)`);
+  const owner = await prisma.organizationMember.findFirst({
+    where: { organizationId: org.id, role: 'OWNER', status: 'ACTIVE' },
+    include: { user: true },
+  });
+  if (!owner) throw new UsageError(`"${org.name}" has no active owner`);
+  printInvite(owner.user.phone ?? '', await issueInvite(prisma, org.id, owner.id));
+}
+
+async function list() {
+  const org = await businessByPhone();
+  console.log(`Target database: ${target()}\n${org.name} (${org.phone}, ${org.city ?? '-'})`);
+  const members = await prisma.organizationMember.findMany({
+    where: { organizationId: org.id },
+    include: { user: true },
+    orderBy: { joinedAt: 'asc' },
+  });
+  for (const m of members) {
+    const linked = m.user.googleSubject ? 'joined' : 'not joined';
+    console.log(`  ${m.role.padEnd(17)} ${m.user.name.padEnd(24)} ${m.user.phone ?? '-'}  ${m.status}  ${linked}`);
+  }
+}
+
+const COMMANDS: Record<string, () => Promise<void>> = {
+  'create-business': createBusiness,
+  'add-staff': addStaff,
+  'owner-invite': ownerInvite,
+  list,
+};
+
+async function main() {
+  const command = COMMANDS[positionals[0] ?? ''];
+  if (!command) {
+    throw new UsageError(
+      `Commands: ${Object.keys(COMMANDS).join(', ')}. See the top of backend/prisma/pilot.ts.`,
+    );
+  }
+  await command();
+}
+
+main()
+  .catch((e: unknown) => {
+    console.error(e instanceof UsageError ? `✗ ${e.message}` : e);
+    process.exitCode = 1;
+  })
+  .finally(() => prisma.$disconnect());

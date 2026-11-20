@@ -14,12 +14,7 @@ import {
   PrismaClient,
   type MemberRole,
 } from '../src/generated/prisma/client.js';
-import {
-  hashInviteValue,
-  inviteQrPayload,
-  newInviteCode,
-  newInviteToken,
-} from '../src/auth/invite-codes.js';
+import { issueInvite } from './invite-tools.js';
 
 if (process.env.NODE_ENV === 'production') {
   console.error('Refusing to seed demo data in production.');
@@ -88,32 +83,6 @@ async function upsertMember(
   return member.id;
 }
 
-/**
- * Google login (D-025) needs an invite to claim an employee record. The demo
- * owner gets one here (7 days, demo data only); staff invites come from the
- * owner in the app.
- */
-async function ownerInvite(organizationId: string, memberId: string) {
-  const secret = process.env.OTP_HASH_SECRET;
-  if (!secret) throw new Error('OTP_HASH_SECRET missing in backend/.env');
-  const token = newInviteToken();
-  const code = newInviteCode();
-  await prisma.memberInvite.updateMany({
-    where: { memberId, usedAt: null, revokedAt: null },
-    data: { revokedAt: new Date() },
-  });
-  await prisma.memberInvite.create({
-    data: {
-      organizationId,
-      memberId,
-      tokenHash: hashInviteValue(secret, token),
-      codeHash: hashInviteValue(secret, code),
-      expiresAt: new Date(Date.now() + 7 * 24 * 3600_000),
-    },
-  });
-  return { code, qr: inviteQrPayload(token) };
-}
-
 async function seedBusiness(
   b: DemoBusiness,
 ): Promise<{ people: number; invite: { code: string; qr: string } }> {
@@ -146,7 +115,8 @@ async function seedBusiness(
   }
   return {
     people: 1 + b.teams.length * 2,
-    invite: await ownerInvite(org.id, ownerId),
+    // Google login (D-025) needs an invite to claim the owner record.
+    invite: await issueInvite(prisma, org.id, ownerId),
   };
 }
 
