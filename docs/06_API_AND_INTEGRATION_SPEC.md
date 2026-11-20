@@ -70,6 +70,8 @@ Validate that the selected senior technician and helpers are active members of t
 
 ## 5. Customers and equipment
 
+**Implemented 20 Nov 2026 (D-028), owner only:** `GET /customers?q=&archived=` (name, any case, or any digits of the mobile), `POST /customers` (with first `site`; `409 CUSTOMER_PHONE_EXISTS` + `details.customerId` unless `allowDuplicatePhone`), `GET`/`PATCH /customers/:id` (incl. `archived`), `POST /customers/:id/sites`, `POST /equipment`, `PATCH /equipment/:id` (incl. `archived`). History and `/customers/:id/outstanding` wait for jobs and bills.
+
 - `GET /customers?q=`
 - `POST /customers`
 - `GET /customers/:id`

@@ -90,7 +90,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Tests:** team rules; deactivated member's token refresh fails; isolation.
 - **Acceptance:** owner sets up 6 teams; a technician logs in and sees the technician home.
 
-### T4.3 Customer management — Critical — Not Started — depends T4.1
+### T4.3 Customer management — Critical — In Progress (built early under D-028: search, add with default site, duplicate warning, addresses, edit, archive; backend 7cf2731; phone test pending) — depends T4.1
 - **Objective:** find or add a customer in seconds.
 - **Stories:** search by phone or name; add with name, phone, address; customer can have several sites; archive.
 - **Frontend:** Customers list/search, add/edit, detail with sites. **Backend/API:** doc 06 §5. **DB:** Customer, Site.
@@ -99,7 +99,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Tests:** search by partial phone; duplicate detection per org only; isolation.
 - **Acceptance:** repeat customer found by last 4 digits of phone in < 5 s.
 
-### T4.4 AC equipment management — High — Not Started — depends T4.3
+### T4.4 AC equipment management — High — In Progress (D-028: add/remove ACs per address; AC history waits for jobs, T4.6) — depends T4.3
 - **Objective:** know every AC a customer has and its history.
 - **Stories:** add AC with type, brand, capacity, room; optional fields hidden by default; view AC history.
 - **DB:** Equipment. **API:** doc 06 §5.
