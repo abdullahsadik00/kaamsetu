@@ -10,6 +10,7 @@ export default function MoreScreen() {
   const { t } = useTranslation();
   return (
     <Screen>
+      <Button variant="secondary" label={t('teams.title')} onPress={() => router.push('/teams')} />
       <Button variant="secondary" label={t('owner.employees')} onPress={() => router.push('/employees')} />
       <Button variant="secondary" label={t('business.title')} onPress={() => router.push('/business')} />
       <ProfileSection />
