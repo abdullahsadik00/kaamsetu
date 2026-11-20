@@ -1,1 +1,1 @@
-export { Placeholder as default } from '@/components/ui/placeholder';
+export { CustomersScreen as default } from '@/features/customers/customers-screen';
