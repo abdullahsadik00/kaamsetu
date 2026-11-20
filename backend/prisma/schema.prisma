@@ -45,6 +45,7 @@ model Organization {
 
   members      OrganizationMember[]
   subscription Subscription?
+  customers    Customer[]
 }
 
 enum SubscriptionStatus {
@@ -170,4 +171,91 @@ model OrganizationMember {
 
   @@unique([organizationId, userId])
   @@index([organizationId, status])
+}
+
+// ---------- Customers and ACs (docs/05 §3–4, T4.3/T4.4, D-028) ----------
+
+enum CustomerType {
+  INDIVIDUAL
+  BUSINESS
+}
+
+/// A business's customer. Phone is not unique: the app warns on duplicates instead.
+model Customer {
+  id             String       @id @default(uuid()) @db.Uuid
+  organizationId String       @db.Uuid
+  type           CustomerType @default(INDIVIDUAL)
+  name           String
+  /// E.164, e.g. +919876501234
+  phone          String
+  alternatePhone String?
+  notes          String?
+  /// Default for this customer's bills (prototype "Give GST bills").
+  gstBills       Boolean      @default(false)
+  gstin          String?
+  archivedAt     DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  sites        Site[]
+  equipment    Equipment[]
+
+  @@index([organizationId, phone])
+  @@index([organizationId, name])
+}
+
+/// An address of a customer (home, office, shop). The first one is the default.
+model Site {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  customerId     String   @db.Uuid
+  label          String?
+  addressLine1   String
+  locality       String?
+  city           String?
+  landmark       String?
+  isDefault      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  customer  Customer    @relation(fields: [customerId], references: [id])
+  equipment Equipment[]
+
+  @@index([organizationId, customerId])
+}
+
+enum EquipmentType {
+  SPLIT
+  WINDOW
+  CASSETTE
+  DUCTABLE
+  TOWER
+  OTHER
+}
+
+/// One AC unit at a site.
+model Equipment {
+  id             String        @id @default(uuid()) @db.Uuid
+  organizationId String        @db.Uuid
+  customerId     String        @db.Uuid
+  siteId         String        @db.Uuid
+  type           EquipmentType @default(SPLIT)
+  brand          String?
+  /// Tons, e.g. 1.5. Null = not known.
+  capacityTons   Decimal?      @db.Decimal(3, 1)
+  /// Where it is, e.g. "Bedroom 1".
+  locationLabel  String?
+  model          String?
+  serialNumber   String?
+  refrigerant    String?
+  status         RecordStatus  @default(ACTIVE)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  site     Site     @relation(fields: [siteId], references: [id])
+
+  @@index([organizationId, customerId])
+  @@index([siteId])
 }
