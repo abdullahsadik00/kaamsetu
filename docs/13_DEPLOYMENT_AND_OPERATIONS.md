@@ -20,7 +20,7 @@
 | API | Render free web service `kaamsetu-api-staging`, Singapore, from `render.yaml` | Deploys on every push to `main`; start command runs `prisma migrate deploy` first; `TRUST_PROXY=1`; sleeps after 15 min without traffic |
 | Database | Supabase free, Mumbai (`ap-south-1`) | Use the **session pooler** connection string (IPv4); 500 MB; pauses after 7 idle days |
 | Keep-alive and uptime | External monitor (UptimeRobot free) on `GET /health` every 5 min | `/health` touches the database, so it keeps both Render and Supabase awake and alerts by email when down |
-| Backups | GitHub Actions nightly `pg_dump` → GPG AES-256 → artifact, 14 days | Secrets `STAGING_BACKUP_DATABASE_URL`, `STAGING_BACKUP_PASSPHRASE`; restore steps in the workflow header; test a restore before the pilot (T5.7) |
+| Backups | GitHub Actions nightly `pg_dump` → GPG AES-256 → artifact, 14 days | Secrets `STAGING_BACKUP_DATABASE_URL`, `STAGING_BACKUP_PASSPHRASE`; app schema only; restore proven by `restore-test.yml` (monthly and on demand, T5.7) |
 | Files | Cloudflare R2 free (10 GB) | Added with photos (T4.8) |
 | App builds | EAS Build, `preview` profile (APK pointing at staging) | Same EAS signing key as development builds |
 
@@ -55,6 +55,19 @@ Phase 3 foundation (task T3.9). **Implemented 19 Nov 2026** in `.github/workflow
 - Weekly glance at: sync `NEEDS_ATTENTION` count, failed photo uploads, OTP delivery failures.
 
 ## 5. Backup and recovery
+
+**Pilot staging (20 Nov 2026):** nightly `backup-staging.yml` (02:00 IST) dumps the `public` schema, encrypts it with `STAGING_BACKUP_PASSPHRASE` and keeps it 14 days. `restore-test.yml` restores the newest one into a clean PostgreSQL 17 and checks migrations and row counts (first run: 5 s). To restore for real: download the artifact, `gpg -d <file>.dump.gpg > db.dump`, then `pg_restore --clean --no-owner --schema=public -d "<target URL>" db.dump`. Without the passphrase (in your password manager) the backups cannot be opened. There is no point-in-time recovery on the free plan: at most one day of data can be lost.
+
+### Setting up the pilot business (until T4.1/T4.2)
+
+From `backend/`, with `DATABASE_URL` (Supabase session pooler) and `OTP_HASH_SECRET` (copied from Render › Environment) set in that PowerShell window only:
+
+- `npm run pilot -- create-business --name "…" --phone <business mobile> --city Pune --owner-name "…" --owner-phone <owner mobile> --yes` prints the owner's 7-day invite code.
+- `npm run pilot -- add-staff --business-phone <business mobile> --name "…" --phone <mobile> --role senior|helper --yes`, then the owner invites them in the app (More › Employees).
+- `npm run pilot -- owner-invite --business-phone … --yes` issues a new owner code; `npm run pilot -- list --business-phone …` shows who has joined.
+
+The script prints the target database host and changes nothing without `--yes`.
+
 
 - Automated daily database backup + point-in-time recovery, retained ≥ 14 days in pilot, ≥ 30 days at launch.
 - Object storage versioning on.

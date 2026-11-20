@@ -9,6 +9,16 @@ Meaningful product, documentation, architecture and implementation changes, newe
 - `docs/design/STITCH_PROMPTS.md`: a strict base prompt plus 83 numbered, ready-to-paste Stitch prompts (all owner, technician, helper, sign-in, setup and settings screens, sheets, dialogs and offline/empty/error/language variants). Sample data matches the prototype; open decisions appear as visible placeholders.
 - `docs/design/STITCH_PROTOTYPE_PROMPTS.md`: prompts that link the Stitch screens into one clickable prototype (base rules, 12 link prompts following flows F1–F17, a check prompt, fix prompts and a full link table for wiring by hand or in Figma). No new screens.
 
+## 2026-11-20 — Pre-pilot readiness
+
+### Added
+- `npm run pilot` (backend/prisma/pilot.ts): create the pilot business and owner (prints the owner invite), add staff, re-issue the owner invite, list members. Dry run unless `--yes`; prints the target database host only.
+- Backup restore test (`restore-test.yml`, T5.7): newest staging backup decrypted and restored into PostgreSQL 17 in 5 s, data checked; runs monthly.
+
+### Changed
+- Joining with a mistyped mobile now says there is no invite for that number (`INVITE_NOT_FOR_THIS_PHONE`, T3.13).
+- Backups dump only the app's `public` schema (Supabase's own schemas need Supabase-only extensions).
+
 ## 2026-11-20 — Free pilot staging (T3.10)
 
 ### Added
