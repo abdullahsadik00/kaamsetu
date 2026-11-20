@@ -9,6 +9,12 @@ Meaningful product, documentation, architecture and implementation changes, newe
 - `docs/design/STITCH_PROMPTS.md`: a strict base prompt plus 83 numbered, ready-to-paste Stitch prompts (all owner, technician, helper, sign-in, setup and settings screens, sheets, dialogs and offline/empty/error/language variants). Sample data matches the prototype; open decisions appear as visible placeholders.
 - `docs/design/STITCH_PROTOTYPE_PROMPTS.md`: prompts that link the Stitch screens into one clickable prototype (base rules, 12 link prompts following flows F1–F17, a check prompt, fix prompts and a full link table for wiring by hand or in Figma). No new screens.
 
+## 2026-11-20 — Public pages and app tests
+
+### Added
+- Homepage, privacy policy and terms served by the API at `/`, `/privacy`, `/terms` (needed to publish Google sign-in and for DPDP). Contact from `SUPPORT_EMAIL`; Google Search Console tag from `GOOGLE_SITE_VERIFICATION`. The privacy text must be updated whenever data collection or processors change (`backend/src/site/pages.ts`). Get Indian legal review before commercial launch (doc 10 §4).
+- Mobile component tests (React Native Testing Library) for Join, Your business, Add employee, and API client tests: 29 app tests.
+
 ## 2026-11-20 — Business onboarding and adding staff (T4.1, early under D-027)
 
 ### Added

@@ -52,6 +52,8 @@ Implementation rules:
 
 ## 4. Data protection
 
+Public privacy notice and terms (20 Nov 2026): `/privacy` and `/terms` on the API host, text in `backend/src/site/pages.ts`; keep them true to what the code collects and which processors it uses.
+
 India's **Digital Personal Data Protection Act, 2023 (DPDP)** applies: customer names, phones and addresses, and employee data are personal data. Roughly, each business decides what it collects about its customers and KaamSetu processes it for them; KaamSetu is directly responsible for its own users' data. Get Indian legal advice before commercial launch (doc 03 §9). Practical rules now:
 
 - Collect only what the workflow needs. No Aadhaar, no ID documents, no location tracking.

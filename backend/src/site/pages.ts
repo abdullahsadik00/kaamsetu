@@ -22,7 +22,7 @@ const esc = (s: string) =>
 function contact(s: SiteSettings): string {
   return s.supportEmail
     ? `<a href="mailto:${esc(s.supportEmail)}">${esc(s.supportEmail)}</a>`
-    : 'the email address shown in the KaamSetu app';
+    : '<em>(contact email not set yet)</em>'; // never point to a contact that does not exist
 }
 
 function layout(title: string, body: string, s: SiteSettings, extraHead = ''): string {
