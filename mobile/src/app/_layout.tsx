@@ -8,10 +8,12 @@ import { useTranslation } from 'react-i18next';
 
 import { restoreSession, useSession } from '@/features/auth/session';
 import { SyncEngine } from '@/features/sync/sync-engine';
+import { initErrorReporting, withErrorReporting } from '@/monitoring/error-reporting';
 import { i18n, initI18n } from '@/localization/i18n';
 import { fontFiles } from '@/theme/fonts';
 import { colors } from '@/theme/tokens';
 
+initErrorReporting();
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient({
@@ -21,7 +23,7 @@ const queryClient = new QueryClient({
   },
 });
 
-export default function RootLayout() {
+function RootLayout() {
   const [fontsLoaded, fontError] = useFonts(fontFiles);
   const [i18nReady, setI18nReady] = useState(false);
   // No suspending: this runs before i18n is initialised; `ready` gates the UI instead.
@@ -83,3 +85,5 @@ export default function RootLayout() {
     </QueryClientProvider>
   );
 }
+
+export default withErrorReporting(RootLayout);

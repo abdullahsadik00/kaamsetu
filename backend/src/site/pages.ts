@@ -158,6 +158,10 @@ on KaamSetu. Each business's data is kept separate from every other business.</p
   <li><strong>App builds:</strong> Expo (EAS) builds the Android app; it does not receive your data.</li>
   <li><strong>Uptime check:</strong> UptimeRobot checks every few minutes that the server is up;
   it does not receive personal data.</li>
+  <li><strong>Error reports:</strong> when the app crashes or the server hits an unexpected error,
+  Sentry receives a technical report (what failed, app version, phone model and Android
+  version). We remove names, phone numbers, email addresses, sign-in tokens and the contents of
+  requests before a report is sent.</li>
 </ul>
 <p>All traffic between the app and the server is encrypted (HTTPS). On the phone, sign-in
 tokens are kept in the Android Keystore.</p>

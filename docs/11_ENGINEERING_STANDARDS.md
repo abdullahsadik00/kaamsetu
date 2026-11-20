@@ -60,7 +60,7 @@ Business routes: always add `@Roles(...)` (the guard rejects callers without a b
 
 - Structured JSON logs on the backend (NestJS logger or pino), one line per request: `requestId`, route, status, duration, `organizationId`, `memberId`.
 - Redact OTPs, tokens, phone numbers, addresses, and bodies (doc 10 §4).
-- Mobile: crash and error reporting (Sentry or similar, decided in Phase 3); no personal data in breadcrumbs.
+- Mobile and backend: crash and error reporting with **Sentry** (decided 20 Nov 2026), on only when a DSN is set (`EXPO_PUBLIC_SENTRY_DSN` for release builds, `SENTRY_DSN` on the server). Events are scrubbed: no user, request body, headers, query strings or console messages (`mobile/src/monitoring/error-reporting.ts`, `backend/src/common/error-reporting.ts`). Server reports only HTTP 500s.
 
 ## 7. Configuration
 

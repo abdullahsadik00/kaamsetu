@@ -42,3 +42,6 @@ services:
         sync: false
       - key: GOOGLE_SITE_VERIFICATION
         sync: false
+      # Sentry DSN for server error reports; set in the dashboard.
+      - key: SENTRY_DSN
+        sync: false
