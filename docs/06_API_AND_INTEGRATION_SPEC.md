@@ -50,12 +50,12 @@ Authentication provider and OTP delivery method should be selected after compari
 
 - `POST /organizations` — **implemented (D-027)**: a signed-in user without a business creates one (`name`, `ownerName`, `phone`, `city?`, `gstBills`, `gstin?`) and becomes OWNER with a 30-day trial; `409 ALREADY_IN_BUSINESS`. The app then calls `/auth/refresh` for the new role.
 - `GET /organization` (implemented; includes `gstBills`, `gstin`)
-- `PATCH /organization`
+- `PATCH /organization` — **implemented (D-027)**: owner edits `name`, `phone`, `city`, `gstBills`, `gstin` (null clears); empty body refused
 - `GET /employees`
 - `POST /employees` — **implemented (D-027)**: owner adds `name`, `phone`, `role` (SENIOR_TECHNICIAN/HELPER); `409 EMPLOYEE_EXISTS`, `409 PHONE_IN_OTHER_BUSINESS`. Staff link their Google login with `POST /employees/:id/invite` + `POST /auth/accept-invite` (D-025)
 - `GET /employees/:id`
 - `PATCH /employees/:id`
-- `POST /employees/:id/deactivate`
+- `POST /employees/:id/deactivate` — **implemented (D-027)**: owner removes someone who left; INACTIVE at once (next request 401), phones signed out, open invites cancelled; `400 CANNOT_REMOVE_OWNER`; adding the same mobile again reactivates
 
 ## 4. Teams
 

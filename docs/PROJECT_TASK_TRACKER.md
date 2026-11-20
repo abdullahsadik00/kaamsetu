@@ -69,7 +69,7 @@
 
 Each module below gets split into subtasks (frontend / backend / DB / tests) when it starts. All modules share the definition of done in the execution plan and the non-negotiable tests in doc 12 §2 (tenant isolation, role scope, money, idempotency, state machine).
 
-### T4.1 Authentication and business onboarding — Critical — In Progress (built early under D-027: Google sign-in + "Set up a new business" + 30-day trial + "Add employee"; backend d14b216, app 484a356; phone test pending) — depends G3 (waived for this module by D-027)
+### T4.1 Authentication and business onboarding — Critical — In Progress (built early under D-027: Google sign-in + "Set up a new business" + 30-day trial + "Add employee" + remove employee + business details; backend d14b216/b393f8d, app 484a356/ba07c91; phone test pending) — depends G3 (waived for this module by D-027)
 - **Objective:** an owner signs up and sets up the business in minutes.
 - **Stories:** As an owner I log in with my phone and OTP. I enter business name, phone, address, GST setting. I can skip optional fields.
 - **Frontend:** welcome, phone, OTP, business profile, optional "add first team" prompt.

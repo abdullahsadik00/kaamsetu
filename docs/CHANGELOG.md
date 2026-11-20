@@ -15,6 +15,7 @@ Meaningful product, documentation, architecture and implementation changes, newe
 - A Google-signed-in user without a business can **set up a new business** (name, owner name, business mobile, city, GST bills on/off + optional GSTIN); it starts a **30-day trial** (D-014). `POST /organizations`.
 - Owners can **add employees** (name, mobile, senior technician/helper) in More › Employees and then show the invite QR. `POST /employees`.
 - Owner Home shows a "Get started" card; the pilot script's `create-business` also starts the trial.
+- Owners can **remove an employee** (signed out on all phones at once; adding the same mobile again brings them back) and **edit business details** (More › Business details). `POST /employees/:id/deactivate`, `PATCH /organization`.
 - `Organization.gstBills`, minimal `Subscription` table (migration applied on staging by the start command).
 
 ### Notes
