@@ -43,7 +43,7 @@ jobs:
           ls -lR in
       - name: Decrypt
         run: |
-          f=$(find in -name '*.dump.gpg' | head -1)
+          f=$(find in -type f -name '*.dump.gpg' | head -1)
           echo "Backup file: $(basename "$f")"
           gpg --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" \
             --decrypt --output db.dump "$f"
