@@ -115,6 +115,10 @@ export function CustomerScreen() {
       ))}
 
       <Button
+        label={t('jobs.new')}
+        onPress={() => router.push({ pathname: '/jobs/new', params: { customerId: id } })}
+      />
+      <Button
         variant="secondary"
         label={t('customers.addAddress')}
         onPress={() => router.push({ pathname: '/customers/[id]/site', params: { id } })}

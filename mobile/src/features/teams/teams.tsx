@@ -26,7 +26,7 @@ export type TeamMember = {
 export type Team = { id: string; name: string; active: boolean; members: TeamMember[] };
 
 const TEAMS_KEY = ['teams'] as const;
-const useTeams = () => queryOptions({ queryKey: TEAMS_KEY, queryFn: () => api.get<Team[]>('/teams') });
+export const useTeams = () => queryOptions({ queryKey: TEAMS_KEY, queryFn: () => api.get<Team[]>('/teams') });
 const useTeam = (id: string) =>
   queryOptions({ queryKey: [...TEAMS_KEY, id], queryFn: () => api.get<Team>(`/teams/${id}`) });
 
