@@ -16,7 +16,11 @@ class FakeGoogleVerifier extends GoogleVerifier {
   async verify(idToken: string): Promise<GoogleIdentity> {
     const m = idToken.match(/^test-google:(test-d-[\w-]+)$/);
     if (!m) throw new AppError(401, 'GOOGLE_TOKEN_INVALID', 'bad token');
-    return { subject: m[1], email: `${m[1]}@example.test`, name: 'Google Name' };
+    return {
+      subject: m[1],
+      email: `${m[1]}@example.test`,
+      name: 'Google Name',
+    };
   }
 }
 
@@ -37,12 +41,21 @@ describe('Delete my account (e2e)', () => {
 
   async function removeGoogleUsers() {
     const users = await prisma.user.findMany({
-      where: { OR: [{ googleSubject: { startsWith: 'test-d-' } }, { email: { startsWith: 'test-d-' } }] },
+      where: {
+        OR: [
+          { googleSubject: { startsWith: 'test-d-' } },
+          { email: { startsWith: 'test-d-' } },
+        ],
+      },
     });
     const ids = users.map((u) => u.id);
-    await prisma.refreshToken.deleteMany({ where: { device: { userId: { in: ids } } } });
+    await prisma.refreshToken.deleteMany({
+      where: { device: { userId: { in: ids } } },
+    });
     await prisma.device.deleteMany({ where: { userId: { in: ids } } });
-    await prisma.user.deleteMany({ where: { id: { in: ids }, memberships: { none: {} } } });
+    await prisma.user.deleteMany({
+      where: { id: { in: ids }, memberships: { none: {} } },
+    });
   }
 
   beforeAll(async () => {
@@ -50,7 +63,9 @@ describe('Delete my account (e2e)', () => {
       .overrideProvider(GoogleVerifier)
       .useValue(new FakeGoogleVerifier())
       .compile();
-    app = configureApp(moduleRef.createNestApplication()) as INestApplication<App>;
+    app = configureApp(
+      moduleRef.createNestApplication(),
+    ) as INestApplication<App>;
     await app.init();
     prisma = app.get(PrismaService);
     factory = new TenantFactory(app);
@@ -69,7 +84,9 @@ describe('Delete my account (e2e)', () => {
     });
     await factory.cleanUp();
     const ids = members.map((m) => m.userId);
-    await prisma.refreshToken.deleteMany({ where: { device: { userId: { in: ids } } } });
+    await prisma.refreshToken.deleteMany({
+      where: { device: { userId: { in: ids } } },
+    });
     await prisma.device.deleteMany({ where: { userId: { in: ids } } });
     await prisma.user.deleteMany({ where: { id: { in: ids } } });
     await removeGoogleUsers();
@@ -85,7 +102,10 @@ describe('Delete my account (e2e)', () => {
     const res = await del(a.tokens.HELPER).expect(200);
     expect(res.body.data).toEqual({ deleted: true, businessClosed: false });
 
-    await http().get('/api/v1/auth/me').set(bearer(a.tokens.HELPER)).expect(401);
+    await http()
+      .get('/api/v1/auth/me')
+      .set(bearer(a.tokens.HELPER))
+      .expect(401);
     const member = await prisma.organizationMember.findUniqueOrThrow({
       where: { id: a.memberIds.HELPER },
       include: { user: true },
@@ -99,8 +119,14 @@ describe('Delete my account (e2e)', () => {
       status: 'INACTIVE',
     });
     // The owner and others are unaffected.
-    await http().get('/api/v1/organization').set(bearer(a.tokens.OWNER)).expect(200);
-    await http().get('/api/v1/organization').set(bearer(a.tokens.SENIOR_TECHNICIAN)).expect(200);
+    await http()
+      .get('/api/v1/organization')
+      .set(bearer(a.tokens.OWNER))
+      .expect(200);
+    await http()
+      .get('/api/v1/organization')
+      .set(bearer(a.tokens.SENIOR_TECHNICIAN))
+      .expect(200);
   });
 
   it('an owner: the business is closed and everyone in it is signed out', async () => {
@@ -108,7 +134,10 @@ describe('Delete my account (e2e)', () => {
     expect(res.body.data).toEqual({ deleted: true, businessClosed: true });
 
     for (const role of ['OWNER', 'SENIOR_TECHNICIAN', 'HELPER'] as const) {
-      await http().get('/api/v1/auth/me').set(bearer(b.tokens[role])).expect(401);
+      await http()
+        .get('/api/v1/auth/me')
+        .set(bearer(b.tokens[role]))
+        .expect(401);
     }
     const org = await prisma.organization.findUniqueOrThrow({
       where: { id: b.organizationId },
@@ -119,7 +148,10 @@ describe('Delete my account (e2e)', () => {
     });
     expect(active).toBe(0);
     // Business A is untouched.
-    await http().get('/api/v1/organization').set(bearer(a.tokens.OWNER)).expect(200);
+    await http()
+      .get('/api/v1/organization')
+      .set(bearer(a.tokens.OWNER))
+      .expect(200);
   });
 
   it('signing in again with the same Google account starts fresh', async () => {
