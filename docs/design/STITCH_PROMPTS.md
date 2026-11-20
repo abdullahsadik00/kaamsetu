@@ -15,6 +15,7 @@
 5. If a screen comes out wrong, fix it with a short edit prompt (§11), one change at a time. If colours or fonts drift, paste the **Base prompt** again with the words "Re-apply this style to the current screen."
 6. Do the prompts in order. Later screens reuse components from earlier ones.
 7. Tick each screen in the checklist (§12) when it matches.
+8. When the screens are done, link them into a clickable prototype with [STITCH_PROTOTYPE_PROMPTS.md](STITCH_PROTOTYPE_PROMPTS.md).
 
 Screen size for all prompts: **390 × 844, portrait, Android**.
 

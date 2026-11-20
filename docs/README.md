@@ -60,7 +60,7 @@ This folder (`app/docs/`) is the documentation source of truth (D-017). The olde
 | `RISK_REGISTER.md` | Risks and mitigations |
 | `CHANGELOG.md` | Meaningful changes over time |
 | `DOCUMENTATION_AUDIT.md` | Audit of 19 Nov 2026 |
-| `design/` | Clickable prototype and design canvas (open in a browser); `STITCH_DESIGN_BRIEF.md` collects the agreed design decisions for building screens in Google Stitch (a summary, not a source of truth) |
+| `design/` | Clickable prototype and design canvas (open in a browser); `STITCH_DESIGN_BRIEF.md` collects the agreed design decisions for building screens in Google Stitch (a summary, not a source of truth); `STITCH_PROMPTS.md` and `STITCH_PROTOTYPE_PROMPTS.md` are the ready-to-paste screen and prototype-linking prompts |
 
 ## Source of truth
 
