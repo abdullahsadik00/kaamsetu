@@ -35,13 +35,39 @@ model Organization {
   postalCode   String?
   logoKey      String?
   gstin        String?
+  /// Default for new bills: GST bill or not (prototype "We give GST bills"); each bill can still change it.
+  gstBills     Boolean      @default(false)
   currencyCode String       @default("INR") @db.Char(3)
   timezone     String       @default("Asia/Kolkata")
   status       RecordStatus @default(ACTIVE)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
-  members OrganizationMember[]
+  members      OrganizationMember[]
+  subscription Subscription?
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+}
+
+/// One per business (docs/03). Minimal until billing plans exist (D-027):
+/// a new business gets a 30-day trial (D-014).
+model Subscription {
+  id                 String             @id @default(uuid()) @db.Uuid
+  organizationId     String             @unique @db.Uuid
+  plan               String             @default("TRIAL")
+  status             SubscriptionStatus @default(TRIALING)
+  currentPeriodStart DateTime           @default(now())
+  currentPeriodEnd   DateTime
+  trialEndsAt        DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
 }
 
 model User {

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { normalizeIndianMobile } from './phone.js';
 
-const IndianMobile = z
+export const IndianMobile = z
   .string()
   .max(20)
   .refine((v) => normalizeIndianMobile(v) !== null, {

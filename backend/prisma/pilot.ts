@@ -111,7 +111,16 @@ async function createBusiness() {
   if (await prisma.organization.findFirst({ where: { phone } })) {
     throw new UsageError(`A business with phone ${phone} already exists. Use owner-invite or add-staff.`);
   }
-  const org = await prisma.organization.create({ data: { name, phone, city } });
+  // Same 30-day trial as signup in the app (D-014, D-027).
+  const trialEnd = new Date(Date.now() + 30 * 24 * 3600_000);
+  const org = await prisma.organization.create({
+    data: {
+      name,
+      phone,
+      city,
+      subscription: { create: { currentPeriodEnd: trialEnd, trialEndsAt: trialEnd } },
+    },
+  });
   const owner = await upsertPerson(ownerPhone, ownerName);
   const member = await prisma.organizationMember.create({
     data: { organizationId: org.id, userId: owner.id, role: 'OWNER' },

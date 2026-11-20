@@ -74,6 +74,9 @@ export class TenantFactory {
     await this.prisma.memberInvite.deleteMany({
       where: { organizationId: { in: orgIds } },
     });
+    await this.prisma.subscription.deleteMany({
+      where: { organizationId: { in: orgIds } },
+    });
     await this.prisma.organizationMember.deleteMany({
       where: { organizationId: { in: orgIds } },
     });

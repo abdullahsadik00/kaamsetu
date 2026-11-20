@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
@@ -6,6 +7,7 @@ import {
   Param,
   Post,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';
 import { CurrentAuth } from '../auth/auth.guard.js';
 import { InviteService } from '../auth/invite.service.js';
@@ -15,6 +17,15 @@ import { AppError } from '../common/app-error.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg, scoped } from '../tenancy/tenant.js';
+import {
+  CreateEmployeeSchema,
+  CreateOrganizationSchema,
+} from './organization.schemas.js';
+import type {
+  CreateEmployee,
+  CreateOrganization,
+} from './organization.schemas.js';
+import { OrganizationService } from './organization.service.js';
 
 const memberSelect = {
   id: true,
@@ -38,15 +49,43 @@ function present<
 }
 
 /**
- * Read-only business and employee endpoints (docs/06 §3). Creating and
- * editing them comes with modules 4.1 and 4.2.
+ * Business and employee endpoints (docs/06 §3). Creating a business and
+ * adding staff were built early under D-027; editing comes with 4.1/4.2.
  */
 @Controller()
 export class OrganizationController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly invites: InviteService,
+    private readonly organizations: OrganizationService,
   ) {}
+
+  /**
+   * "Your business" (T4.1): a signed-in user without a business creates one
+   * and becomes its owner, with a 30-day trial. No @Roles: callers have no
+   * business yet. The app refreshes its token afterwards to get the role.
+   */
+  @Throttle({ default: { ttl: 60_000, limit: 10 } })
+  @Post('organizations')
+  @HttpCode(HttpStatus.CREATED)
+  createOrganization(
+    @CurrentAuth() auth: AuthContext,
+    @Body(new ZodValidationPipe(CreateOrganizationSchema))
+    body: CreateOrganization,
+  ) {
+    return this.organizations.create(auth, body);
+  }
+
+  /** Owner adds a senior technician or helper (D-027); they join by invite. */
+  @Roles('OWNER')
+  @Post('employees')
+  @HttpCode(HttpStatus.CREATED)
+  async addEmployee(
+    @CurrentAuth() auth: AuthContext,
+    @Body(new ZodValidationPipe(CreateEmployeeSchema)) body: CreateEmployee,
+  ) {
+    return present(await this.organizations.addEmployee(auth, body));
+  }
 
   /** The caller's own business. Any member may see its basic details. */
   @Roles(...ALL_ROLES)
@@ -60,6 +99,8 @@ export class OrganizationController {
         phone: true,
         city: true,
         currencyCode: true,
+        gstBills: true,
+        gstin: true,
         timezone: true,
       },
     });
