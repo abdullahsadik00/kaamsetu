@@ -9,6 +9,11 @@ Meaningful product, documentation, architecture and implementation changes, newe
 - `docs/design/STITCH_PROMPTS.md`: a strict base prompt plus 83 numbered, ready-to-paste Stitch prompts (all owner, technician, helper, sign-in, setup and settings screens, sheets, dialogs and offline/empty/error/language variants). Sample data matches the prototype; open decisions appear as visible placeholders.
 - `docs/design/STITCH_PROTOTYPE_PROMPTS.md`: prompts that link the Stitch screens into one clickable prototype (base rules, 12 link prompts following flows F1–F17, a check prompt, fix prompts and a full link table for wiring by hand or in Figma). No new screens.
 
+## 2026-11-21 — Teams (T4.2, early under D-029)
+
+### Added
+- More › Teams: create teams (one lead senior technician and helpers), rename, add/remove members, change the lead, stop using a team. Removing an employee from the business takes them out of their teams.
+
 ## 2026-11-21 — Customers, addresses and ACs (T4.3/T4.4, early under D-028)
 
 ### Added

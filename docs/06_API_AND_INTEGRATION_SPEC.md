@@ -59,6 +59,8 @@ Authentication provider and OTP delivery method should be selected after compari
 
 ## 4. Teams
 
+**Implemented 21 Nov 2026 (D-029), owner only:** all six endpoints below. `POST /teams` takes `name`, `seniorMemberId?`, `helperMemberIds[]`; one primary senior per team; errors `ALREADY_IN_TEAM`, `EMPLOYEE_NOT_ACTIVE`, `OWNER_NOT_IN_TEAM`, `TEAM_NOT_FOUND`.
+
 - `GET /teams`
 - `POST /teams`
 - `GET /teams/:id`

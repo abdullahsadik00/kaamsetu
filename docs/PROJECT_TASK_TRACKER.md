@@ -80,7 +80,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Tests:** unit for validation; integration for signup creating exactly one org; isolation.
 - **Acceptance:** new owner reaches Home with business details saved; second login lands on Home directly.
 
-### T4.2 Organization, employees and teams — Critical — Not Started — depends T4.1
+### T4.2 Organization, employees and teams — Critical — In Progress (built early: add/remove employees under D-027, teams under D-029; backend 7cfd43b; phone test pending; reassignment warning waits for jobs) — depends T4.1
 - **Objective:** owner adds staff and teams; staff log in with no setup.
 - **Stories:** add employee with role; create team with one primary senior and helpers; deactivate employee; revoke devices.
 - **Frontend:** Teams list/detail, Employee add/edit, invite SMS confirmation.
