@@ -6,6 +6,7 @@ Meaningful product, documentation, architecture and implementation changes, newe
 
 ### Added
 - `docs/design/STITCH_DESIGN_BRIEF.md`: one brief for designing the app in Google Stitch, compiled from docs 01, 02, 08, 09, the decision log, discovery answers, the prototype and the app theme/strings. Covers the design system (colours, type, spacing, radius, shadows, icons), every screen, user flows, components, states, microcopy in three languages and 23 open gaps (G-1 to G-23). Each item is tagged FINAL, PROPOSED, OPEN or OUT. No new decisions.
+- `docs/design/STITCH_PROMPTS.md`: a strict base prompt plus 83 numbered, ready-to-paste Stitch prompts (all owner, technician, helper, sign-in, setup and settings screens, sheets, dialogs and offline/empty/error/language variants). Sample data matches the prototype; open decisions appear as visible placeholders.
 
 ## 2026-11-19 — Google sign-in and owner invites (T3.11)
 

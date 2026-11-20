@@ -721,6 +721,8 @@ Resolve these before treating the designs as final. Do not fill them in Stitch w
 
 ## 11. Google Stitch working guide
 
+> Ready-to-paste prompts for every screen (83, in build order) are in [STITCH_PROMPTS.md](STITCH_PROMPTS.md).
+
 ### 11.1 Base style prompt (paste first, reuse for every screen)
 > Android mobile app, 390×844 portrait, light theme only. Brand "KaamSetu", AC service business app for India. Warm off-white background #F7F5F0, white cards with 1px #E4E0D6 border, 12px radius, no shadows on cards. Primary colour deep teal #0F766E (pressed #115E59, tint #E6F2EF, text on tint #0B5F58). Text #14213D, secondary #4A5468. Status colours with tinted pill badges: green #15803D on #E3F3E8, amber #B45309 on #FDEBD3, red #B42318 on #FBE4E4, blue #1E4FBF on #E3ECFD, purple #5B32B4 on #EDE7FB, grey #3B4556 on #ECEEF2. Saffron #E8891C only as a rare accent. Font Noto Sans (Noto Sans Devanagari for Hindi/Marathi), weights 400/600/700. 16px side padding, 4-point spacing. Buttons 52px tall, 12px radius, full width at the bottom; one primary teal button per screen. Inputs 52px, 10px radius, 1.5px #CFCABE border. Chips 44px, 10px radius. Outline icons, 2px stroke, always with a text label. Simple, high contrast, friendly, minimal decoration, readable outdoors.
 
