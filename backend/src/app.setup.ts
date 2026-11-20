@@ -20,6 +20,7 @@ export function configureApp(app: INestApplication): INestApplication {
       { path: '/', method: RequestMethod.GET },
       { path: 'privacy', method: RequestMethod.GET },
       { path: 'terms', method: RequestMethod.GET },
+      { path: 'delete-account', method: RequestMethod.GET },
     ],
   });
   app.useGlobalFilters(new HttpExceptionFilter());

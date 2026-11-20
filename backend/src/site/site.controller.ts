@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Public } from '../auth/auth.guard.js';
 import { RawResponse } from '../common/response-envelope.interceptor.js';
 import {
+  deleteAccountPage,
   homePage,
   privacyPage,
   termsPage,
@@ -40,6 +41,13 @@ export class SiteController {
   @Header('Cache-Control', 'public, max-age=3600')
   privacy(): string {
     return privacyPage(this.settings);
+  }
+
+  @Get('delete-account')
+  @Header('Content-Type', HTML)
+  @Header('Cache-Control', 'public, max-age=3600')
+  deleteAccount(): string {
+    return deleteAccountPage(this.settings);
   }
 
   @Get('terms')

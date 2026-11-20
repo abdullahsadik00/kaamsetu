@@ -27,6 +27,7 @@ describe('Public pages for Google publishing (e2e)', () => {
     ['/', 'Simple jobs and billing'],
     ['/privacy', 'Privacy policy'],
     ['/terms', 'Terms of use'],
+    ['/delete-account', 'Delete your KaamSetu account'],
   ])('serves %s as HTML without signing in', async (path, heading) => {
     const res = await http().get(path).expect(200);
     expect(res.headers['content-type']).toMatch(/text\/html/);

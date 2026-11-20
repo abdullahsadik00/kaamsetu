@@ -60,7 +60,7 @@ ${extraHead}
 <main>
 ${body}
 <footer class="muted">
-  <nav><a href="/">Home</a><a href="/privacy">Privacy policy</a><a href="/terms">Terms</a></nav>
+  <nav><a href="/">Home</a><a href="/privacy">Privacy policy</a><a href="/terms">Terms</a><a href="/delete-account">Delete account</a></nav>
   <p>KaamSetu by Vyapaar Labs · Contact: ${contact(s)}</p>
 </footer>
 </main>
@@ -165,8 +165,12 @@ tokens are kept in the Android Keystore.</p>
 <h2>How long we keep it</h2>
 <p>We keep your data while you or your business use KaamSetu. If you leave a business, the
 owner can remove you; your sign-in stops at once, and the business keeps its own work
-records. When an account or business is deleted, we remove its data within 30 days;
-encrypted backups expire within a further 14 days.</p>
+records.</p>
+<p><strong>Deleting your account:</strong> in the app, open Profile (owners: More) and tap
+"Delete my account", or follow the steps on <a href="/delete-account">this page</a>.
+Your name, mobile number, email and Google link are erased at once and you are signed out
+everywhere. If you are the owner, your business is closed for everyone and its data is
+permanently removed after 30 days. Encrypted backups expire within a further 14 days.</p>
 
 <h2>Your choices and rights</h2>
 <p>You can ask us to show, correct or delete your personal data, or tell us about a
@@ -180,6 +184,41 @@ business owner, who can correct or remove their record in the app. We answer wit
 <h2>Changes</h2>
 <p>If we change this policy, we will update the date above and, for important changes,
 tell users in the app.</p>`,
+    s,
+  );
+}
+
+export function deleteAccountPage(s: SiteSettings): string {
+  return layout(
+    'KaamSetu — Delete your account',
+    `<h1>Delete your KaamSetu account</h1>
+<p class="muted">KaamSetu by Vyapaar Labs</p>
+
+<h2>In the app (fastest)</h2>
+<ol>
+  <li>Open KaamSetu and sign in.</li>
+  <li>Technicians and helpers: open <strong>Profile</strong>. Owners: open <strong>More</strong>.</li>
+  <li>Tap <strong>Delete my account</strong> and confirm.</li>
+</ol>
+
+<h2>Without the app</h2>
+<p>Write to ${contact(s)} from the email address of your Google account, with the subject
+"Delete my KaamSetu account" and your mobile number. We confirm and complete it within 30 days.</p>
+
+<h2>What is deleted</h2>
+<ul>
+  <li><strong>At once:</strong> your name, mobile number, email address and the link to your
+  Google account; you are signed out on every phone.</li>
+  <li><strong>If you are the owner:</strong> the business is closed and everyone in it is signed
+  out. Its data (business details, staff list and work records) is permanently deleted after
+  30 days.</li>
+  <li><strong>If you work for a business:</strong> the business keeps its own work records
+  (jobs, bills), which then show "Deleted user" instead of your name.</li>
+  <li>Encrypted backups containing the data expire within a further 14 days.</li>
+</ul>
+<div class="card" lang="hi"><strong>हिंदी:</strong> ऐप में प्रोफ़ाइल (मालिक: और) खोलें और
+"मेरा खाता हटाएं" दबाएं। आपका नाम, मोबाइल नंबर और ईमेल तुरंत हट जाते हैं। मालिक का खाता हटाने
+पर कारोबार बंद हो जाता है और 30 दिन बाद उसका डेटा हमेशा के लिए मिटा दिया जाता है।</div>`,
     s,
   );
 }
