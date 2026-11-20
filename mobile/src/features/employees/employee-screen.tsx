@@ -11,7 +11,7 @@ import { Screen } from '@/components/ui/screen';
 import { useSession } from '@/features/auth/session';
 import { colors, radius, space } from '@/theme/tokens';
 
-import { createInvite, resetLogin, useEmployee, EMPLOYEES_KEY } from './api';
+import { createInvite, deactivateEmployee, resetLogin, useEmployee, EMPLOYEES_KEY } from './api';
 
 /** Owner: one employee. Show an invite QR to link their Google login, or reset it. */
 export function EmployeeScreen() {
@@ -29,6 +29,14 @@ export function EmployeeScreen() {
     },
   });
 
+  const remove = useMutation({
+    mutationFn: () => deactivateEmployee(id),
+    onSuccess: () => {
+      invite.reset();
+      void qc.invalidateQueries({ queryKey: EMPLOYEES_KEY });
+    },
+  });
+
   if (employee.isPending) return <ActivityIndicator style={{ flex: 1 }} color={colors.teal} />;
   if (employee.isError) {
     return (
@@ -40,6 +48,7 @@ export function EmployeeScreen() {
   const e = employee.data;
   const name = e.user.name || e.user.phone || '';
   const isMe = e.id === me;
+  const removed = e.status !== 'ACTIVE';
   const until = invite.data
     ? new Date(invite.data.expiresAt).toLocaleString(i18n.language === 'en' ? 'en-IN' : `${i18n.language}-IN`, {
         day: 'numeric',
@@ -48,6 +57,12 @@ export function EmployeeScreen() {
         minute: '2-digit',
       })
     : '';
+
+  const confirmRemove = () =>
+    Alert.alert(t('employees.removeTitle'), t('employees.removeBody', { name }), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('employees.remove'), style: 'destructive', onPress: () => remove.mutate() },
+    ]);
 
   const confirmReset = () =>
     Alert.alert(t('employees.resetTitle'), t('employees.resetBody', { name }), [
@@ -62,9 +77,15 @@ export function EmployeeScreen() {
         <AppText variant="section">{name}</AppText>
         <AppText color={colors.slate}>{t(`roles.${e.role}`)}</AppText>
         {e.user.phone ? <AppText color={colors.slate}>{e.user.phone.replace(/^\+91/, '+91 ')}</AppText> : null}
-        <AppText weight="semibold" color={e.loginLinked ? colors.ok : colors.warn}>
-          {e.loginLinked ? t('employees.linked') : t('employees.notLinked')}
-        </AppText>
+        {removed ? (
+          <AppText weight="semibold" color={colors.muted}>
+            {t('employees.removed')}
+          </AppText>
+        ) : (
+          <AppText weight="semibold" color={e.loginLinked ? colors.ok : colors.warn}>
+            {e.loginLinked ? t('employees.linked') : t('employees.notLinked')}
+          </AppText>
+        )}
       </View>
 
       {invite.data ? (
@@ -84,7 +105,7 @@ export function EmployeeScreen() {
         </View>
       ) : null}
 
-      {!isMe ? (
+      {!isMe && !removed ? (
         <Button
           label={invite.data ? t('employees.newInvite') : t('employees.invite')}
           variant={invite.data ? 'secondary' : 'primary'}
@@ -92,12 +113,25 @@ export function EmployeeScreen() {
           loading={invite.isPending}
         />
       ) : null}
-      {!isMe && e.loginLinked ? (
+      {!isMe && !removed && e.loginLinked ? (
         <Button variant="text" label={t('employees.resetLogin')} onPress={confirmReset} loading={reset.isPending} />
       ) : null}
       {reset.isSuccess ? <AppText color={colors.ok}>{t('employees.resetDone')}</AppText> : null}
-      {invite.error || reset.error ? (
-        <AppText color={colors.bad}>{errorMessage(t, invite.error ?? reset.error)}</AppText>
+      {!isMe && !removed && e.role !== 'OWNER' ? (
+        <Button
+          variant="text"
+          label={t('employees.remove')}
+          onPress={confirmRemove}
+          loading={remove.isPending}
+        />
+      ) : null}
+      {removed ? (
+        <AppText variant="support" color={colors.slate}>
+          {t('employees.removedHint')}
+        </AppText>
+      ) : null}
+      {invite.error || reset.error || remove.error ? (
+        <AppText color={colors.bad}>{errorMessage(t, invite.error ?? reset.error ?? remove.error)}</AppText>
       ) : null}
     </Screen>
   );

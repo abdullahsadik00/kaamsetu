@@ -40,7 +40,9 @@ export function EmployeesScreen() {
 
   return (
     <Screen footer={addButton}>
-      {list.data.map((e) => (
+      {[...list.data]
+        .sort((a, b) => Number(a.status !== 'ACTIVE') - Number(b.status !== 'ACTIVE'))
+        .map((e) => (
         <Pressable
           key={e.id}
           accessibilityRole="button"
@@ -53,11 +55,19 @@ export function EmployeesScreen() {
               {t(`roles.${e.role}`)}
             </AppText>
           </View>
-          <View style={[styles.chip, e.loginLinked ? styles.chipOk : styles.chipWait]}>
-            <AppText variant="small" weight="semibold" color={e.loginLinked ? colors.ok : colors.warn}>
-              {e.loginLinked ? t('employees.linked') : t('employees.notLinked')}
-            </AppText>
-          </View>
+          {e.status !== 'ACTIVE' ? (
+            <View style={[styles.chip, styles.chipOff]}>
+              <AppText variant="small" weight="semibold" color={colors.muted}>
+                {t('employees.removed')}
+              </AppText>
+            </View>
+          ) : (
+            <View style={[styles.chip, e.loginLinked ? styles.chipOk : styles.chipWait]}>
+              <AppText variant="small" weight="semibold" color={e.loginLinked ? colors.ok : colors.warn}>
+                {e.loginLinked ? t('employees.linked') : t('employees.notLinked')}
+              </AppText>
+            </View>
+          )}
         </Pressable>
       ))}
     </Screen>
@@ -78,5 +88,6 @@ const styles = StyleSheet.create({
   },
   chip: { paddingHorizontal: space.sm, paddingVertical: 2, borderRadius: radius.sm },
   chipOk: { backgroundColor: colors.okTint },
+  chipOff: { backgroundColor: colors.soft },
   chipWait: { backgroundColor: colors.warnTint },
 });

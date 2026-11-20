@@ -66,6 +66,7 @@ export default function RootLayout() {
           <Stack.Screen name="employees/index" options={{ ...pushed, title: t('employees.title') }} />
           <Stack.Screen name="employees/[id]" options={{ ...pushed, title: '' }} />
           <Stack.Screen name="employees/new" options={{ ...pushed, title: t('employees.addTitle') }} />
+          <Stack.Screen name="business" options={{ ...pushed, title: t('business.title') }} />
         </Stack.Protected>
         <Stack.Protected guard={signedIn && role === 'SENIOR_TECHNICIAN'}>
           <Stack.Screen name="(field)" />

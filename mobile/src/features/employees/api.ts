@@ -38,5 +38,32 @@ export const createInvite = (id: string) => api.post<Invite>(`/employees/${id}/i
 export const addEmployee = (body: { name: string; phone: string; role: StaffRole }) =>
   api.post<Employee>('/employees', body);
 
+/** Owner removes someone who left: signed out at once (D-027). */
+export const deactivateEmployee = (id: string) =>
+  api.post<{ removed: boolean }>(`/employees/${id}/deactivate`);
+
+/** `GET /organization`. */
+export type Business = {
+  id: string;
+  name: string;
+  phone: string;
+  city: string | null;
+  gstBills: boolean;
+  gstin: string | null;
+};
+
+export const ORGANIZATION_KEY = ['organization'] as const;
+
+export const useBusiness = () =>
+  queryOptions({
+    queryKey: ORGANIZATION_KEY,
+    queryFn: () => api.get<Business>('/organization'),
+  });
+
+/** Owner edits business details; send only what changed; gstin null clears it. */
+export const updateBusiness = (
+  body: Partial<Pick<Business, 'name' | 'phone' | 'city' | 'gstBills' | 'gstin'>>,
+) => api.request<Business>('PATCH', '/organization', { body });
+
 export const resetLogin = (id: string) =>
   api.post<{ reset: boolean }>(`/employees/${id}/reset-login`);

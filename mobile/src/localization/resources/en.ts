@@ -108,7 +108,17 @@ export const en = {
     create: 'Create my business',
     trial: 'Free for 30 days. No payment needed now.',
   },
+  business: {
+    title: 'Business details',
+    save: 'Save changes',
+    saved: 'Saved',
+  },
   employees: {
+    remove: 'Remove from business',
+    removeTitle: 'Remove this person?',
+    removeBody: '{{name}} will be logged out on all phones at once and cannot use KaamSetu for your business. You can add them again later.',
+    removed: 'Removed',
+    removedHint: 'Removed from your business. Add the same mobile number again to bring them back.',
     add: 'Add employee',
     addTitle: 'Add employee',
     nameLabel: 'Name',
@@ -137,6 +147,7 @@ export const en = {
     attention: 'Needs attention',
   },
   errors: {
+    CANNOT_REMOVE_OWNER: 'The owner cannot be removed.',
     EMPLOYEE_EXISTS: 'This mobile number is already in your business.',
     PHONE_IN_OTHER_BUSINESS: 'This mobile number already belongs to another business on KaamSetu.',
     GOOGLE_NOT_CONFIGURED: 'Google sign-in is not set up on the server yet.',
