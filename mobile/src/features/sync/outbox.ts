@@ -29,6 +29,9 @@ export type NewOperation = Pick<OutboxOperation, 'id' | 'entityType' | 'entityId
   dependsOn?: string | null;
 };
 
+/** Sent operations are kept this long, then pruned (docs/09 §3: 7 days, tunable). */
+export const SENT_RETENTION_MS = 7 * 24 * 3600_000;
+
 /** Retry delays after the 1st, 2nd, 3rd… failure: 5 s, 30 s, 2 min, 10 min, then every 10 min. */
 export const BACKOFF_MS = [5_000, 30_000, 120_000, 600_000] as const;
 export function backoffMs(attempts: number): number {
@@ -188,6 +191,21 @@ export class Outbox {
          updated_at = ? WHERE id = ?`,
       [errorCode, this.iso(), id],
     );
+  }
+
+  /**
+   * Removes operations the server accepted more than `keepMs` ago (docs/09
+   * §3 retention). Unsent and NEEDS_ATTENTION rows are never removed.
+   * Returns how many rows were deleted.
+   */
+  async prune(keepMs: number = SENT_RETENTION_MS): Promise<number> {
+    const cutoff = new Date(this.now() - keepMs).toISOString();
+    const before = await this.db.getFirstAsync<{ n: number }>(
+      `SELECT COUNT(*) AS n FROM outbox WHERE state = 'SENT' AND updated_at < ?`,
+      [cutoff],
+    );
+    await this.db.runAsync(`DELETE FROM outbox WHERE state = 'SENT' AND updated_at < ?`, [cutoff]);
+    return before?.n ?? 0;
   }
 
   /** Saved on this phone but not yet accepted by the server. */

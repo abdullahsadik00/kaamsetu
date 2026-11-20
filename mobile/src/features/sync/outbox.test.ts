@@ -9,7 +9,7 @@ import { ApiError } from '@/api/errors';
 import { migrate, MIGRATIONS } from '@/db/migrations';
 import { openNodeDatabase, type NodeSqlDatabase } from '@/db/node-sqlite.testing';
 
-import { backoffMs, Outbox, type NewOperation } from './outbox';
+import { backoffMs, Outbox, SENT_RETENTION_MS, type NewOperation } from './outbox';
 import { OutboxSender, type SendResult, type Transport } from './outbox-sender';
 
 let dir: string;
@@ -208,6 +208,25 @@ describe('outbox', () => {
     await s.trigger();
     expect(sent).toEqual(['photo', 'photo', 'job-a', 'job-b', 'other-job']);
     expect(await outbox.unsentCount()).toBe(0);
+  });
+
+  it('prunes only sent operations older than the retention window', async () => {
+    const outbox = new Outbox(db, now);
+    await outbox.enqueue(op('old-sent', { entityId: 'a' }));
+    await outbox.enqueue(op('stuck', { entityId: 'b' }));
+    await outbox.enqueue(op('unsent', { entityId: 'c' }));
+    await outbox.markSent('old-sent');
+    await outbox.markNeedsAttention('stuck', 'VALIDATION_FAILED');
+
+    clock += SENT_RETENTION_MS + 1;
+    await outbox.enqueue(op('new-sent', { entityId: 'd' }));
+    await outbox.markSent('new-sent');
+
+    expect(await outbox.prune()).toBe(1);
+    expect(await outbox.get('old-sent')).toBeNull();
+    expect(await outbox.get('new-sent')).not.toBeNull();
+    expect((await outbox.get('stuck'))?.state).toBe('NEEDS_ATTENTION'); // never dropped
+    expect((await outbox.get('unsent'))?.state).toBe('PENDING');
   });
 
   it('holds later operations on a record behind one that needs attention', async () => {

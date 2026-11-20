@@ -1,3 +1,4 @@
+import NetInfo from '@react-native-community/netinfo';
 import { useEffect } from 'react';
 import { AppState } from 'react-native';
 
@@ -56,7 +57,8 @@ export function currentOutbox(): Outbox | null {
 
 /**
  * Opens the user's database and runs the outbox sender while logged in.
- * Triggers: app start, app back in front, after each local save, retry timer.
+ * Triggers: app start, app back in front, internet back, after each local
+ * save, retry timer. Old sent operations are pruned at start.
  */
 export function SyncEngine({ userId }: { userId: string }) {
   useEffect(() => {
@@ -69,10 +71,18 @@ export function SyncEngine({ userId }: { userId: string }) {
         const outbox = new Outbox(db);
         mine = new OutboxSender({ outbox, transport });
         active = { userId, outbox, sender: mine };
+        await outbox.prune();
         await mine.start();
       })
       .catch((error: unknown) => console.warn('Local database could not open', error));
 
+    // Connectivity regained (docs/09 §5): send what was saved while offline.
+    let wasOffline = false;
+    const net = NetInfo.addEventListener((state) => {
+      const online = state.isConnected !== false && state.isInternetReachable !== false;
+      if (online && wasOffline) void mine?.trigger();
+      wasOffline = !online;
+    });
     const appState = AppState.addEventListener('change', (state) => {
       if (state === 'active') void mine?.trigger();
     });
@@ -85,6 +95,7 @@ export function SyncEngine({ userId }: { userId: string }) {
     return () => {
       cancelled = true;
       appState.remove();
+      net();
       unregister();
       mine?.stop();
       if (active?.userId === userId) active = null;

@@ -141,6 +141,7 @@ export const en = {
     resetDone: 'Login reset. Show a new invite QR to join again.',
   },
   sync: {
+    noNet: 'No internet. Keep working. All saved on phone.',
     saved: 'Saved on phone',
     sending: 'Sending…',
     sent: 'Sent',
