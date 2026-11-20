@@ -25,7 +25,12 @@ function contact(s: SiteSettings): string {
     : '<em>(contact email not set yet)</em>'; // never point to a contact that does not exist
 }
 
-function layout(title: string, body: string, s: SiteSettings, extraHead = ''): string {
+function layout(
+  title: string,
+  body: string,
+  s: SiteSettings,
+  extraHead = '',
+): string {
   return `<!doctype html>
 <html lang="en">
 <head>
