@@ -9,6 +9,7 @@
  *       --role senior|helper --yes
  *   npm run pilot -- owner-invite --business-phone 98xxxxxxxx --yes
  *   npm run pilot -- list --business-phone 98xxxxxxxx
+ *   npm run pilot -- purge-closed [--yes]   (closed > 30 days ago; run monthly)
  *
  * Needs DATABASE_URL and, for invites, the server's OTP_HASH_SECRET.
  * Staff are invited by the owner in the app (More › Employees).
@@ -173,11 +174,60 @@ async function list() {
   }
 }
 
+/**
+ * Permanently removes businesses closed by "Delete my account" more than
+ * 30 days ago (privacy policy), with their members, invites and
+ * subscription, and the anonymised users left without any business.
+ * Lists them first; deletes only with --yes.
+ */
+async function purgeClosed() {
+  const cutoff = new Date(Date.now() - 30 * 24 * 3600_000);
+  const orgs = await prisma.organization.findMany({
+    where: { status: 'INACTIVE', subscription: { currentPeriodEnd: { lt: cutoff } } },
+    select: { id: true, name: true },
+  });
+  console.log(`Target database: ${target()}`);
+  for (const o of orgs) console.log(`  closed: ${o.name}`);
+  if (!orgs.length) console.log('  nothing to purge');
+  if (!orgs.length) return;
+  if (!values.yes) throw new UsageError(`Would permanently delete ${orgs.length} closed business(es). Add --yes.`);
+  const ids = orgs.map((o) => o.id);
+  const members = await prisma.organizationMember.findMany({
+    where: { organizationId: { in: ids } },
+    select: { userId: true },
+  });
+  await prisma.$transaction([
+    prisma.memberInvite.deleteMany({ where: { organizationId: { in: ids } } }),
+    prisma.subscription.deleteMany({ where: { organizationId: { in: ids } } }),
+    prisma.organizationMember.deleteMany({ where: { organizationId: { in: ids } } }),
+    prisma.organization.deleteMany({ where: { id: { in: ids } } }),
+  ]);
+  // Deleted (anonymised) people who now belong nowhere.
+  const gone = await prisma.user.findMany({
+    where: {
+      id: { in: members.map((m) => m.userId) },
+      status: 'INACTIVE',
+      googleSubject: null,
+      phone: null,
+      memberships: { none: {} },
+    },
+    select: { id: true },
+  });
+  const userIds = gone.map((u) => u.id);
+  await prisma.$transaction([
+    prisma.refreshToken.deleteMany({ where: { device: { userId: { in: userIds } } } }),
+    prisma.device.deleteMany({ where: { userId: { in: userIds } } }),
+    prisma.user.deleteMany({ where: { id: { in: userIds } } }),
+  ]);
+  console.log(`✓ Purged ${orgs.length} business(es) and ${userIds.length} deleted user record(s).`);
+}
+
 const COMMANDS: Record<string, () => Promise<void>> = {
   'create-business': createBusiness,
   'add-staff': addStaff,
   'owner-invite': ownerInvite,
   list,
+  'purge-closed': purgeClosed,
 };
 
 async function main() {

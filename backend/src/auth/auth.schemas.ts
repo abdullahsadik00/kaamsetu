@@ -43,6 +43,10 @@ export const AcceptInviteSchema = z.union([
 ]);
 export type AcceptInvite = z.infer<typeof AcceptInviteSchema>;
 
+/** "Delete my account": the app sends this only after the user confirms. */
+export const DeleteAccountSchema = z.strictObject({ confirm: z.literal(true) });
+export type DeleteAccount = z.infer<typeof DeleteAccountSchema>;
+
 export const RefreshSchema = z.strictObject({
   refreshToken: z.string().min(20).max(200),
 });

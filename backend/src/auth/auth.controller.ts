@@ -13,6 +13,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { CurrentAuth, Public } from './auth.guard.js';
 import {
   AcceptInviteSchema,
+  DeleteAccountSchema,
   GoogleLoginSchema,
   RefreshSchema,
   RequestOtpSchema,
@@ -20,11 +21,13 @@ import {
 } from './auth.schemas.js';
 import type {
   AcceptInvite,
+  DeleteAccount,
   GoogleLogin,
   Refresh,
   RequestOtp,
   VerifyOtp,
 } from './auth.schemas.js';
+import { AccountService } from './account.service.js';
 import { GoogleVerifier } from './google-verifier.js';
 import { InviteService } from './invite.service.js';
 import { OtpService } from './otp.service.js';
@@ -42,7 +45,23 @@ export class AuthController {
     private readonly prisma: PrismaService,
     private readonly google: GoogleVerifier,
     private readonly invites: InviteService,
+    private readonly accounts: AccountService,
   ) {}
+
+  /**
+   * "Delete my account": wipes the caller's personal details and signs out
+   * their phones; an owner's business is closed (privacy policy, Google
+   * Play's account-deletion rule). Body must be { confirm: true }.
+   */
+  @Throttle(AUTH_THROTTLE)
+  @Post('delete-account')
+  @HttpCode(HttpStatus.OK)
+  deleteAccount(
+    @CurrentAuth() auth: AuthContext,
+    @Body(new ZodValidationPipe(DeleteAccountSchema)) _body: DeleteAccount,
+  ) {
+    return this.accounts.deleteAccount(auth);
+  }
 
   /**
    * Pilot login (D-025): Google ID token from the app. A new Google account

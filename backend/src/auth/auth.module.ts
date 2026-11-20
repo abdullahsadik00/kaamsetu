@@ -9,6 +9,7 @@ import {
   GoogleNotConfiguredVerifier,
   GoogleVerifier,
 } from './google-verifier.js';
+import { AccountService } from './account.service.js';
 import { InviteService } from './invite.service.js';
 import {
   CapturingOtpSender,
@@ -35,6 +36,7 @@ import { TokenService } from './token.service.js';
     OtpService,
     TokenService,
     InviteService,
+    AccountService,
     {
       provide: GoogleVerifier,
       inject: [ConfigService],
