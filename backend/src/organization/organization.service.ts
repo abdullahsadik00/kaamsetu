@@ -125,6 +125,10 @@ export class OrganizationService {
         where: { memberId: member.id, usedAt: null, revokedAt: null },
         data: { revokedAt: now },
       }),
+      this.prisma.teamMember.updateMany({
+        where: { organizationMemberId: member.id, leftAt: null },
+        data: { leftAt: now, isPrimary: false },
+      }),
       this.prisma.device.updateMany({
         where: { userId: member.userId, revokedAt: null },
         data: { revokedAt: now },

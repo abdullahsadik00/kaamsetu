@@ -77,6 +77,12 @@ export class TenantFactory {
     await this.prisma.subscription.deleteMany({
       where: { organizationId: { in: orgIds } },
     });
+    await this.prisma.teamMember.deleteMany({
+      where: { organizationId: { in: orgIds } },
+    });
+    await this.prisma.team.deleteMany({
+      where: { organizationId: { in: orgIds } },
+    });
     await this.prisma.equipment.deleteMany({
       where: { organizationId: { in: orgIds } },
     });

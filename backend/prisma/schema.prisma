@@ -46,6 +46,7 @@ model Organization {
   members      OrganizationMember[]
   subscription Subscription?
   customers    Customer[]
+  teams        Team[]
 }
 
 enum SubscriptionStatus {
@@ -168,6 +169,7 @@ model OrganizationMember {
   organization Organization @relation(fields: [organizationId], references: [id])
   user         User         @relation(fields: [userId], references: [id])
   invites      MemberInvite[]
+  teamSlots    TeamMember[]
 
   @@unique([organizationId, userId])
   @@index([organizationId, status])
@@ -258,4 +260,44 @@ model Equipment {
 
   @@index([organizationId, customerId])
   @@index([siteId])
+}
+
+// ---------- Teams (docs/05 §2, T4.2, D-029) ----------
+
+enum TeamPosition {
+  SENIOR_TECHNICIAN
+  HELPER
+}
+
+/// A field team: one primary senior technician and helpers. Jobs are assigned to teams.
+model Team {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  name           String
+  active         Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  members      TeamMember[]
+
+  @@index([organizationId, active])
+}
+
+/// An employee's place in a team. Leaving sets leftAt (history is kept for jobs).
+model TeamMember {
+  id                   String       @id @default(uuid()) @db.Uuid
+  organizationId       String       @db.Uuid
+  teamId               String       @db.Uuid
+  organizationMemberId String       @db.Uuid
+  position             TeamPosition
+  isPrimary            Boolean      @default(false)
+  joinedAt             DateTime     @default(now())
+  leftAt               DateTime?
+
+  team   Team               @relation(fields: [teamId], references: [id])
+  member OrganizationMember @relation(fields: [organizationMemberId], references: [id])
+
+  @@index([teamId, leftAt])
+  @@index([organizationMemberId, leftAt])
 }

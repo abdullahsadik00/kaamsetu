@@ -74,6 +74,18 @@ export class AccountService {
         });
       }
 
+      // Out of every team (theirs, and everyone's in a closed business).
+      await tx.teamMember.updateMany({
+        where: {
+          leftAt: null,
+          OR: [
+            { member: { userId: auth.userId } },
+            { organizationId: { in: ownedOrgIds } },
+          ],
+        },
+        data: { leftAt: now, isPrimary: false },
+      });
+
       // The person themself, in every business they belonged to.
       await tx.organizationMember.updateMany({
         where: { userId: auth.userId, status: 'ACTIVE' },
