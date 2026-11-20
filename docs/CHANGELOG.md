@@ -9,6 +9,19 @@ Meaningful product, documentation, architecture and implementation changes, newe
 - `docs/design/STITCH_PROMPTS.md`: a strict base prompt plus 83 numbered, ready-to-paste Stitch prompts (all owner, technician, helper, sign-in, setup and settings screens, sheets, dialogs and offline/empty/error/language variants). Sample data matches the prototype; open decisions appear as visible placeholders.
 - `docs/design/STITCH_PROTOTYPE_PROMPTS.md`: prompts that link the Stitch screens into one clickable prototype (base rules, 12 link prompts following flows F1–F17, a check prompt, fix prompts and a full link table for wiring by hand or in Figma). No new screens.
 
+## 2026-11-20 — Free pilot staging (T3.10)
+
+### Added
+- Staging API on Render free (`https://kaamsetu-api-staging-0368.onrender.com`, Singapore) from `render.yaml`, database on Supabase free (Mumbai, session pooler), demo data seeded. Decision D-026; Q-09 answered for the pilot only.
+- `TRUST_PROXY` setting; checked on staging that faked `X-Forwarded-For` values do not bypass the per-IP login limit.
+- Nightly encrypted database backup (`.github/workflows/backup-staging.yml`, 14 days); first run green.
+- UptimeRobot pings `/health` every 5 minutes (keeps Render and Supabase awake, emails on downtime).
+- EAS `preview` profile builds an APK that talks to staging; owner login verified on a phone.
+
+### Notes
+- The seed must run with the same `OTP_HASH_SECRET` as the server, or invite codes show "Wrong code"; copy it from Render's Environment page.
+- Still to do before the pilot: a backup restore test (T5.7) and a way to create the pilot business itself (business onboarding, T4.1).
+
 ## 2026-11-19 — Google sign-in and owner invites (T3.11)
 
 ### Added
