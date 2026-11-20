@@ -19,7 +19,9 @@ export const CLOSED_BUSINESS_GRACE_DAYS = 30;
 export class AccountService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async deleteAccount(auth: AuthContext): Promise<{ deleted: true; businessClosed: boolean }> {
+  async deleteAccount(
+    auth: AuthContext,
+  ): Promise<{ deleted: true; businessClosed: boolean }> {
     const now = new Date();
     const memberships = await this.prisma.organizationMember.findMany({
       where: { userId: auth.userId, status: 'ACTIVE' },
@@ -39,18 +41,27 @@ export class AccountService {
           data: { status: 'INACTIVE', deactivatedAt: now },
         });
         await tx.memberInvite.updateMany({
-          where: { organizationId: { in: ownedOrgIds }, usedAt: null, revokedAt: null },
+          where: {
+            organizationId: { in: ownedOrgIds },
+            usedAt: null,
+            revokedAt: null,
+          },
           data: { revokedAt: now },
         });
         // Everyone in a closed business is signed out (unless they work elsewhere).
-        const staffIds = members.map((m) => m.userId).filter((id) => id !== auth.userId);
+        const staffIds = members
+          .map((m) => m.userId)
+          .filter((id) => id !== auth.userId);
         const stillActive = await tx.organizationMember.findMany({
           where: { userId: { in: staffIds }, status: 'ACTIVE' },
           select: { userId: true },
         });
         const busy = new Set(stillActive.map((m) => m.userId));
         await tx.device.updateMany({
-          where: { userId: { in: staffIds.filter((id) => !busy.has(id)) }, revokedAt: null },
+          where: {
+            userId: { in: staffIds.filter((id) => !busy.has(id)) },
+            revokedAt: null,
+          },
           data: { revokedAt: now },
         });
         await tx.organization.updateMany({
@@ -69,7 +80,11 @@ export class AccountService {
         data: { status: 'INACTIVE', deactivatedAt: now },
       });
       await tx.memberInvite.updateMany({
-        where: { member: { userId: auth.userId }, usedAt: null, revokedAt: null },
+        where: {
+          member: { userId: auth.userId },
+          usedAt: null,
+          revokedAt: null,
+        },
         data: { revokedAt: now },
       });
       await tx.device.updateMany({
