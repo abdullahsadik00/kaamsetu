@@ -359,6 +359,8 @@ model ServiceJob {
   equipment    JobEquipment[]
   assignments  JobAssignment[]
   history      JobStatusHistory[]
+  report       ServiceReport?
+  collections  CashCollection[]
 
   @@unique([organizationId, jobNumber])
   @@index([organizationId, status, scheduledDate])
@@ -424,4 +426,61 @@ model SyncOperation {
   receivedAt     DateTime @default(now())
 
   @@index([organizationId, receivedAt])
+}
+
+enum ReportOutcome {
+  COMPLETED
+  NEEDS_FOLLOW_UP
+  NOT_COMPLETED
+}
+
+enum CollectionMode {
+  CASH
+  UPI
+}
+
+enum CollectionStatus {
+  /// Recorded by the team; not yet a payment (D-008).
+  WITH_TEAM
+  /// Owner confirmed the handover (cash received / UPI seen).
+  CONFIRMED
+}
+
+/// The finish page (T4.8, D-032). Id = the phone's job.complete operation id.
+model ServiceReport {
+  id             String        @id @db.Uuid
+  organizationId String        @db.Uuid
+  jobId          String        @unique @db.Uuid
+  byMemberId     String        @db.Uuid
+  outcome        ReportOutcome
+  note           String?
+  /// Work per AC: [{ equipmentId, work: ["CLEANED", ...], note? }].
+  work           Json          @default("[]")
+  /// Parts used: [{ name, qty }].
+  parts          Json          @default("[]")
+  createdAt      DateTime      @default(now())
+
+  job ServiceJob @relation(fields: [jobId], references: [id])
+
+  @@index([organizationId, createdAt])
+}
+
+/// Money a team took from the customer (D-008); a payment only after the owner confirms.
+model CashCollection {
+  id                  String           @id @db.Uuid
+  organizationId      String           @db.Uuid
+  jobId               String           @db.Uuid
+  collectedByMemberId String           @db.Uuid
+  /// Paise (docs/11 §3).
+  amount              Int
+  mode                CollectionMode
+  status              CollectionStatus @default(WITH_TEAM)
+  confirmedByMemberId String?          @db.Uuid
+  confirmedAt         DateTime?
+  createdAt           DateTime         @default(now())
+
+  job ServiceJob @relation(fields: [jobId], references: [id])
+
+  @@index([organizationId, status])
+  @@index([jobId])
 }

@@ -99,6 +99,40 @@ describe('Field: my jobs and sync operations (e2e, T4.7)', () => {
     await http().get('/api/v1/my/jobs').set(as(a.tokens.OWNER)).expect(403);
   });
 
+  it('finish page: keeps the report and the money with the team; refuses bad reports (T4.8)', async () => {
+    const owner = as(a.tokens.OWNER);
+    const senior = a.tokens.SENIOR_TECHNICIAN;
+    const job = (await http().get(`/api/v1/jobs/${jobId}`).set(owner).expect(200)).body.data;
+    const ac = (await http().post('/api/v1/equipment').set(owner).send({ customerId: job.customer.id, siteId: job.site.id, type: 'SPLIT' }).expect(201)).body.data.id;
+    const team = (await http().get('/api/v1/teams').set(owner).expect(200)).body.data.find((t: { name: string }) => t.name === 'Team 1').id;
+    const j2 = (await http().post('/api/v1/jobs').set(owner).send({ customerId: job.customer.id, siteId: job.site.id, teamId: team, equipmentIds: [ac] }).expect(201)).body.data.id;
+
+    const couldnt = await send(senior, op('job.complete', j2, { outcome: 'NOT_COMPLETED' }));
+    expect(couldnt.body.data.results[0]).toMatchObject({ status: 'rejected', code: 'VALIDATION_FAILED' });
+    const strangeAc = await send(senior, op('job.complete', j2, { work: [{ equipmentId: randomUUID(), work: ['CLEANED'] }] }));
+    expect(strangeAc.body.data.results[0]).toMatchObject({ status: 'rejected', code: 'EQUIPMENT_NOT_ON_JOB' });
+
+    const finish = op('job.complete', j2, {
+      outcome: 'NEEDS_FOLLOW_UP',
+      note: 'Compressor weak',
+      work: [{ equipmentId: ac, work: ['CLEANED', 'GAS_FILLED'] }],
+      parts: [{ name: 'Capacitor', qty: 1 }],
+      collected: { amount: 150000, mode: 'CASH' },
+    });
+    expect((await send(senior, finish)).body.data.results[0].status).toBe('applied');
+    expect((await send(senior, finish)).body.data.results[0].status).toBe('duplicate'); // no second report or money row
+
+    const done = (await http().get(`/api/v1/jobs/${j2}`).set(owner).expect(200)).body.data;
+    expect(done.status).toBe('COMPLETED');
+    expect(done.report).toMatchObject({
+      outcome: 'NEEDS_FOLLOW_UP',
+      note: 'Compressor weak',
+      work: [{ equipmentId: ac, work: ['CLEANED', 'GAS_FILLED'] }],
+      parts: [{ name: 'Capacitor', qty: 1 }],
+    });
+    expect(done.collections).toEqual([expect.objectContaining({ amount: 150000, mode: 'CASH', status: 'WITH_TEAM' })]);
+  });
+
   it('skips an operation whose dependency failed', async () => {
     const first = op('job.start', otherTeamJob);
     const res = await send(a.tokens.SENIOR_TECHNICIAN, first, { ...op('job.complete', otherTeamJob), dependsOn: first.id });

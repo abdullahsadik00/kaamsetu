@@ -34,10 +34,33 @@ const HoldPayload = z.object({
   side: z.enum(['CUSTOMER', 'OURS']).optional(),
   reason: z.string().max(200).optional(),
 });
-const CompletePayload = z.object({
-  outcome: z.enum(['COMPLETED', 'NEEDS_FOLLOW_UP', 'NOT_COMPLETED']).optional(),
-  note: z.string().max(500).optional(),
-});
+/** What was done to one AC on the finish page (T4.8). */
+export const WORK_CODES = ['CLEANED', 'GAS_FILLED', 'REPAIRED', 'PART_CHANGED', 'INSTALLED', 'CHECKED'] as const;
+const CompletePayload = z
+  .object({
+    outcome: z.enum(['COMPLETED', 'NEEDS_FOLLOW_UP', 'NOT_COMPLETED']).default('COMPLETED'),
+    note: z.string().trim().max(500).optional(),
+    work: z
+      .array(
+        z.object({
+          equipmentId: z.uuid(),
+          work: z.array(z.enum(WORK_CODES)).max(WORK_CODES.length),
+          note: z.string().trim().max(200).optional(),
+        }),
+      )
+      .max(30)
+      .default([]),
+    parts: z
+      .array(z.object({ name: z.string().trim().min(1).max(60), qty: z.number().int().min(1).max(99) }))
+      .max(30)
+      .default([]),
+    /** Money taken from the customer, paise (D-008). */
+    collected: z
+      .object({ amount: z.number().int().min(1).max(100_000_000), mode: z.enum(['CASH', 'UPI']) })
+      .optional(),
+  })
+  // "Couldn't do it" needs a reason (T4.8 validation).
+  .refine((p) => p.outcome !== 'NOT_COMPLETED' || !!p.note, { path: ['note'] });
 
 type Result = { id: string; status: 'applied' | 'duplicate' | 'conflict' | 'rejected'; code?: string };
 
@@ -190,6 +213,7 @@ export class FieldService {
     if (!to) return { id: op.id, status: 'conflict', code: 'INVALID_STATUS_TRANSITION' };
 
     let note: string | null = null;
+    let report: z.infer<typeof CompletePayload> | null = null;
     if (op.operation === 'job.hold') {
       const p = HoldPayload.safeParse(op.payload ?? {});
       if (!p.success) return { id: op.id, status: 'rejected', code: 'VALIDATION_FAILED' };
@@ -200,6 +224,15 @@ export class FieldService {
     if (op.operation === 'job.complete') {
       const p = CompletePayload.safeParse(op.payload ?? {});
       if (!p.success) return { id: op.id, status: 'rejected', code: 'VALIDATION_FAILED' };
+      const onJob = new Set(
+        (await this.prisma.jobEquipment.findMany({ where: { jobId: job.id }, select: { equipmentId: true } })).map(
+          (e) => e.equipmentId,
+        ),
+      );
+      if (p.data.work.some((w) => !onJob.has(w.equipmentId))) {
+        return { id: op.id, status: 'rejected', code: 'EQUIPMENT_NOT_ON_JOB' };
+      }
+      report = p.data;
       note = [p.data.outcome, p.data.note].filter(Boolean).join(': ') || null;
     }
 
@@ -222,6 +255,36 @@ export class FieldService {
           note,
         },
       }),
+      ...(report
+        ? [
+            this.prisma.serviceReport.create({
+              data: {
+                id: op.id,
+                organizationId: job.organizationId,
+                jobId: job.id,
+                byMemberId: auth.memberId as string,
+                outcome: report.outcome,
+                note: report.note || null,
+                work: report.work,
+                parts: report.parts,
+              },
+            }),
+          ]
+        : []),
+      ...(report?.collected
+        ? [
+            this.prisma.cashCollection.create({
+              data: {
+                id: op.id,
+                organizationId: job.organizationId,
+                jobId: job.id,
+                collectedByMemberId: auth.memberId as string,
+                amount: report.collected.amount,
+                mode: report.collected.mode,
+              },
+            }),
+          ]
+        : []),
     ]);
     return { id: op.id, status: 'applied' };
   }

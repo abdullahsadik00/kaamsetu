@@ -96,6 +96,8 @@ export class JobsService {
         equipment: { select: { equipmentId: true } },
         assignments: { orderBy: { assignedAt: 'asc' } },
         history: { orderBy: { at: 'asc' } },
+        report: true,
+        collections: { orderBy: { createdAt: 'asc' } },
       },
     });
     if (!job) throw AppError.notFound('JOB_NOT_FOUND');
@@ -130,6 +132,16 @@ export class JobsService {
         capacityTons: e.capacityTons === null ? null : Number(e.capacityTons),
       })),
       history: job.history.map((h) => ({ from: h.fromStatus, to: h.toStatus, note: h.note, at: h.at })),
+      // Finish page (T4.8): work per AC (ids match `equipment`), parts, outcome.
+      report: job.report && {
+        outcome: job.report.outcome,
+        note: job.report.note,
+        work: job.report.work,
+        parts: job.report.parts,
+        at: job.report.createdAt,
+      },
+      // Money with the team until the owner confirms the handover (D-008).
+      collections: job.collections.map((c) => ({ id: c.id, amount: c.amount, mode: c.mode, status: c.status, at: c.createdAt })),
       assignments: job.assignments.map((a) => ({
         teamId: a.teamId,
         assignedAt: a.assignedAt,
