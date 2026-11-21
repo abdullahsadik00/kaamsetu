@@ -53,6 +53,10 @@ model Organization {
   enquiries         ServiceRequest[]
   /// Next enquiry number for this business (E-201, E-202, …).
   nextRequestNumber Int                  @default(201)
+  invoices          Invoice[]
+  /// Next bill number (KS-0001, KS-0002, …) and quotation number (Q-001, …), T4.10.
+  nextBillNumber    Int                  @default(1)
+  nextQuoteNumber   Int                  @default(1)
 }
 
 enum SubscriptionStatus {
@@ -504,6 +508,8 @@ enum CollectionStatus {
   WITH_TEAM
   /// Owner confirmed the handover (cash received / UPI seen).
   CONFIRMED
+  /// Owner says the money did not reach them (reason kept).
+  REJECTED
 }
 
 /// The finish page (T4.8, D-032). Id = the phone's job.complete operation id.
@@ -537,10 +543,133 @@ model CashCollection {
   status              CollectionStatus @default(WITH_TEAM)
   confirmedByMemberId String?          @db.Uuid
   confirmedAt         DateTime?
+  rejectReason        String?
+  /// The payment made from it on the job's bill, when there was one (T4.11).
+  paymentId           String?          @unique @db.Uuid
   createdAt           DateTime         @default(now())
 
   job ServiceJob @relation(fields: [jobId], references: [id])
 
   @@index([organizationId, status])
   @@index([jobId])
+}
+
+// ---------- Billing (docs/05 §7, T4.10/T4.11, D-034) ----------
+
+enum InvoiceKind {
+  BILL
+  QUOTATION
+}
+
+/// One status list for bills and quotations. A bill: DRAFT → ISSUED (final,
+/// cannot change) → CANCELLED. A quotation: DRAFT → ISSUED ("sent") →
+/// CONVERTED (turned into a bill) or CANCELLED.
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  CONVERTED
+  CANCELLED
+}
+
+/// A bill (KS-0001) or a written quotation (Q-001). Money in paise; the
+/// server recalculates every total from the lines (never trusts the phone).
+model Invoice {
+  id                String        @id @default(uuid()) @db.Uuid
+  organizationId    String        @db.Uuid
+  kind              InvoiceKind
+  /// Per business and kind; shown as KS-0001 or Q-001.
+  number            Int
+  status            InvoiceStatus @default(DRAFT)
+  customerId        String        @db.Uuid
+  siteId            String?       @db.Uuid
+  jobId             String?       @db.Uuid
+  /// Same as jobId while this is the job's bill; cleared on cancel so the job can be billed again.
+  billForJobId      String?       @unique @db.Uuid
+  /// The quotation this bill was made from, or the bill a quotation became.
+  fromQuotationId   String?       @unique @db.Uuid
+  convertedToBillId String?       @db.Uuid
+  billDate          DateTime      @db.Date
+  /// GST per line, CGST + SGST (intra-state only); provisional until Q-04.
+  gstBill           Boolean       @default(false)
+  sellerGstin       String?
+  buyerGstin        String?
+  discount          Int           @default(0)
+  subtotal          Int           @default(0)
+  taxTotal          Int           @default(0)
+  total             Int           @default(0)
+  /// Sum of payments not voided (kept in the same transaction as each payment).
+  paid              Int           @default(0)
+  issuedAt          DateTime?
+  cancelReason      String?
+  cancelledAt       DateTime?
+  createdByMemberId String        @db.Uuid
+  version           Int           @default(1)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  organization Organization  @relation(fields: [organizationId], references: [id])
+  items        InvoiceItem[]
+  payments     Payment[]
+
+  @@unique([organizationId, kind, number])
+  @@index([organizationId, kind, status, billDate])
+  @@index([organizationId, customerId])
+  @@index([jobId])
+}
+
+/// One line of a bill or quotation. Description and prices are snapshots.
+model InvoiceItem {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  invoiceId      String @db.Uuid
+  position       Int
+  description    String
+  qty            Int
+  /// Paise for one.
+  unitPrice      Int
+  /// Percent: 0, 5, 12, 18 or 28 (0 when the bill is not a GST bill).
+  gstRate        Int    @default(0)
+  /// qty × unitPrice, before discount and tax.
+  amount         Int
+  /// Share of the bill discount, then tax on what is left.
+  discountShare  Int    @default(0)
+  cgst           Int    @default(0)
+  sgst           Int    @default(0)
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+
+  @@index([invoiceId, position])
+}
+
+enum PaymentMode {
+  CASH
+  UPI
+  BANK
+  OTHER
+}
+
+/// Money received against one bill (one payment → one bill for now).
+/// Voiding keeps the row and the reason (audit).
+model Payment {
+  id                 String      @id @default(uuid()) @db.Uuid
+  organizationId     String      @db.Uuid
+  invoiceId          String      @db.Uuid
+  customerId         String      @db.Uuid
+  amount             Int
+  mode               PaymentMode
+  receivedAt         DateTime    @db.Date
+  note               String?
+  /// Phone-generated; the same key again returns the same payment.
+  idempotencyKey     String
+  recordedByMemberId String      @db.Uuid
+  voidedAt           DateTime?
+  voidReason         String?
+  voidedByMemberId   String?     @db.Uuid
+  createdAt          DateTime    @default(now())
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id])
+
+  @@unique([organizationId, idempotencyKey])
+  @@index([organizationId, customerId])
+  @@index([invoiceId])
 }

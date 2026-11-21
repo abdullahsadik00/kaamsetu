@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module.js';
+import { BillingModule } from './billing/billing.controller.js';
 import { validateEnv } from './config/env.js';
 import { CustomersModule } from './customers/customers.module.js';
 import { EnquiriesModule } from './enquiries/enquiries.controller.js';
@@ -27,6 +28,7 @@ import { TeamsModule } from './teams/teams.controller.js';
     JobsModule,
     EnquiriesModule,
     FieldModule,
+    BillingModule,
   ],
   controllers: [HealthController, SiteController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

@@ -78,7 +78,7 @@ export class TenantFactory {
       where: { organizationId: { in: orgIds } },
     });
     await this.prisma.syncOperation.deleteMany({ where: { organizationId: { in: orgIds } } });
-    for (const model of ['serviceReport', 'cashCollection', 'jobEquipment', 'jobAssignment', 'jobStatusHistory', 'serviceJob', 'serviceRequestEquipment', 'serviceRequest'] as const) {
+    for (const model of ['payment', 'invoiceItem', 'invoice', 'serviceReport', 'cashCollection', 'jobEquipment', 'jobAssignment', 'jobStatusHistory', 'serviceJob', 'serviceRequestEquipment', 'serviceRequest'] as const) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- same call on each delegate
       await (this.prisma[model] as any).deleteMany({ where: { organizationId: { in: orgIds } } });
     }
