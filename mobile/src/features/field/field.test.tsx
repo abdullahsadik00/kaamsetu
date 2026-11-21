@@ -7,7 +7,7 @@ import { api } from '@/features/auth/session';
 import { Outbox } from '@/features/sync/outbox';
 import { renderScreen, setupI18n } from '@/testing/render';
 
-import { MyWorkScreen, TodayScreen } from './field';
+import { MyWorkScreen, TodayScreen, toPaise } from './field';
 
 let mockDb: NodeSqlDatabase;
 let mockOutbox: Outbox;
@@ -34,7 +34,7 @@ const job = {
   landmark: null,
   complaint: 'Not cooling',
   amountToCollect: 80000,
-  equipment: [],
+  equipment: [{ id: 'ac-1', type: 'SPLIT', brand: null, capacityTons: 1.5, locationLabel: 'Bedroom' }],
 };
 
 beforeAll(setupI18n);
@@ -83,5 +83,47 @@ describe("Helper's Today's work (Q-01)", () => {
     expect(screen.getByText('Call Meera')).toBeTruthy();
     expect(screen.getByText('Call Rakesh (senior)')).toBeTruthy();
     expect(screen.queryByText('Start work')).toBeNull();
+  });
+});
+
+describe('Finish page (T4.8)', () => {
+  const pressLastFinish = () => fireEvent.press(screen.getByText('Save and finish'));
+
+  it('sends outcome, work per AC, parts and money in paise with job.complete', async () => {
+    jest.spyOn(api, 'get').mockResolvedValue([{ ...job, status: 'IN_PROGRESS' }] as never);
+    await renderScreen(<MyWorkScreen />);
+    await fireEvent.press(await screen.findByText('Finish work'));
+    await fireEvent.press(screen.getByText('Gas filled'));
+    await fireEvent.press(screen.getByText('+ Add part used'));
+    await fireEvent.changeText(screen.getByLabelText('Part used'), 'Capacitor');
+    await fireEvent.press(screen.getByText('UPI'));
+    await pressLastFinish();
+
+    await waitFor(() => expect(mockNotify).toHaveBeenCalled());
+    const [op] = await mockOutbox.unsentFor('ServiceJob', 'job-1');
+    expect(op.operation).toBe('job.complete');
+    expect(op.payload).toEqual({
+      outcome: 'COMPLETED',
+      work: [{ equipmentId: 'ac-1', work: ['GAS_FILLED'] }],
+      parts: [{ name: 'Capacitor', qty: 1 }],
+      collected: { amount: 80000, mode: 'UPI' }, // pre-filled with the amount to collect
+    });
+  });
+
+  it("needs a reason for couldn't do it", async () => {
+    jest.spyOn(api, 'get').mockResolvedValue([{ ...job, status: 'IN_PROGRESS' }] as never);
+    await renderScreen(<MyWorkScreen />);
+    await fireEvent.press(await screen.findByText('Finish work'));
+    await fireEvent.press(screen.getByText("Couldn't do it"));
+    await pressLastFinish();
+    expect(await screen.findByText("Please write why the work couldn't be done.")).toBeTruthy();
+    expect(await mockOutbox.unsentFor('ServiceJob', 'job-1')).toEqual([]);
+  });
+
+  it('turns typed rupees into paise', () => {
+    expect(toPaise('1,500')).toBe(150000);
+    expect(toPaise('₹ 99.5')).toBe(9950);
+    expect(toPaise('')).toBeNull();
+    expect(toPaise('abc')).toBeNull();
   });
 });

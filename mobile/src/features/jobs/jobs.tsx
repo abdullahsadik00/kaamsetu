@@ -43,6 +43,13 @@ type Job = JobRow & {
   customer: { id: string; name: string; phone: string } | null;
   site: { addressLine1: string; locality: string | null; city: string | null; landmark: string | null } | null;
   equipment: { id: string; type: string; brand: string | null; capacityTons: number | null; locationLabel: string | null }[];
+  report: {
+    outcome: 'COMPLETED' | 'NEEDS_FOLLOW_UP' | 'NOT_COMPLETED';
+    note: string | null;
+    work: { equipmentId: string; work: string[] }[];
+    parts: { name: string; qty: number }[];
+  } | null;
+  collections: { id: string; amount: number; mode: 'CASH' | 'UPI'; status: 'WITH_TEAM' | 'CONFIRMED' }[];
 };
 
 const JOBS_KEY = ['jobs'] as const;
@@ -330,6 +337,36 @@ export function JobScreen() {
           <Button variant="secondary" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${j.customer?.phone}`)} />
         ) : null}
       </View>
+
+      {j.report ? (
+        <View style={styles.card}>
+          <AppText variant="section">{t('jobs.report')}</AppText>
+          <AppText weight="semibold" color={j.report.outcome === 'COMPLETED' ? colors.ok : colors.warn}>
+            {t(`jobs.outcome.${j.report.outcome}`)}
+          </AppText>
+          {j.report.note ? <AppText>{j.report.note}</AppText> : null}
+          {j.report.work.map((w) => {
+            const e = j.equipment.find((x) => x.id === w.equipmentId);
+            return (
+              <AppText key={w.equipmentId} variant="support">
+                • {[e?.locationLabel, e && t(`customers.acTypes.${e.type}`)].filter(Boolean).join(' · ')}:{' '}
+                {w.work.map((code) => t(`field.work.${code}`)).join(', ')}
+              </AppText>
+            );
+          })}
+          {j.report.parts.length ? (
+            <AppText variant="support">
+              {t('jobs.parts')}: {j.report.parts.map((p) => `${p.name} × ${p.qty}`).join(', ')}
+            </AppText>
+          ) : null}
+          {j.collections.map((c) => (
+            <AppText key={c.id} weight="semibold">
+              {t('jobs.taken')}: {rupees(c.amount)} · {t(c.mode === 'CASH' ? 'field.cash' : 'field.upi')} ·{' '}
+              {t(c.status === 'WITH_TEAM' ? 'jobs.withTeam' : 'jobs.confirmed')}
+            </AppText>
+          ))}
+        </View>
+      ) : null}
 
       {open && panel === 'team' ? (
         <ChoiceChips

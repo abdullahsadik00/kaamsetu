@@ -7,7 +7,7 @@ import { ActivityIndicator, Linking, RefreshControl, ScrollView, StyleSheet, Vie
 import { ApiError } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
-import { ChoiceChips } from '@/components/ui/choice-chips';
+import { ChoiceChips, MultiChoiceChips } from '@/components/ui/choice-chips';
 import { OfflineBanner } from '@/components/ui/offline-banner';
 import { TextField } from '@/components/ui/text-field';
 import { api } from '@/features/auth/session';
@@ -98,7 +98,6 @@ function JobCard({ job }: { job: FieldJob }) {
   const state = useQuery({ queryKey: ['job-local', job.id, job.status], queryFn: () => localState(job), refetchInterval: 3000 });
   const [panel, setPanel] = useState<'none' | 'hold' | 'finish'>('none');
   const [side, setSide] = useState<'CUSTOMER' | 'OURS'>('CUSTOMER');
-  const [outcome, setOutcome] = useState<'COMPLETED' | 'NEEDS_FOLLOW_UP' | 'NOT_COMPLETED'>('COMPLETED');
   const [text, setText] = useState('');
   const save = useMutation({
     mutationFn: async ({ op, payload }: { op: Op; payload: object }) => {
@@ -174,20 +173,7 @@ function JobCard({ job }: { job: FieldJob }) {
         </View>
       ) : null}
       {panel === 'finish' ? (
-        <View style={styles.panel}>
-          <ChoiceChips
-            label={t('field.result')}
-            options={[
-              { value: 'COMPLETED', label: t('field.done') },
-              { value: 'NEEDS_FOLLOW_UP', label: t('field.again') },
-              { value: 'NOT_COMPLETED', label: t('field.couldnt') },
-            ]}
-            value={outcome}
-            onChange={setOutcome}
-          />
-          <TextField label={t('field.note')} value={text} onChangeText={setText} multiline />
-          <Button label={t('field.finish')} onPress={() => save.mutate({ op: 'job.complete', payload: { outcome, ...(text.trim() ? { note: text.trim() } : {}) } })} />
-        </View>
+        <FinishForm job={job} busy={save.isPending} onSave={(payload) => save.mutate({ op: 'job.complete', payload })} />
       ) : null}
 
       {s === 'ASSIGNED' || s === 'ON_HOLD' ? (
@@ -200,6 +186,107 @@ function JobCard({ job }: { job: FieldJob }) {
         </>
       ) : null}
       {save.error ? <AppText color={colors.bad}>{String(save.error)}</AppText> : null}
+    </View>
+  );
+}
+
+// ---------- Finish page (T4.8, D-032) ----------
+
+const WORK = ['CLEANED', 'GAS_FILLED', 'REPAIRED', 'PART_CHANGED', 'INSTALLED', 'CHECKED'] as const;
+type Work = (typeof WORK)[number];
+type Outcome = 'COMPLETED' | 'NEEDS_FOLLOW_UP' | 'NOT_COMPLETED';
+type Part = { name: string; qty: string };
+
+/** Rupees typed by the technician → paise (docs/11 §3); empty or invalid → null. */
+export function toPaise(rupees: string): number | null {
+  const n = Number(rupees.replace(/[,\s₹]/g, ''));
+  return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : null;
+}
+
+function FinishForm({ job, busy, onSave }: { job: FieldJob; busy: boolean; onSave: (payload: object) => void }) {
+  const { t } = useTranslation();
+  const [outcome, setOutcome] = useState<Outcome>('COMPLETED');
+  const [work, setWork] = useState<Record<string, Work[]>>({});
+  const [parts, setParts] = useState<Part[]>([]);
+  const [money, setMoney] = useState(job.amountToCollect ? String(job.amountToCollect / 100) : '');
+  const [mode, setMode] = useState<'CASH' | 'UPI'>('CASH');
+  const [note, setNote] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  const submit = () => {
+    if (outcome === 'NOT_COMPLETED' && !note.trim()) return setError(t('field.reasonNeeded'));
+    const amount = toPaise(money);
+    if (money.trim() && amount === null) return setError(t('field.badAmount'));
+    setError(null);
+    onSave({
+      outcome,
+      ...(note.trim() ? { note: note.trim() } : {}),
+      work: Object.entries(work)
+        .filter(([, w]) => w.length > 0)
+        .map(([equipmentId, w]) => ({ equipmentId, work: w })),
+      parts: parts
+        .filter((p) => p.name.trim())
+        .map((p) => ({ name: p.name.trim(), qty: Math.min(99, Math.max(1, Number(p.qty) || 1)) })),
+      ...(amount ? { collected: { amount, mode } } : {}),
+    });
+  };
+
+  return (
+    <View style={styles.panel}>
+      <ChoiceChips
+        label={t('field.result')}
+        options={[
+          { value: 'COMPLETED', label: t('field.done') },
+          { value: 'NEEDS_FOLLOW_UP', label: t('field.again') },
+          { value: 'NOT_COMPLETED', label: t('field.couldnt') },
+        ]}
+        value={outcome}
+        onChange={setOutcome}
+      />
+      {job.equipment?.map((e) => (
+        <MultiChoiceChips
+          key={e.id}
+          label={`${t('field.workOn')} ${[e.locationLabel, t(`customers.acTypes.${e.type}`)].filter(Boolean).join(' · ')}`}
+          options={WORK.map((w) => ({ value: w, label: t(`field.work.${w}`) }))}
+          value={work[e.id] ?? []}
+          onChange={(v) => setWork({ ...work, [e.id]: v })}
+        />
+      ))}
+      {parts.map((p, i) => (
+        <View key={i} style={styles.row}>
+          <View style={{ flex: 3 }}>
+            <TextField
+              label={t('field.part')}
+              value={p.name}
+              onChangeText={(name) => setParts(parts.map((x, j) => (j === i ? { ...x, name } : x)))}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <TextField
+              label={t('field.qty')}
+              value={p.qty}
+              keyboardType="number-pad"
+              onChangeText={(qty) => setParts(parts.map((x, j) => (j === i ? { ...x, qty } : x)))}
+            />
+          </View>
+        </View>
+      ))}
+      <Button variant="text" label={t('field.addPart')} onPress={() => setParts([...parts, { name: '', qty: '1' }])} />
+      <TextField label={t('field.moneyTaken')} prefix="₹" keyboardType="decimal-pad" value={money} onChangeText={setMoney} />
+      {money.trim() ? (
+        <ChoiceChips
+          label={t('field.how')}
+          options={[
+            { value: 'CASH', label: t('field.cash') },
+            { value: 'UPI', label: t('field.upi') },
+          ]}
+          value={mode}
+          onChange={setMode}
+        />
+      ) : null}
+      <TextField label={outcome === 'NOT_COMPLETED' ? t('field.whyNot') : t('field.note')} value={note} onChangeText={setNote} multiline />
+      {error ? <AppText color={colors.bad}>{error}</AppText> : null}
+      <Button label={t('field.saveFinish')} onPress={submit} loading={busy} />
     </View>
   );
 }

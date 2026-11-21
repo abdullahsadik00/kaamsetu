@@ -42,6 +42,45 @@ export function ChoiceChips<T extends string>({ label, options, value, onChange 
   );
 }
 
+/** Several choices from a few (e.g. work done on one AC); same look as ChoiceChips. */
+export function MultiChoiceChips<T extends string>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: Option<T>[];
+  value: T[];
+  onChange: (value: T[]) => void;
+}) {
+  return (
+    <View style={styles.wrap}>
+      <AppText variant="support" weight="semibold" color={colors.slate}>
+        {label}
+      </AppText>
+      <View style={styles.row} accessibilityLabel={label}>
+        {options.map((o) => {
+          const on = value.includes(o.value);
+          return (
+            <Pressable
+              key={o.value}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: on }}
+              onPress={() => onChange(on ? value.filter((v) => v !== o.value) : [...value, o.value])}
+              style={[styles.chip, on && styles.chipOn]}
+            >
+              <AppText weight="semibold" color={on ? colors.white : colors.ink}>
+                {o.label}
+              </AppText>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   wrap: { gap: space.sm },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
