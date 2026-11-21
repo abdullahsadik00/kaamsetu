@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
-import { router } from 'expo-router';
+import { queryOptions, useQuery } from '@tanstack/react-query';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { errorMessage } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
@@ -9,47 +10,117 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
-import { useSession } from '@/features/auth/session';
-import { dayString, useDayLabel, useJobs, type JobRow } from '@/features/jobs/jobs';
-import { useEnquiries } from '@/features/enquiries/enquiries';
+import { api, useSession } from '@/features/auth/session';
+import { useDayLabel } from '@/features/jobs/jobs';
 import { useTeams } from '@/features/teams/teams';
 import { useLanguage } from '@/localization/i18n';
 import { colors, radius, space, tones, type Tone } from '@/theme/tokens';
 
+type ActionKind = 'HOLD_OURS' | 'HOLD_CUSTOMER' | 'FOLLOW_UP' | 'NOT_SCHEDULED';
+type JobStatus = 'NEW' | 'ASSIGNED' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED' | 'CANCELLED';
+
+/** `GET /dashboard` (T4.12). Money in paise. */
+export type Dashboard = {
+  today: string;
+  enquiries: { open: number; bySource: Record<string, number>; newest: { id: string; customerName: string } | null };
+  needTeam: {
+    count: number;
+    next: { id: string; jobNumber: number; customerName: string; scheduledDate: string | null; timeSlot: string | null } | null;
+  };
+  needsAction: {
+    count: number;
+    items: {
+      kind: ActionKind;
+      jobId: string;
+      jobNumber: number;
+      customerName: string;
+      teamName: string | null;
+      note: string | null;
+      at: string;
+    }[];
+  };
+  todayByStatus: { total: number; NEW: number; ASSIGNED: number; IN_PROGRESS: number; ON_HOLD: number; COMPLETED: number };
+  latest: { jobId: string; jobNumber: number; customerName: string; toStatus: JobStatus; note: string | null; by: string; at: string }[];
+  money: { toCollect: number; cashWithTeams: number; cashCount: number; readyToBill: number };
+};
+
+export const DASHBOARD_KEY = ['dashboard'] as const;
+export const useDashboard = () => queryOptions({ queryKey: DASHBOARD_KEY, queryFn: () => api.get<Dashboard>('/dashboard') });
+
 /** Today's jobs grouped as on Stitch screen 02. */
-const GROUPS: { key: string; tone: Tone; statuses: JobRow['status'][] }[] = [
+const GROUPS: { key: string; tone: Tone; statuses: (keyof Dashboard['todayByStatus'])[] }[] = [
   { key: 'notStarted', tone: 'teal', statuses: ['NEW', 'ASSIGNED'] },
   { key: 'working', tone: 'warn', statuses: ['IN_PROGRESS'] },
   { key: 'onHold', tone: 'orange', statuses: ['ON_HOLD'] },
   { key: 'done', tone: 'ok', statuses: ['COMPLETED'] },
 ];
 
+const KIND: Record<ActionKind, { title: string; icon: IconName; tone: Tone }> = {
+  HOLD_OURS: { title: 'kindHoldOurs', icon: 'alert-outline', tone: 'orange' },
+  HOLD_CUSTOMER: { title: 'kindHoldCustomer', icon: 'pause', tone: 'grey' },
+  FOLLOW_UP: { title: 'kindFollowUp', icon: 'repeat', tone: 'warn' },
+  NOT_SCHEDULED: { title: 'kindNotScheduled', icon: 'calendar-blank-outline', tone: 'info' },
+};
+
+const STATUS: Partial<Record<JobStatus, { icon: IconName; tone: Tone }>> = {
+  IN_PROGRESS: { icon: 'play-outline', tone: 'warn' },
+  ON_HOLD: { icon: 'pause', tone: 'orange' },
+  COMPLETED: { icon: 'check-circle-outline', tone: 'ok' },
+};
+
+const rupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
+const openJob = (id: string) => router.push({ pathname: '/jobs/[id]', params: { id } });
+
 /**
- * Owner Home (Stitch 02 / 75), limited to what exists today: jobs that still
- * need a team, today's jobs by status, and quick actions. A new business
- * without teams also sees the "Get started" card (D-027).
+ * Owner Home (Stitch 02, T4.12): what needs the owner now, from one
+ * `GET /dashboard` call. Pull down to refresh. A new business without teams
+ * also sees the "Get started" card (D-027).
  */
 export function OwnerHomeScreen() {
   const { t } = useTranslation();
   const language = useLanguage();
   const name = useSession((s) => s.profile?.user.name ?? null);
-  const today = useQuery(useJobs(`date=${dayString(0)}`));
-  const open = useQuery(useJobs('status=OPEN'));
+  const dash = useQuery(useDashboard());
   const teams = useQuery(useTeams());
-  const enquiries = useQuery(useEnquiries('OPEN'));
   const dayLabel = useDayLabel();
+
+  // The tab stays mounted: refresh when the owner comes back to it (not on the first focus).
+  const seen = useRef(false);
+  const { refetch } = dash;
+  useFocusEffect(
+    useCallback(() => {
+      if (seen.current) void refetch();
+      seen.current = true;
+    }, [refetch]),
+  );
 
   const hour = new Date().getHours();
   const greeting = t(hour < 12 ? 'uiOwner.goodMorning' : hour < 17 ? 'uiOwner.goodAfternoon' : 'uiOwner.goodEvening');
   const firstName = name?.trim().split(/\s+/)[0];
   const date = new Date().toLocaleDateString(`${language}-IN`, { weekday: 'short', day: 'numeric', month: 'short' });
+  const time = (at: string) => {
+    const d = new Date(at);
+    const clock = d.toLocaleTimeString(`${language}-IN`, { hour: 'numeric', minute: '2-digit' });
+    const isToday = d.toDateString() === new Date().toDateString();
+    return isToday ? clock : `${d.toLocaleDateString(`${language}-IN`, { day: 'numeric', month: 'short' })}, ${clock}`;
+  };
+  const refresh = () => {
+    void dash.refetch();
+    void teams.refetch();
+  };
 
-  const needTeam = (open.data ?? []).filter((j) => !j.teamId);
-  const next = needTeam[0];
-  const todayJobs = (today.data ?? []).filter((j) => j.status !== 'CANCELLED');
+  const d = dash.data;
+  const e = d?.enquiries;
+  const sources = e
+    ? Object.entries(e.bySource)
+        .sort((x, y) => y[1] - x[1])
+        .map(([s, count]) => t(`uiHome.src_${s}`, { count }))
+        .join(', ')
+    : '';
+  const more = d ? d.needsAction.count - d.needsAction.items.length : 0;
 
   return (
-    <Screen>
+    <Screen refreshControl={<RefreshControl refreshing={dash.isRefetching} onRefresh={refresh} />}>
       <View>
         <AppText variant="support" color={colors.slate}>
           {date}
@@ -66,17 +137,31 @@ export function OwnerHomeScreen() {
         </Card>
       ) : null}
 
-      {enquiries.data?.length ? (
+      {dash.isPending ? <ActivityIndicator color={colors.teal} accessibilityLabel={t('common.loading')} /> : null}
+      {dash.isError && !d ? (
+        <Card tone="warm">
+          <AppText weight="semibold">{t('uiHome.loadError')}</AppText>
+          <AppText color={colors.bad}>{errorMessage(t, dash.error)}</AppText>
+          <Button variant="text" label={t('common.retry')} onPress={refresh} />
+        </Card>
+      ) : null}
+
+      {d && e && e.open > 0 ? (
         <Card
           onPress={() => router.navigate({ pathname: '/jobs', params: { show: 'enquiries' } })}
-          accessibilityLabel={t('uiEnquiry.openCount', { count: enquiries.data.length })}
+          accessibilityLabel={t('uiEnquiry.openCount', { count: e.open })}
         >
           <View style={styles.between}>
             <View style={styles.flex}>
-              <AppText weight="semibold">{t('uiEnquiry.openCount', { count: enquiries.data.length })}</AppText>
+              <AppText weight="semibold">{t('uiEnquiry.openCount', { count: e.open })}</AppText>
               <AppText variant="small" color={colors.slate} numberOfLines={1}>
-                {t('uiEnquiry.newest', { name: enquiries.data[0].customerName })}
+                {sources ? t('uiHome.bySource', { list: sources }) : null}
               </AppText>
+              {e.newest ? (
+                <AppText variant="small" color={colors.slate} numberOfLines={1}>
+                  {t('uiEnquiry.newest', { name: e.newest.customerName })}
+                </AppText>
+              ) : null}
             </View>
             <AppText weight="semibold" color={colors.teal}>
               {t('uiEnquiry.view')}
@@ -85,48 +170,96 @@ export function OwnerHomeScreen() {
         </Card>
       ) : null}
 
-      {next ? (
-        <View style={styles.needTeam}>
+      {d?.needTeam.next ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('uiOwner.needTeam', { count: d.needTeam.count })}
+          onPress={() => router.navigate({ pathname: '/jobs', params: { show: 'open' } })}
+          style={({ pressed }) => [styles.needTeam, pressed && { opacity: 0.9 }]}
+        >
           <View style={styles.countBox}>
             <AppText weight="bold" color={colors.white}>
-              {needTeam.length}
+              {d.needTeam.count}
             </AppText>
           </View>
           <View style={styles.flex}>
             <AppText weight="semibold" color={colors.ink}>
-              {t('uiOwner.needTeam', { count: needTeam.length })}
+              {t('uiOwner.needTeam', { count: d.needTeam.count })}
             </AppText>
             <AppText variant="small" color={colors.slate} numberOfLines={1}>
-              {t('uiOwner.needTeamNext', { name: next.customerName, day: dayLabel(next.scheduledDate) })}
+              {t('uiOwner.needTeamNext', { name: d.needTeam.next.customerName, day: dayLabel(d.needTeam.next.scheduledDate) })}
             </AppText>
           </View>
           <Pressable
             accessibilityRole="button"
-            onPress={() => router.push({ pathname: '/jobs/[id]', params: { id: next.id } })}
+            onPress={() => openJob(d.needTeam.next!.id)}
             style={({ pressed }) => [styles.assignBtn, pressed && { opacity: 0.85 }]}
           >
             <AppText variant="support" weight="semibold" color={colors.white}>
               {t('uiOwner.assign')}
             </AppText>
           </Pressable>
-        </View>
+        </Pressable>
       ) : null}
 
-      <Card>
-        <View style={styles.between}>
-          <AppText variant="section">{t('uiOwner.todayCount', { count: todayJobs.length })}</AppText>
-          <Pressable accessibilityRole="link" onPress={() => router.navigate('/jobs')} hitSlop={12}>
-            <AppText weight="semibold" color={colors.teal}>
-              {t('uiOwner.seeAll')}
+      {d ? (
+        <Card>
+          <View>
+            <AppText variant="section">{t('uiHome.needsAction', { count: d.needsAction.count })}</AppText>
+            <AppText variant="small" color={colors.slate}>
+              {t('uiHome.needsActionSub')}
             </AppText>
-          </Pressable>
-        </View>
-        {today.isPending ? <ActivityIndicator color={colors.teal} /> : null}
-        {today.isError ? <AppText color={colors.bad}>{errorMessage(t, today.error)}</AppText> : null}
-        {today.data ? (
+          </View>
+          {d.needsAction.count === 0 ? (
+            <View style={styles.empty}>
+              <Icon name="check-all" size={24} color={colors.ok} />
+              <AppText weight="semibold">{t('uiHome.allClear')}</AppText>
+              <AppText variant="small" color={colors.slate}>
+                {t('uiHome.allClearBody')}
+              </AppText>
+            </View>
+          ) : null}
+          {d.needsAction.items.map((a) => {
+            const k = KIND[a.kind];
+            const title = t(`uiHome.${k.title}`);
+            return (
+              <Row
+                key={`${a.kind}-${a.jobId}`}
+                icon={k.icon}
+                tone={k.tone}
+                title={a.note ? t('uiHome.withReason', { title, reason: a.note }) : title}
+                sub={[a.customerName, a.teamName ?? t('uiOwner.noTeamYet'), `#${a.jobNumber}`].join(' · ')}
+                onPress={() => openJob(a.jobId)}
+              />
+            );
+          })}
+          {more > 0 ? (
+            <Pressable accessibilityRole="link" onPress={() => router.navigate({ pathname: '/jobs', params: { show: 'open' } })} hitSlop={12}>
+              <AppText weight="semibold" color={colors.teal}>
+                {t('uiHome.moreRows', { count: more })}
+              </AppText>
+            </Pressable>
+          ) : null}
+        </Card>
+      ) : null}
+
+      {d ? (
+        <Card>
+          <View style={styles.between}>
+            <AppText variant="section">{t('uiOwner.todayCount', { count: d.todayByStatus.total })}</AppText>
+            <Pressable
+              accessibilityRole="link"
+              onPress={() => router.navigate({ pathname: '/jobs', params: { show: 'today' } })}
+              hitSlop={12}
+            >
+              <AppText weight="semibold" color={colors.teal}>
+                {t('uiOwner.seeAll')}
+              </AppText>
+            </Pressable>
+          </View>
           <View style={styles.chips}>
             {GROUPS.map((g) => {
-              const n = todayJobs.filter((j) => g.statuses.includes(j.status)).length;
+              const n = g.statuses.reduce((s, st) => s + d.todayByStatus[st], 0);
               return (
                 <View key={g.key} style={[styles.countChip, { backgroundColor: tones[g.tone].fill }]}>
                   <AppText variant="small" weight="semibold" color={tones[g.tone].text} numberOfLines={1}>
@@ -136,14 +269,112 @@ export function OwnerHomeScreen() {
               );
             })}
           </View>
-        ) : null}
-      </Card>
+        </Card>
+      ) : null}
+
+      {d ? (
+        <Card>
+          <View>
+            <AppText variant="section">{t('uiHome.latest')}</AppText>
+            <AppText variant="small" color={colors.slate}>
+              {t('uiHome.latestSub')}
+            </AppText>
+          </View>
+          {d.latest.length === 0 ? (
+            <AppText variant="support" color={colors.slate}>
+              {t('uiHome.latestEmpty')}
+            </AppText>
+          ) : null}
+          {d.latest.map((l, i) => {
+            const s = STATUS[l.toStatus] ?? { icon: 'sync' as IconName, tone: 'grey' as Tone };
+            const key = STATUS[l.toStatus] ? `uiHome.st_${l.toStatus}` : 'uiHome.st_OTHER';
+            const title = t(key);
+            return (
+              <Row
+                key={`${l.jobId}-${l.at}-${i}`}
+                icon={s.icon}
+                tone={s.tone}
+                title={l.note && l.toStatus === 'ON_HOLD' ? t('uiHome.withReason', { title, reason: l.note }) : title}
+                sub={[l.customerName, `#${l.jobNumber}`, l.by, time(l.at)].filter(Boolean).join(' · ')}
+                onPress={() => openJob(l.jobId)}
+              />
+            );
+          })}
+        </Card>
+      ) : null}
+
+      {d && d.money.readyToBill > 0 ? (
+        <Card onPress={() => router.navigate('/billing')} accessibilityLabel={t('uiHome.readyToBill', { count: d.money.readyToBill })}>
+          <View style={styles.between}>
+            <View style={styles.flex}>
+              <AppText weight="semibold">{t('uiHome.readyToBill', { count: d.money.readyToBill })}</AppText>
+              <AppText variant="small" color={colors.slate}>
+                {t('uiHome.readyToBillSub')}
+              </AppText>
+            </View>
+            <AppText weight="semibold" color={colors.teal}>
+              {t('uiHome.open')}
+            </AppText>
+          </View>
+        </Card>
+      ) : null}
+
+      {d ? (
+        <Card onPress={() => router.navigate('/billing')} accessibilityLabel={t('uiHome.moneyToCollect')}>
+          <View style={styles.between}>
+            <AppText variant="section">{t('uiHome.moneyToCollect')}</AppText>
+            <AppText weight="semibold" color={colors.teal}>
+              {t('uiHome.open')}
+            </AppText>
+          </View>
+          <View style={styles.money}>
+            <View style={styles.flex}>
+              <AppText variant="title">{rupees(d.money.toCollect)}</AppText>
+              <AppText variant="small" color={colors.slate}>
+                {t('uiHome.fromBills')}
+              </AppText>
+            </View>
+            <View style={styles.right}>
+              <AppText variant="section" color={d.money.cashWithTeams > 0 ? colors.orange : colors.slate}>
+                {rupees(d.money.cashWithTeams)}
+              </AppText>
+              <AppText variant="small" color={colors.slate}>
+                {t('uiHome.withTeams')}
+              </AppText>
+            </View>
+          </View>
+        </Card>
+      ) : null}
 
       <View style={styles.grid}>
         <QuickAction primary icon="plus" label={t('jobs.new')} onPress={() => router.push('/jobs/new')} />
         <QuickAction icon="account-plus-outline" label={t('customers.add')} onPress={() => router.push('/customers/new')} />
       </View>
     </Screen>
+  );
+}
+
+function Row({ icon, tone, title, sub, onPress }: { icon: IconName; tone: Tone; title: string; sub: string; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`${title}. ${sub}`}
+      onPress={onPress}
+      style={({ pressed }) => [styles.row, pressed && { opacity: 0.7 }]}
+    >
+      <View style={[styles.rowIcon, { backgroundColor: tones[tone].fill }]}>
+        <Icon name={icon} size={20} color={tones[tone].text} />
+      </View>
+      <View style={styles.flex}>
+        <AppText weight="semibold" numberOfLines={1}>
+          {title}
+        </AppText>
+        <AppText variant="small" color={colors.slate} numberOfLines={1}>
+          {sub}
+        </AppText>
+      </View>
+      <Icon name="chevron-right" size={20} color={colors.muted} />
+    </Pressable>
   );
 }
 
@@ -170,6 +401,7 @@ function QuickAction({ icon, label, onPress, primary }: { icon: IconName; label:
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  right: { alignItems: 'flex-end' },
   between: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.sm },
   needTeam: {
     flexDirection: 'row',
@@ -183,6 +415,10 @@ const styles = StyleSheet.create({
   },
   countBox: { width: 32, height: 32, borderRadius: radius.md, backgroundColor: colors.info, alignItems: 'center', justifyContent: 'center' },
   assignBtn: { minHeight: 40, paddingHorizontal: space.lg, borderRadius: radius.md, backgroundColor: colors.info, justifyContent: 'center' },
+  empty: { alignItems: 'center', gap: space.xs, paddingVertical: space.sm },
+  row: { flexDirection: 'row', alignItems: 'center', gap: space.md, minHeight: 48, paddingVertical: space.xs },
+  rowIcon: { width: 36, height: 36, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+  money: { flexDirection: 'row', alignItems: 'flex-end', gap: space.md },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   countChip: { flexGrow: 1, borderRadius: radius.md, paddingHorizontal: space.sm, paddingVertical: space.sm, alignItems: 'center' },
   grid: { flexDirection: 'row', gap: space.md },
