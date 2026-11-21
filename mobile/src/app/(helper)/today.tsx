@@ -1,9 +1,2 @@
-import { useTranslation } from 'react-i18next';
-
-import { Placeholder } from '@/components/ui/placeholder';
-
-/** The team's current job arrives with the jobs module; for now the prototype's note. */
-export default function TodayScreen() {
-  const { t } = useTranslation();
-  return <Placeholder title={t('field.noJobs')} body={t('helper.helperNote')} />;
-}
+/** Helper's view of the team's jobs, no report to fill (Q-01, D-031). */
+export { TodayScreen as default } from '@/features/field/field';

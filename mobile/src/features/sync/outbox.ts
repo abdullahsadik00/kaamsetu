@@ -208,6 +208,15 @@ export class Outbox {
     return before?.n ?? 0;
   }
 
+  /** Operations on one record that the server has not accepted yet, oldest first. */
+  async unsentFor(entityType: string, entityId: string): Promise<OutboxOperation[]> {
+    const rows = await this.db.getAllAsync<Row>(
+      `SELECT * FROM outbox WHERE entity_type = ? AND entity_id = ? AND state <> 'SENT' ORDER BY seq`,
+      [entityType, entityId],
+    );
+    return rows.map(fromRow);
+  }
+
   /** Saved on this phone but not yet accepted by the server. */
   async unsentCount(): Promise<number> {
     const row = await this.db.getFirstAsync<{ n: number }>(

@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { AppState } from 'react-native';
 
 import { deleteUserDatabase, openUserDatabase } from '@/db/database';
+import type { SqlDatabase } from '@/db/sql';
 import { api, onLogout } from '@/features/auth/session';
 
 import { Outbox, type OutboxOperation } from './outbox';
@@ -38,7 +39,7 @@ async function transport(op: OutboxOperation): Promise<SendResult> {
   return { result: r.status, code: r.code ?? r.status.toUpperCase() };
 }
 
-let active: { userId: string; outbox: Outbox; sender: OutboxSender } | null = null;
+let active: { userId: string; outbox: Outbox; sender: OutboxSender; db: SqlDatabase } | null = null;
 
 /** Count of saved changes the server has not accepted yet (0 before the DB is open). */
 export async function unsentCount(): Promise<number> {
@@ -48,6 +49,11 @@ export async function unsentCount(): Promise<number> {
 /** Call after each local save, so it goes out right away when online. */
 export function notifyLocalSave(): void {
   void active?.sender.trigger();
+}
+
+/** The user's open database, for cached data (null until ready). */
+export function currentDb(): SqlDatabase | null {
+  return active?.db ?? null;
 }
 
 /** The open outbox, for features that queue work (null until the DB is ready). */
@@ -70,7 +76,7 @@ export function SyncEngine({ userId }: { userId: string }) {
         if (cancelled) return;
         const outbox = new Outbox(db);
         mine = new OutboxSender({ outbox, transport });
-        active = { userId, outbox, sender: mine };
+        active = { userId, outbox, sender: mine, db };
         await outbox.prune();
         await mine.start();
       })
