@@ -3,6 +3,7 @@ import { CurrentAuth } from '../auth/auth.guard.js';
 import { Roles } from '../auth/roles.js';
 import type { AuthContext } from '../auth/token.service.js';
 import { BillingModule } from '../billing/billing.controller.js';
+import { UpdatesModule } from '../updates/updates.js';
 import { DashboardService } from './dashboard.service.js';
 
 /** Owner home cards in one call (Stitch 02, T4.12, D-036). Owner only. */
@@ -17,5 +18,5 @@ export class DashboardController {
   }
 }
 
-@Module({ imports: [BillingModule], controllers: [DashboardController], providers: [DashboardService] })
+@Module({ imports: [BillingModule, UpdatesModule], controllers: [DashboardController], providers: [DashboardService] })
 export class DashboardModule {}

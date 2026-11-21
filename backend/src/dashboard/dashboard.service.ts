@@ -6,6 +6,10 @@ import type { EnquirySource, JobStatus, MemberRole, ReportOutcome } from '../gen
 import { fromDate, toDate } from '../jobs/jobs.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg, scoped } from '../tenancy/tenant.js';
+import { UpdatesService } from '../updates/updates.js';
+import { holdSide } from './hold-side.js';
+
+export { holdSide } from './hold-side.js';
 
 const OPEN: JobStatus[] = ['NEW', 'ASSIGNED', 'IN_PROGRESS', 'ON_HOLD'];
 /** Statuses shown on the "Today" card (cancelled jobs are left out). */
@@ -18,13 +22,15 @@ const FOLLOW_UP_DAYS = 30;
 
 /**
  * Why a job needs the owner (T4.12):
+ * - PART_NEEDED: the team asked for a part (T4.7) on a job that is still open,
  * - HOLD_OURS: team can't continue (tool, gas, part, second person…),
  * - HOLD_CUSTOMER: customer not ready,
  * - NOT_SCHEDULED: open job without a day (appointment not fixed yet),
  * - FOLLOW_UP: the finish page said "needs another visit" / "couldn't do it" and no follow-up job exists.
  */
-export type ActionKind = 'HOLD_OURS' | 'HOLD_CUSTOMER' | 'NOT_SCHEDULED' | 'FOLLOW_UP';
-const ORDER: ActionKind[] = ['HOLD_OURS', 'HOLD_CUSTOMER', 'FOLLOW_UP', 'NOT_SCHEDULED'];
+export type ActionKind = 'PART_NEEDED' | 'HOLD_OURS' | 'HOLD_CUSTOMER' | 'NOT_SCHEDULED' | 'FOLLOW_UP';
+/** One row per job: the first kind in this order wins. */
+const ORDER: ActionKind[] = ['PART_NEEDED', 'HOLD_OURS', 'HOLD_CUSTOMER', 'FOLLOW_UP', 'NOT_SCHEDULED'];
 
 type ActionRow = {
   kind: ActionKind;
@@ -37,25 +43,13 @@ type ActionRow = {
   at: Date;
 };
 
-/** Splits a hold note saved by the sync endpoint ("Our side: reason", "Customer side: reason"). */
-export function holdSide(note: string | null): { side: 'OURS' | 'CUSTOMER' | null; reason: string | null } {
-  if (!note) return { side: null, reason: null };
-  for (const [prefix, side] of [
-    ['Our side', 'OURS'],
-    ['Customer side', 'CUSTOMER'],
-  ] as const) {
-    if (note === prefix) return { side, reason: null };
-    if (note.startsWith(`${prefix}: `)) return { side, reason: note.slice(prefix.length + 2) || null };
-  }
-  return { side: null, reason: note };
-}
-
 /** Owner home (Stitch 02, T4.12): every count comes from the same rules as the lists it opens. */
 @Injectable()
 export class DashboardService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly billing: BillingService,
+    private readonly updates: UpdatesService,
   ) {}
 
   async get(auth: AuthContext) {
@@ -63,13 +57,15 @@ export class DashboardService {
     const org = await this.prisma.organization.findUnique({ where: { id: organizationId }, select: { timezone: true } });
     const today = dayIn(org?.timezone ?? 'Asia/Kolkata', new Date());
 
-    const [enquiries, needTeam, todayJobs, actions, latest, money] = await Promise.all([
+    const [enquiries, needTeam, todayJobs, actions, latest, money, feed, unread] = await Promise.all([
       this.enquiries(auth),
       this.needTeam(auth),
       this.today(auth, today),
       this.needsAction(auth),
       this.latest(auth),
       this.billing.summary(auth),
+      this.updates.latest(auth, LATEST_ROWS),
+      this.updates.unread(auth),
     ]);
 
     const customerIds = [
@@ -125,6 +121,8 @@ export class DashboardService {
         by: l.by,
         at: l.at,
       })),
+      // "Updates from teams" (T4.7): the bell's unread count and the newest rows of the same feed.
+      updates: { unread: unread.unread, latest: feed },
       money: {
         // Same numbers as GET /billing/summary (one place for money math).
         toCollect: money.toCollect,
@@ -222,7 +220,29 @@ export class DashboardService {
     });
     const hasFollowUp = new Set(followed.map((f) => f.followUpOfJobId));
 
-    const rows: ActionRow[] = [
+    // Parts asked for on jobs still open (T4.7); the newest request per job.
+    const parts = await this.prisma.jobUpdate.findMany({
+      where: scoped(auth, { type: 'PART_NEEDED' as const, job: { status: { in: OPEN } } }),
+      orderBy: { receivedAt: 'desc' },
+      select: { jobId: true, payload: true, receivedAt: true, job: { select: { jobNumber: true, customerId: true, assignedTeamId: true } } },
+    });
+    const partRows = new Map<string, ActionRow>();
+    for (const p of parts) {
+      if (partRows.has(p.jobId)) continue;
+      const body = (p.payload ?? {}) as { part?: string; qty?: number; note?: string };
+      partRows.set(p.jobId, {
+        kind: 'PART_NEEDED',
+        jobId: p.jobId,
+        jobNumber: p.job.jobNumber,
+        customerId: p.job.customerId,
+        teamId: p.job.assignedTeamId,
+        note: [`${body.qty ?? 1} × ${body.part ?? ''}`, body.note].filter(Boolean).join(' · '),
+        at: p.receivedAt,
+      });
+    }
+
+    const all: ActionRow[] = [
+      ...partRows.values(),
       ...held.map((j): ActionRow => {
         const h = lastHold.get(j.id);
         const { side, reason } = holdSide(h?.note ?? null);
@@ -261,7 +281,10 @@ export class DashboardService {
         }),
       ),
     ];
-    rows.sort((x, y) => ORDER.indexOf(x.kind) - ORDER.indexOf(y.kind) || y.at.getTime() - x.at.getTime());
+    all.sort((x, y) => ORDER.indexOf(x.kind) - ORDER.indexOf(y.kind) || y.at.getTime() - x.at.getTime());
+    // A job shows once, under its most pressing reason (part needed before a hold or a missing day).
+    const shown = new Set<string>();
+    const rows = all.filter((r) => !shown.has(r.jobId) && !!shown.add(r.jobId));
     return { count: rows.length, items: rows.slice(0, ACTION_ROWS) };
   }
 
