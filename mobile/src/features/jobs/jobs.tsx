@@ -110,12 +110,16 @@ export function JobsScreen() {
   const params = useLocalSearchParams<{ show?: string }>();
   const [segment, setSegment] = useState<'enquiries' | 'jobs'>(params.show === 'enquiries' ? 'enquiries' : 'jobs');
   const [shown, setShown] = useState(params.show);
-  // Home's "open enquiries" card navigates here with ?show=enquiries.
+  const [view, setView] = useState<'today' | 'tomorrow' | 'open' | 'done'>(params.show === 'open' ? 'open' : 'today');
+  // Home cards open this tab with ?show=enquiries, ?show=open (jobs needing a team) or ?show=today.
   if (params.show !== shown) {
     setShown(params.show);
     if (params.show === 'enquiries') setSegment('enquiries');
+    if (params.show === 'open' || params.show === 'today') {
+      setSegment('jobs');
+      setView(params.show);
+    }
   }
-  const [view, setView] = useState<'today' | 'tomorrow' | 'open' | 'done'>('today');
   const filter =
     view === 'today' ? `date=${dayString(0)}` : view === 'tomorrow' ? `date=${dayString(1)}` : view === 'open' ? 'status=OPEN' : 'status=COMPLETED';
   const jobs = useQuery({ ...useJobs(filter), enabled: segment === 'jobs' });
