@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, SectionLabel } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
+import { rupees, useOutstanding } from '@/features/billing/api';
 import { colors, radius, space } from '@/theme/tokens';
 
 import {
@@ -79,6 +80,8 @@ export function CustomerScreen() {
           onPress={() => router.push({ pathname: '/jobs/new', params: { customerId: id } })}
         />
       </Card>
+
+      <OutstandingCard customerId={id} />
 
       {c.sites.map((s) => (
         <Card key={s.id}>
@@ -174,8 +177,52 @@ export function CustomerScreen() {
   );
 }
 
+/** What the customer still owes (T4.11), with New bill / New quotation for them. */
+function OutstandingCard({ customerId }: { customerId: string }) {
+  const { t } = useTranslation();
+  const due = useQuery(useOutstanding(customerId));
+  const o = due.data;
+  return (
+    <Card>
+      <SectionLabel>{t('uiBilling.outstanding')}</SectionLabel>
+      {due.isPending ? <ActivityIndicator color={colors.teal} /> : null}
+      {due.isError ? <AppText color={colors.bad}>{errorMessage(t, due.error)}</AppText> : null}
+      {o ? (
+        <>
+          <AppText variant="title" color={o.outstanding > 0 ? colors.tealTintText : colors.ok} testID="outstanding">
+            {o.outstanding > 0 ? rupees(o.outstanding) : t('uiBilling.nothingDue')}
+          </AppText>
+          {o.billed ? (
+            <AppText variant="support" color={colors.slate}>
+              {t('uiBilling.billedReceived', { billed: rupees(o.billed), received: rupees(o.received) })}
+            </AppText>
+          ) : null}
+        </>
+      ) : null}
+      <View style={styles.badges}>
+        <View style={{ flex: 1 }}>
+          <Button
+            variant="soft"
+            icon="receipt-text-outline"
+            label={t('uiBilling.newBill')}
+            onPress={() => router.push({ pathname: '/bills/new', params: { customerId } })}
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Button
+            variant="soft"
+            icon="file-document-outline"
+            label={t('uiBilling.newQuote')}
+            onPress={() => router.push({ pathname: '/quotations/new', params: { customerId } })}
+          />
+        </View>
+      </View>
+    </Card>
+  );
+}
+
 const styles = StyleSheet.create({
-  badges: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  badges:{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   ac: {
     minHeight: 56,
     flexDirection: 'row',
