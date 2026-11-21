@@ -150,7 +150,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Tests:** all 12 scenarios in doc 09 §10, automated where possible, plus real-phone run.
 - **Acceptance:** 3 days offline with 5 jobs and 20 photos syncs with zero loss and zero duplicates.
 
-### T4.10 Invoicing and quotations — Critical — In Progress (backend built early under D-034: bills KS-0001 and quotations Q-001, totals in paise, discount, provisional GST, issue/cancel, bill from job, quotation → bill; 6971f80. App screens, PDF and WhatsApp share next; phone test TP-34) — depends T4.8 (and Q-04 for GST)
+### T4.10 Invoicing and quotations — Critical — In Progress (backend built early under D-034: bills KS-0001 and quotations Q-001, totals in paise, discount, provisional GST, issue/cancel, bill from job, quotation → bill; 6971f80. App done 22 Nov 2026: Billing tab, bill/quotation forms and pages, draft edit with version check, issue, cancel, PDF via share sheet, Make bill on completed jobs. Not built: rate-list picker, changing bill date, billing offline; GST rates wait for Q-04; phone test TP-34) — depends T4.8 (and Q-04 for GST)
 - **Objective:** bill from a completed job in under 2 minutes.
 - **Stories:** create a written quotation for big jobs, share as PDF, convert to bill (D-020); create bill from job (prefilled parts/services and ticket charges); add lines; discount; GST per line if enabled; issue; PDF; share on WhatsApp; cancel with reason.
 - **DB:** Invoice, InvoiceItem, numbering. **API:** doc 06 §8.
@@ -158,7 +158,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Tests:** money suite (doc 12 §2); numbering under concurrency; PDF contains required fields.
 - **Acceptance:** bill PDF shared on WhatsApp from a completed job in < 2 minutes.
 
-### T4.11 Payment tracking — Critical — In Progress (backend built early under D-034: payments with idempotency key, over-pay guard, void, customer outstanding, confirm/reject team cash; 6971f80. App screens next; phone test TP-35) — depends T4.10
+### T4.11 Payment tracking — Critical — In Progress (backend built early under D-034: payments with idempotency key, over-pay guard, void, customer outstanding, confirm/reject team cash; 6971f80. App done 22 Nov 2026: Record payment with idempotency key and over-pay prompt, Remove payment, Cash with teams Got it / Not received, customer outstanding; phone test TP-35) — depends T4.10
 - **Objective:** always know who owes what.
 - **Stories:** record cash/UPI/bank/other payment, partial or full, several per bill; see Paid/Partly paid/Not paid; confirm or reject cash handed over by teams (if Q-03).
 - **DB:** Payment, PaymentAllocation, CashCollection status. **API:** doc 06 §8.

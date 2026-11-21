@@ -2,6 +2,11 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-22 — Billing app screens (T4.10/T4.11, D-034)
+
+- App: Billing tab with To collect, cash with teams, Ready to bill (**Make bill**) and **Cash with teams** (**Got it** / **Not received** with a reason), plus **Bills | Quotations** with To collect / Not paid / Partly paid / Paid / All bills. New bill (blank, from the customer page, or filled from a completed job) with item and discount sheets and GST per line as CGST + SGST (provisional, Q-04); draft edit with version check, **Save bill** (issue), cancel with a reason. Bill page with **Record payment** (cash/UPI/bank/other, one idempotency key per form, asks before over-paying) and **Remove payment** with a reason. Quotations: create, edit, **Send quotation**, cancel, **Turn into bill**. PDFs go out through the share sheet; **Send reminder** opens WhatsApp. **Make bill** on completed jobs; the customer page shows what they owe. New packages `expo-print`, `expo-sharing` (new native build). 14 component tests.
+- Not yet: rate-list picker, changing the bill date, billing offline, final GST rates (Q-04).
+
 ## 2026-11-22 — Offline sync on the phone (T4.9, D-035)
 
 - App: field staff's jobs live in the phone's database (migration 2); My Work and Today's work work fully offline. Sends saved work first, then downloads only what changed (full download on first login, business switch or when the server asks). Syncs on open, back in front, internet back, after each save, pull-to-refresh and every minute; never two at once. Jobs taken away leave the phone; one with unsent work stays with **Needs attention** and the reason (cancelled, another team, already finished) until **OK, got it**. Cards and job page show Saved on phone / Sending… / Sent / Needs attention. Logout deletes the phone's data; a business switch clears it, including the old business's unsent work.

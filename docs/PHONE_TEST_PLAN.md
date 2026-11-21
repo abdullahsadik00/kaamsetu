@@ -66,8 +66,8 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-31 | Paste a service-centre ticket | T4.5a | Not built yet | | Needs ticket samples |
 | TP-32 | Job photos | T4.8 | Not built yet | | Needs a storage bucket (D-026) |
 | TP-33 | Three days offline | T4.9 | Pending | | Needs the next APK; photos later |
-| TP-34 | Quotations and bills | T4.10 | Not built yet | | GST waits for Q-04 |
-| TP-35 | Payments | T4.11 | Not built yet | | |
+| TP-34 | Quotations and bills | T4.10 | Pending | | Needs the next APK; GST rates wait for Q-04 |
+| TP-35 | Payments | T4.11 | Pending | | Needs the next APK |
 | TP-36 | Home dashboard | T4.12 | Pending | | Needs the next APK |
 | TP-37 | Hindi and Marathi wording review | T3.14 | Pending | | Needs a Hindi and a Marathi speaker |
 | TP-38 | Usability test with real users | T5.6 | Not built yet | | After TP-36 |
@@ -333,6 +333,48 @@ Same as TP-06, with **Test Helper**, the helper's Google account and **900000300
 - Step 13: jobs download fresh and nothing old is left.
 - Optional, two phones: a job given to Team 1 while the senior is offline appears once back online; a job moved to **Team 2** disappears (or shows **Needs attention** "This job was given to another team…" if work was saved on it).
 
+### TP-34 Quotations and bills (T4.10)
+1. Owner: **Customers** › **Rohan Kulkarni**; under "To collect from this customer" tap **New quotation**.
+2. **Add item**: "AMC visit, split AC", Qty **3**, Rate **2100**, **Save item**. **Discount** › **₹100** › **Apply discount**. **Save quotation**.
+3. On **Quotation Q-001** tap **Send quotation** and pick WhatsApp.
+4. Back in the app tap **Turn into bill**.
+5. Open a completed job with parts (Jobs › Done) › **Make bill**. Tap a part line, set its **Rate**, **Save item**, then **Save draft**.
+6. **Edit draft**, change a rate, **Save changes**, then **Save bill**.
+7. **Send bill**, pick WhatsApp, send to your own number. Time steps 5–7.
+8. Open the same job again and tap **Make bill**.
+9. If the business makes GST bills: **Billing** › **New bill**, a GST customer, turn on **GST bill**, add "Deep cleaning, cassette AC", Qty **2**, Rate **1800**, GST **18%**, **Save draft**, **Save bill**.
+10. On any saved bill: **More** › **Cancel bill**; try an empty reason, then "Wrong customer" › **Cancel bill**.
+
+**Expected**
+- Step 2: total ₹6,200 (₹6,300 − ₹100) and "Number given when saved".
+- Step 3: PDF says QUOTATION, Q-001 and "This is a price quotation, not a bill."; in **Billing** › **Quotations** it shows **Sent**.
+- Step 4: a draft bill opens with the same lines and discount; the quotation shows **Made into bill**.
+- Step 5: "Filled from the work report…" with the service line and parts, and money received on site if the team took cash.
+- Step 6: change kept; after **Save bill** it shows **Not paid** (or **Partly paid**) and can no longer be edited.
+- Step 7: PDF has business name, KS number, customer, lines and balance; all in under 2 minutes.
+- Step 8: "This job already has a bill." with **Open bill**.
+- Step 9: CGST 9% ₹324 and SGST 9% ₹324, Bill total ₹4,248, GSTIN shown (rates provisional until Q-04).
+- Step 10: button disabled until a reason is typed; bill shows **Cancelled** with the reason and leaves **To collect**.
+
+### TP-35 Payments (T4.11)
+1. Owner: **Billing**, note **To collect**, open a **Not paid** bill (e.g. ₹6,100).
+2. **Record payment** › **₹3,050** (half) › **Cash** › **Today** › **Save payment · ₹3,050 Cash** — tap it twice quickly.
+3. **Record payment** again, keep the full amount, **UPI**, save.
+4. On another bill, **Record payment**, type **99999**, **Bank**, save; close without **Save anyway**.
+5. On the first bill, **Remove payment** under the UPI payment, reason "Entered twice".
+6. Senior finishes a job taking ₹1,000 cash. Owner: **Billing** › **Cash with teams** › **Got it**.
+7. Another job: **Not received**, reason "Santosh still has it".
+8. Open the first bill's customer.
+
+**Expected**
+- Step 2: exactly one cash payment; **Partly paid**, Remaining ₹3,050; To collect drops by ₹3,050.
+- Step 3: **Paid**, Remaining ₹0; bill moves to **Paid**.
+- Step 4: "This is more than what is left (₹…)" with **Save anyway**; nothing saved.
+- Step 5: UPI line struck through with "Removed: Entered twice"; back to **Partly paid**.
+- Step 6: entry leaves **Cash with teams**; if the job has a saved bill, a Cash payment from the team appears on it.
+- Step 7: entry leaves the list and is not added to any bill.
+- Step 8: "To collect from this customer" ₹3,050, "Billed ₹6,100 · Received ₹3,050".
+
 ### TP-36 Home dashboard (T4.12)
 1. Owner: make sure there is at least one open enquiry from **WhatsApp** and one from **Call** (TP-30).
 2. **Jobs** › **New** (+): make a job for **Rohan Kulkarni** with no team and no day, then **Create job & assign**.
@@ -372,7 +414,5 @@ Claude writes the full steps when each feature ships and changes its status to *
 
 - **TP-31 Service-centre ticket paste (T4.5a):** paste a brand ticket message and get name, phone, address, pincode, job type, ticket number and charges filled in; a duplicate ticket shows a warning; unknown text falls back to manual entry without losing what was pasted.
 - **TP-32 Job photos (T4.8):** add photos on the finish page; they upload, also later when you're back online; the owner sees them on the job.
-- **TP-34 Quotations and bills (T4.10):** quotation PDF shared and turned into a bill; a bill from a completed job, prefilled with parts and services, shared on WhatsApp in under 2 minutes; discount; GST per line (after Q-04); cancel with a reason.
-- **TP-35 Payments (T4.11):** full and partial cash, UPI and bank payments; **Paid / Partly paid / Not paid**; confirm or reject cash the teams handed over; tapping twice records one payment.
 - **TP-37 Hindi and Marathi review (T3.14):** a Hindi speaker and a Marathi speaker go through the login, owner, join, employee and field screens in their language and note wrong or odd wording. This can run now.
 - **TP-38 Usability test (T5.6):** the real owner and a real technician use the built app for a normal day with no help (kit: `discovery/USABILITY_TEST_KIT.md`).
