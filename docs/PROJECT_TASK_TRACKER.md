@@ -128,7 +128,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Tests:** state machine exhaustive; assignment history; isolation; technician sees job after assignment.
 - **Acceptance:** repeat-customer job created and assigned in ≈ 1 minute by the owner.
 
-### T4.7 Technician job workflow — Critical — Not Started — depends T4.6, T3.8
+### T4.7 Technician job workflow — Critical — In Progress (built early under D-031: `GET /my/jobs` team-scoped, helpers slimmer (Q-01); Start/Hold/Finish saved in the phone outbox and sent to `POST /sync/operations`, idempotent; My Work and helper Today's work screens with call and directions, last list kept offline; backend b7a5789, app a8d37f4; job updates feed, "Latest from teams" and part-needed reasons later; phone test pending) — depends T4.6, T3.8
 - **Objective:** technician knows what to do and reports progress.
 - **Stories:** My Work (today/tomorrow); job detail; call; directions; appointment fixed; start; part needed; customer not ready; can't continue; note; owner sees "Latest from teams".
 - **Frontend:** built on the local SQLite store from day one. **DB:** JobUpdate. **API:** `POST /jobs/:id/updates`, sync pull.

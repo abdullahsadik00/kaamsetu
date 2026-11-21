@@ -9,6 +9,15 @@ Meaningful product, documentation, architecture and implementation changes, newe
 - `docs/design/STITCH_PROMPTS.md`: a strict base prompt plus 83 numbered, ready-to-paste Stitch prompts (all owner, technician, helper, sign-in, setup and settings screens, sheets, dialogs and offline/empty/error/language variants). Sample data matches the prototype; open decisions appear as visible placeholders.
 - `docs/design/STITCH_PROTOTYPE_PROMPTS.md`: prompts that link the Stitch screens into one clickable prototype (base rules, 12 link prompts following flows F1–F17, a check prompt, fix prompts and a full link table for wiring by hand or in Figma). No new screens.
 
+## 2026-11-21 — Technician job workflow (T4.7, early under D-031)
+
+### Added
+- Senior technicians see their team's open jobs on My Work: customer, address, problem, ACs and amount to collect, with Call and Directions. Start work, Put on hold (customer side / our side + note) and Finish work (done / need to come again / couldn't do it + note).
+- Each step is saved on the phone first (outbox) and sent to `POST /api/v1/sync/operations` when online; the card shows "Saved on phone" until sent and "Needs attention" if the server refuses it. Re-sending is harmless (idempotent by operation id).
+- The last job list is kept on the phone, so My Work opens offline.
+- Helpers get Today's work: job type, area, time and call buttons for the customer and their senior; nothing to fill (Q-01).
+- `GET /api/v1/my/jobs` (team-scoped; helpers get fewer fields).
+
 ## 2026-11-21 — Jobs, owner side (T4.6, early under D-030)
 
 ### Added
