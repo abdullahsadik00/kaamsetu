@@ -91,6 +91,10 @@ function RootLayout() {
           <Stack.Screen name="customers/[id]/edit" options={{ ...pushed, title: t('customers.edit') }} />
           <Stack.Screen name="customers/[id]/site" options={{ ...pushed, title: t('customers.addAddress') }} />
           <Stack.Screen name="customers/[id]/ac" options={{ ...pushed, title: t('customers.addAc') }} />
+          <Stack.Screen name="bills/new" options={{ ...pushed, title: t('uiBilling.newBill') }} />
+          <Stack.Screen name="bills/[id]" options={{ ...pushed, title: '' }} />
+          <Stack.Screen name="quotations/new" options={{ ...pushed, title: t('uiBilling.newQuote') }} />
+          <Stack.Screen name="quotations/[id]" options={{ ...pushed, title: '' }} />
         </Stack.Protected>
         <Stack.Protected guard={signedIn && role === 'SENIOR_TECHNICIAN'}>
           <Stack.Screen name="(field)" />

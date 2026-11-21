@@ -1,1 +1,1 @@
-export { Placeholder as default } from '@/components/ui/placeholder';
+export { BillingScreen as default } from '@/features/billing/billing-screen';

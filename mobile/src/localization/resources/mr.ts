@@ -1,4 +1,5 @@
 import type { Translations } from './en';
+import { billingUi } from './ui/billing';
 import { enquiryUi } from './ui/enquiries';
 import { fieldUi } from './ui/field';
 import { homeUi } from './ui/home';
@@ -16,6 +17,7 @@ export const mr: Translations = {
   uiField: fieldUi.mr,
   uiEnquiry: enquiryUi.mr,
   uiHome: homeUi.mr,
+  uiBilling: billingUi.mr,
   common: {
     appName: 'कामसेतु',
     tagline: 'काम सोपे। हिशोब सोपा। व्यवसाय सोपा।',

@@ -651,6 +651,14 @@ export function JobScreen() {
             ) : (
               <Button size="large" icon="account-group-outline" label={t('uiOwner.assignTeam')} onPress={openAssign} />
             )
+          ) : j.status === 'COMPLETED' ? (
+            // The bill form opens the existing bill instead when this job already has one.
+            <Button
+              size="large"
+              icon="receipt-text-outline"
+              label={t('uiBilling.makeBill')}
+              onPress={() => router.push({ pathname: '/bills/new', params: { jobId: j.id } })}
+            />
           ) : undefined
         }
       >
