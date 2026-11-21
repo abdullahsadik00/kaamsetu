@@ -144,7 +144,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Tests:** report preserved on re-submit; signed URL scope; isolation of attachments.
 - **Acceptance:** job finished in < 2 minutes on site; owner sees report and photos.
 
-### T4.9 Offline-first field workflow — Critical — In Progress (backend built early under D-035: `GET /sync/bootstrap`, `GET /sync/changes` with removals, conflict codes, operation purge; 5049a60. App switch-over and photo queue next; phone test TP-33) — depends T4.7, T4.8
+### T4.9 Offline-first field workflow — Critical — In Progress (backend built early under D-035: `GET /sync/bootstrap`, `GET /sync/changes` with removals, conflict codes, operation purge; 5049a60. App side done 22 Nov 2026: SQLite job store, push-then-pull with cursor, bootstrap/reset, removals, single-flight, business-switch wipe, Saved/Sending/Sent/Needs attention with per-code reasons in en/hi/mr. Open: photo queue (TP-32), owner view of refused work; phone test TP-33) — depends T4.7, T4.8
 - **Objective:** no field work lost without network.
 - **Work:** sync bootstrap/changes/operations endpoints; per-record conflict policy; photo queue; retention; *Saved/Sending/Sent/Needs attention* UI.
 - **Tests:** all 12 scenarios in doc 09 §10, automated where possible, plus real-phone run.

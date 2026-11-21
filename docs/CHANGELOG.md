@@ -2,6 +2,12 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-22 — Offline sync on the phone (T4.9, D-035)
+
+- App: field staff's jobs live in the phone's database (migration 2); My Work and Today's work work fully offline. Sends saved work first, then downloads only what changed (full download on first login, business switch or when the server asks). Syncs on open, back in front, internet back, after each save, pull-to-refresh and every minute; never two at once. Jobs taken away leave the phone; one with unsent work stays with **Needs attention** and the reason (cancelled, another team, already finished) until **OK, got it**. Cards and job page show Saved on phone / Sending… / Sent / Needs attention. Logout deletes the phone's data; a business switch clears it, including the old business's unsent work.
+- Tests: `job-sync.test.ts`, `sync-engine.test.tsx`, field screen tests.
+- Not yet: photos, owner view of refused work.
+
 ## 2026-11-22 — Home dashboard (T4.12, D-036)
 
 - Backend: owner-only `GET /api/v1/dashboard`: open enquiries by source, jobs needing a team, needs-action list (holds with reason, follow-ups without a follow-up job, appointment not fixed), today by status in the business time zone, latest status changes from teams, ready to bill, money to collect and cash with teams (reuses the billing summary). `holdSide` unit tests; e2e suite `dashboard.e2e-spec.ts` (counts match the lists, isolation, roles).

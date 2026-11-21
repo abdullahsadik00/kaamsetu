@@ -65,7 +65,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-30 | Enquiries | T4.5 | Pending | | Needs the next APK |
 | TP-31 | Paste a service-centre ticket | T4.5a | Not built yet | | Needs ticket samples |
 | TP-32 | Job photos | T4.8 | Not built yet | | Needs a storage bucket (D-026) |
-| TP-33 | Three days offline | T4.9 | Not built yet | | |
+| TP-33 | Three days offline | T4.9 | Pending | | Needs the next APK; photos later |
 | TP-34 | Quotations and bills | T4.10 | Not built yet | | GST waits for Q-04 |
 | TP-35 | Payments | T4.11 | Not built yet | | |
 | TP-36 | Home dashboard | T4.12 | Pending | | Needs the next APK |
@@ -307,6 +307,32 @@ Same as TP-06, with **Test Helper**, the helper's Google account and **900000300
 - In step 6 the close button stays disabled until a reason is typed.
 - **Closed** lists both: E-201 as "Job made" (its page has **Open job #…**) and the second as "Closed" with the reason.
 
+### TP-33 Three days offline (T4.9) — without photos for now
+1. Owner (online): create **5 jobs** for Team 1 for Rohan and Shreeji Clinic: 2 for Today, 2 for Tomorrow, 1 for the day after. Put **800** to collect on one Today job.
+2. Senior's phone: wait until all 5 show in **My Work** (Today and **Coming up**), then pull down once.
+3. Turn on **Airplane mode**, force close the app and open it again.
+4. Offline: first Today job › **Start work**, then **Finish work**: Cleaned, no parts, ₹800 **Cash**, **Work done**, **Save and finish**, **Back to My Work**.
+5. Offline: second Today job › **Update status** › **Customer not ready** › **Customer not at home** › **Save**.
+6. Offline: one Tomorrow job › **Start work**.
+7. Owner (other phone or later online): open the other Tomorrow job and **Cancel job** with reason "Customer cancelled".
+8. Senior, still offline: open that cancelled job › **Start work**, then **Finish work** › **Work done** › **Save and finish**.
+9. Force close the app, turn Airplane mode **off**, open the app.
+10. Pull down on **My Work**.
+11. Open the cancelled job and tap **OK, got it**.
+12. Owner: open each of the 5 jobs.
+13. Senior: **Profile** › **Log out**, then log in again.
+
+**Expected**
+- Step 2: all 5 jobs listed (first time may show "Getting your jobs…").
+- Step 3: banner "No internet. Keep working. All saved on phone."; all 5 jobs still there with customer, address, ACs and ₹800.
+- Steps 4–8: each change saves at once and the card shows **Saved on phone**; "Work completed today: 1".
+- Step 9: nothing lost; within a minute cards go **Sending…** then **Sent**.
+- The cancelled job shows **Needs attention**; its page says "Needs attention · Please call the owner" and "The owner cancelled this job. What you saved is kept for the owner.", with no **Start work** or **Finish work**.
+- Step 11: back on **My Work**, the cancelled job is gone.
+- Step 12: first job **Completed** once, one report, ₹800 Cash with the team shown once; second **On hold** with "Customer side: Customer not at home"; started Tomorrow job **In progress**; cancelled job stays **Cancelled**.
+- Step 13: jobs download fresh and nothing old is left.
+- Optional, two phones: a job given to Team 1 while the senior is offline appears once back online; a job moved to **Team 2** disappears (or shows **Needs attention** "This job was given to another team…" if work was saved on it).
+
 ### TP-36 Home dashboard (T4.12)
 1. Owner: make sure there is at least one open enquiry from **WhatsApp** and one from **Call** (TP-30).
 2. **Jobs** › **New** (+): make a job for **Rohan Kulkarni** with no team and no day, then **Create job & assign**.
@@ -346,7 +372,6 @@ Claude writes the full steps when each feature ships and changes its status to *
 
 - **TP-31 Service-centre ticket paste (T4.5a):** paste a brand ticket message and get name, phone, address, pincode, job type, ticket number and charges filled in; a duplicate ticket shows a warning; unknown text falls back to manual entry without losing what was pasted.
 - **TP-32 Job photos (T4.8):** add photos on the finish page; they upload, also later when you're back online; the owner sees them on the job.
-- **TP-33 Three days offline (T4.9):** 5 jobs and 20 photos across 3 days offline; everything arrives with no loss and no duplicates; the **Saved / Sending / Sent / Needs attention** labels are correct.
 - **TP-34 Quotations and bills (T4.10):** quotation PDF shared and turned into a bill; a bill from a completed job, prefilled with parts and services, shared on WhatsApp in under 2 minutes; discount; GST per line (after Q-04); cancel with a reason.
 - **TP-35 Payments (T4.11):** full and partial cash, UPI and bank payments; **Paid / Partly paid / Not paid**; confirm or reject cash the teams handed over; tapping twice records one payment.
 - **TP-37 Hindi and Marathi review (T3.14):** a Hindi speaker and a Marathi speaker go through the login, owner, join, employee and field screens in their language and note wrong or odd wording. This can run now.
