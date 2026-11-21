@@ -32,6 +32,22 @@ export const MIGRATIONS: readonly string[] = [
     value TEXT NOT NULL
   );
   `,
+  // 2: the person's jobs from the sync pull (docs/09 §6, T4.9, D-035). `data` is
+  // the server's job card as JSON; the other columns are for sorting and pruning.
+  // `gone` marks a job the server took away that still has unsent work on it.
+  `
+  CREATE TABLE job (
+    id             TEXT PRIMARY KEY NOT NULL,
+    job_number     INTEGER NOT NULL,
+    status         TEXT NOT NULL,
+    scheduled_date TEXT,
+    completed_at   TEXT,
+    gone           INTEGER NOT NULL DEFAULT 0,
+    data           TEXT NOT NULL,
+    synced_at      TEXT NOT NULL
+  );
+  DELETE FROM kv WHERE key = 'myJobs';
+  `,
 ];
 
 /** Applies pending migrations, each in its own transaction. Returns the new version. */
