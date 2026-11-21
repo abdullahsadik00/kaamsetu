@@ -166,7 +166,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Tests:** balances after any payment sequence; duplicate submission creates one payment; void keeps audit.
 - **Acceptance:** outstanding balance per customer matches a hand calculation for 20 mixed cases.
 
-### T4.12 Basic dashboard — High — Not Started — depends T4.6–T4.11
+### T4.12 Basic dashboard — High — Completed 22 Nov 2026 (D-036: `GET /dashboard` plus the Home cards; e2e checks counts against the lists, isolation and roles; 4 component tests; "parts needed" shows as Can't continue holds since there is no part-request record; phone test TP-36 pending) — depends T4.6–T4.11
 - **Objective:** owner sees the day at a glance (prototype home).
 - **Cards:** open enquiries, jobs needing a team, needs-action list (parts, holds, appointment not fixed), today by status, latest from teams, money to collect, cash with teams.
 - **Tests:** counts match underlying queries; isolation.

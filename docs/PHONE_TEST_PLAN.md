@@ -68,7 +68,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-33 | Three days offline | T4.9 | Not built yet | | |
 | TP-34 | Quotations and bills | T4.10 | Not built yet | | GST waits for Q-04 |
 | TP-35 | Payments | T4.11 | Not built yet | | |
-| TP-36 | Home dashboard | T4.12 | Not built yet | | |
+| TP-36 | Home dashboard | T4.12 | Pending | | Needs the next APK |
 | TP-37 | Hindi and Marathi wording review | T3.14 | Pending | | Needs a Hindi and a Marathi speaker |
 | TP-38 | Usability test with real users | T5.6 | Not built yet | | After TP-36 |
 
@@ -307,6 +307,28 @@ Same as TP-06, with **Test Helper**, the helper's Google account and **900000300
 - In step 6 the close button stays disabled until a reason is typed.
 - **Closed** lists both: E-201 as "Job made" (its page has **Open job #…**) and the second as "Closed" with the reason.
 
+### TP-36 Home dashboard (T4.12)
+1. Owner: make sure there is at least one open enquiry from **WhatsApp** and one from **Call** (TP-30).
+2. **Jobs** › **New** (+): make a job for **Rohan Kulkarni** with no team and no day, then **Create job & assign**.
+3. Make three more jobs for today with team **Team 1**: A, B and C.
+4. Senior technician's phone: on job A **Update status** › **Can't continue**, pick **Tool or gas missing**, **Save**. On job B **Update status** › **Customer not ready**, pick **Customer not at home**, **Save**. On job C **Start work**, then finish it as "need to come again" with a note and ₹1,000 cash in **Money from customer**.
+5. Owner: open **Home** and pull down to refresh.
+6. Tap each card and come back: the enquiries card, the "jobs need a team" card and **Assign**, each row in **Needs your action**, **See all** on Today, a row in **Latest from teams**, and **Money to collect**.
+7. Open job C, make the follow-up job, then go back to **Home**.
+8. Turn on airplane mode and pull down on **Home**.
+
+**Expected**
+- The enquiries card reads "2 open enquiries" with "1 WhatsApp, 1 call · not jobs yet" (numbers follow your data) and opens **Jobs** on **Enquiries**.
+- The blue card reads "N jobs need a team" with "Next: …"; the card opens **Jobs** on **Open**, **Assign** opens that job.
+- **Needs your action · N** lists "Can't continue: Tool or gas missing", "Customer not ready: Customer not at home", "Needs another visit: <note>", then "Appointment not fixed yet" for the job without a day. Each row opens its job.
+- **Today** shows counts per status that match **Jobs** › **Today**.
+- **Latest from teams** shows the status changes from step 4 with customer, job number, technician and time, newest first.
+- "1 finished job ready to bill" appears; **Money to collect** shows "₹1,000 with teams, to hand over".
+- After step 7, job C's "Needs another visit" row is gone.
+- In step 8 the error card shows **Try again**.
+- Staff phones never show this screen; another business's owner sees only their own numbers.
+
+
 ## Part C — Needs a second phone
 
 ### TP-26 Join by scanning the QR (T3.12)
@@ -327,6 +349,5 @@ Claude writes the full steps when each feature ships and changes its status to *
 - **TP-33 Three days offline (T4.9):** 5 jobs and 20 photos across 3 days offline; everything arrives with no loss and no duplicates; the **Saved / Sending / Sent / Needs attention** labels are correct.
 - **TP-34 Quotations and bills (T4.10):** quotation PDF shared and turned into a bill; a bill from a completed job, prefilled with parts and services, shared on WhatsApp in under 2 minutes; discount; GST per line (after Q-04); cancel with a reason.
 - **TP-35 Payments (T4.11):** full and partial cash, UPI and bank payments; **Paid / Partly paid / Not paid**; confirm or reject cash the teams handed over; tapping twice records one payment.
-- **TP-36 Home dashboard (T4.12):** open enquiries, jobs needing a team, needs-action list, today by status, latest from teams, money to collect and cash with teams, all matching the real data.
 - **TP-37 Hindi and Marathi review (T3.14):** a Hindi speaker and a Marathi speaker go through the login, owner, join, employee and field screens in their language and note wrong or odd wording. This can run now.
 - **TP-38 Usability test (T5.6):** the real owner and a real technician use the built app for a normal day with no help (kit: `discovery/USABILITY_TEST_KIT.md`).

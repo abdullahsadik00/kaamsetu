@@ -2,6 +2,12 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-22 — Home dashboard (T4.12, D-036)
+
+- Backend: owner-only `GET /api/v1/dashboard`: open enquiries by source, jobs needing a team, needs-action list (holds with reason, follow-ups without a follow-up job, appointment not fixed), today by status in the business time zone, latest status changes from teams, ready to bill, money to collect and cash with teams (reuses the billing summary). `holdSide` unit tests; e2e suite `dashboard.e2e-spec.ts` (counts match the lists, isolation, roles).
+- App: Home rebuilt from that one call: Needs your action, Today, Latest from teams, ready-to-bill and Money to collect cards; each opens its job, the Jobs tab (Open/Today/Enquiries) or Billing; pull to refresh; loading, empty and error states; English, Hindi and Marathi. 4 component tests.
+- Not yet: bell badge, "Updates from teams" screen, push.
+
 ## 2026-11-21 — Sync changes backend (T4.9, D-035)
 
 - Backend: `GET /api/v1/sync/bootstrap` and `GET /api/v1/sync/changes?cursor=` for senior technicians and helpers, scoped like `/my/jobs`. A database trigger gives every job write a per-business change number; customer, address, AC and team edits touch the jobs that show them. Jobs that leave a phone come back as removals. Clearer conflict codes on operations; refused operations keep their body; processed ids purged after 30 days. Migration `20261121190000_sync_changes`; e2e suite `sync.e2e-spec.ts`.
