@@ -61,15 +61,15 @@
 | T3.9 | CI: lint, type-check, tests both apps; Postgres service | High | Completed 19 Nov 2026 (`.github/workflows/ci.yml`; first run green; mobile lint, type-check and unit tests blocking since T3.6–T3.8) | T0.6 | Workflow file | Green on `main` | 13 | CI |
 | T3.11 | Pilot login (D-025): Google sign-in (owner and staff) + owner QR / 6-digit invite to link staff; reset link from Employees | Critical | Completed 20 Nov 2026 (EAS dev build on a real phone: owner, senior technician and helper each signed in with Google, joined with phone + code and landed on their home; QR scanning not yet tried on a device, needs a second phone) | T3.7 | Backend Google ID-token check, invite table; mobile Google sign-in + QR scan; EAS dev build | Each seeded role logs in with Google and lands on its home; invite single-use and expiring | 10, 05, 06 | Unit + integration + device |
 | T3.10 | Hosting decision; staging API + DB + bucket; EAS build profile | High | Completed 20 Nov 2026 (D-026: Render free `kaamsetu-api-staging-0368.onrender.com` + Supabase Mumbai; EAS preview APK; owner signed in with Google and joined on a phone against staging; nightly encrypted backup green; UptimeRobot 5-min ping; rate limits checked behind the proxy) | Q-09 | Staging URL, APK | Login works on a phone against staging | 13 | Smoke test |
-| T3.12 | Open point from T3.11: try joining by scanning the owner's invite QR on a real device | High | Not Started | T3.11 | Device check notes | Second phone scans the QR and lands on its role's home; a non-KaamSetu QR shows "not an invite" | 10 §2 | Device |
+| T3.12 | Open point from T3.11: try joining by scanning the owner's invite QR on a real device | High | Not Started (PHONE_TEST_PLAN TP-26, needs a second phone) | T3.11 | Device check notes | Second phone scans the QR and lands on its role's home; a non-KaamSetu QR shows "not an invite" | 10 §2 | Device |
 | T3.13 | Open point from T3.11: Join screen says only "This invite does not work" when the mobile number has no open invite; add a hint to check the number | Medium | Completed 20 Nov 2026 (`INVITE_NOT_FOR_THIS_PHONE` with a "check the number" hint in en/hi/mr; e2e test) | T3.11 | Mobile + backend message | A technician who types the wrong number understands what to fix | 08 §7 | Component |
-| T3.14 | Open point: native-speaker review of the Hindi/Marathi login, owner, join and employee strings (written by Claude; the prototype has these screens in English only) | Medium | Not Started | T3.6, T3.11 | Corrected `mobile/src/localization/resources/hi.ts`, `mr.ts` | A Hindi and a Marathi speaker approve the wording | 08 | Review |
+| T3.14 | Open point: native-speaker review of the Hindi/Marathi login, owner, join and employee strings (written by Claude; the prototype has these screens in English only) | Medium | Not Started (PHONE_TEST_PLAN TP-37) | T3.6, T3.11 | Corrected `mobile/src/localization/resources/hi.ts`, `mr.ts` | A Hindi and a Marathi speaker approve the wording | 08 | Review |
 
 ## Phase 4 — Core MVP modules (M4–M8)
 
 Each module below gets split into subtasks (frontend / backend / DB / tests) when it starts. All modules share the definition of done in the execution plan and the non-negotiable tests in doc 12 §2 (tenant isolation, role scope, money, idempotency, state machine).
 
-### T4.1 Authentication and business onboarding — Critical — In Progress (built early under D-027: Google sign-in + "Set up a new business" + 30-day trial + "Add employee" + remove employee + business details; backend d14b216/b393f8d, app 484a356/ba07c91; phone test pending) — depends G3 (waived for this module by D-027)
+### T4.1 Authentication and business onboarding — Critical — In Progress (built early under D-027: Google sign-in + "Set up a new business" + 30-day trial + "Add employee" + remove employee + business details; backend d14b216/b393f8d, app 484a356/ba07c91; phone test pending, see PHONE_TEST_PLAN TP-05–08, TP-25) — depends G3 (waived for this module by D-027)
 - **Objective:** an owner signs up and sets up the business in minutes.
 - **Stories:** As an owner I log in with my phone and OTP. I enter business name, phone, address, GST setting. I can skip optional fields.
 - **Frontend:** welcome, phone, OTP, business profile, optional "add first team" prompt.
@@ -80,7 +80,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Tests:** unit for validation; integration for signup creating exactly one org; isolation.
 - **Acceptance:** new owner reaches Home with business details saved; second login lands on Home directly.
 
-### T4.2 Organization, employees and teams — Critical — In Progress (built early: add/remove employees under D-027, teams under D-029; backend 7cfd43b; phone test pending; reassignment warning waits for jobs) — depends T4.1
+### T4.2 Organization, employees and teams — Critical — In Progress (built early: add/remove employees under D-027, teams under D-029; backend 7cfd43b; phone test pending, see PHONE_TEST_PLAN TP-09; reassignment warning waits for jobs) — depends T4.1
 - **Objective:** owner adds staff and teams; staff log in with no setup.
 - **Stories:** add employee with role; create team with one primary senior and helpers; deactivate employee; revoke devices.
 - **Frontend:** Teams list/detail, Employee add/edit, invite SMS confirmation.
@@ -90,7 +90,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Tests:** team rules; deactivated member's token refresh fails; isolation.
 - **Acceptance:** owner sets up 6 teams; a technician logs in and sees the technician home.
 
-### T4.3 Customer management — Critical — In Progress (built early under D-028: search, add with default site, duplicate warning, addresses, edit, archive; backend 7cf2731; phone test pending) — depends T4.1
+### T4.3 Customer management — Critical — In Progress (built early under D-028: search, add with default site, duplicate warning, addresses, edit, archive; backend 7cf2731; phone test pending, see PHONE_TEST_PLAN TP-10–11) — depends T4.1
 - **Objective:** find or add a customer in seconds.
 - **Stories:** search by phone or name; add with name, phone, address; customer can have several sites; archive.
 - **Frontend:** Customers list/search, add/edit, detail with sites. **Backend/API:** doc 06 §5. **DB:** Customer, Site.
@@ -119,7 +119,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Work:** parser per known format (pure function, fully unit-tested against T1.9 samples); review screen; ticket number, source partner; duplicate-ticket warning; "Closed in brand portal" tick.
 - **Acceptance:** every sample format fills name, phone, address, pincode, job type, ticket number and charges correctly; unknown text falls back to manual entry without losing what was pasted.
 
-### T4.6 Job creation and assignment — Critical — In Progress (owner side built early under D-030: create with ACs/type/day/slot/team/amount, assign and change team with history, reschedule with version check, cancel with reason, follow-up; backend 7c86feb; helper swap and enquiry link later; phone test pending) — depends T4.4, T4.5, T4.2
+### T4.6 Job creation and assignment — Critical — In Progress (owner side built early under D-030: create with ACs/type/day/slot/team/amount, assign and change team with history, reschedule with version check, cancel with reason, follow-up; backend 7c86feb; helper swap and enquiry link later; phone test pending, see PHONE_TEST_PLAN TP-13–15, TP-22) — depends T4.4, T4.5, T4.2
 - **Objective:** create and assign a job in about a minute.
 - **Stories:** create job with ACs, service type, complaint, day and slot, team, amount to collect; reassign; one-day helper swap; cancel with reason; follow-up job linked.
 - **DB:** ServiceJob, JobEquipment, JobAssignment, JobTechnician, JobStatusHistory, job number sequence. **API:** doc 06 §6.
@@ -128,7 +128,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Tests:** state machine exhaustive; assignment history; isolation; technician sees job after assignment.
 - **Acceptance:** repeat-customer job created and assigned in ≈ 1 minute by the owner.
 
-### T4.7 Technician job workflow — Critical — In Progress (built early under D-031: `GET /my/jobs` team-scoped, helpers slimmer (Q-01); Start/Hold/Finish saved in the phone outbox and sent to `POST /sync/operations`, idempotent; My Work and helper Today's work screens with call and directions, last list kept offline; backend b7a5789, app a8d37f4; job updates feed, "Latest from teams" and part-needed reasons later; phone test pending) — depends T4.6, T3.8
+### T4.7 Technician job workflow — Critical — In Progress (built early under D-031: `GET /my/jobs` team-scoped, helpers slimmer (Q-01); Start/Hold/Finish saved in the phone outbox and sent to `POST /sync/operations`, idempotent; My Work and helper Today's work screens with call and directions, last list kept offline; backend b7a5789, app a8d37f4; job updates feed, "Latest from teams" and part-needed reasons later; phone test pending, see PHONE_TEST_PLAN TP-16–18, TP-20, TP-23–24) — depends T4.6, T3.8
 - **Objective:** technician knows what to do and reports progress.
 - **Stories:** My Work (today/tomorrow); job detail; call; directions; appointment fixed; start; part needed; customer not ready; can't continue; note; owner sees "Latest from teams".
 - **Frontend:** built on the local SQLite store from day one. **DB:** JobUpdate. **API:** `POST /jobs/:id/updates`, sync pull.
@@ -136,7 +136,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Tests:** role scope (other team's job = 404); update feed ordering.
 - **Acceptance:** a technician with no training finds today's job and starts it.
 
-### T4.8 Service reports and photo uploads — Critical — In Progress (finish page built early under D-032: outcome, work per AC, parts, money taken (cash/UPI, with team until owner confirms), note required for "couldn't do it"; saved offline with `job.complete`; owner sees the report; backend 4961d01, app 39cb3e0; **photos waiting for a storage bucket (Cloudflare R2, D-026)**; phone test pending) — depends T4.7
+### T4.8 Service reports and photo uploads — Critical — In Progress (finish page built early under D-032: outcome, work per AC, parts, money taken (cash/UPI, with team until owner confirms), note required for "couldn't do it"; saved offline with `job.complete`; owner sees the report; backend 4961d01, app 39cb3e0; **photos waiting for a storage bucket (Cloudflare R2, D-026)**; phone test pending, see PHONE_TEST_PLAN TP-19, TP-21) — depends T4.7
 - **Objective:** every completed job has a record.
 - **Stories:** finish page: work per AC, parts, note, photos, outcome, money from customer (if Q-03); needs another visit creates a linked follow-up suggestion for the owner.
 - **DB:** ServiceReport, JobWorkItem, JobPartUsage, JobReading, Attachment, CashCollection. **API:** doc 06 §7, attachments upload URL.
