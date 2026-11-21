@@ -9,12 +9,15 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { z } from 'zod';
 import { CurrentAuth } from '../auth/auth.guard.js';
 import { Roles } from '../auth/roles.js';
 import type { AuthContext } from '../auth/token.service.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
+import { DayQuerySchema, LendHelperSchema } from './day-helpers.js';
+import type { LendHelper } from './day-helpers.js';
 import {
   AddTeamMemberSchema,
   CreateTeamSchema,
@@ -31,9 +34,10 @@ const Id = new ZodValidationPipe(z.uuid());
 export class TeamsController {
   constructor(private readonly teams: TeamsService) {}
 
+  /** `?day=YYYY-MM-DD` shows who works with whom that day (default today). */
   @Get()
-  list(@CurrentAuth() auth: AuthContext) {
-    return this.teams.list(auth);
+  list(@CurrentAuth() auth: AuthContext, @Query(new ZodValidationPipe(DayQuerySchema)) q: { day?: string }) {
+    return this.teams.list(auth, q.day);
   }
 
   @Post()
@@ -46,8 +50,32 @@ export class TeamsController {
   }
 
   @Get(':id')
-  get(@CurrentAuth() auth: AuthContext, @Param('id', Id) id: string) {
-    return this.teams.get(auth, id);
+  get(
+    @CurrentAuth() auth: AuthContext,
+    @Param('id', Id) id: string,
+    @Query(new ZodValidationPipe(DayQuerySchema)) q: { day?: string },
+  ) {
+    return this.teams.get(auth, id, q.day);
+  }
+
+  /** One-day helper swap (T4.6, D-038): lend a helper to this team for a day. */
+  @Post(':id/day-helpers')
+  @HttpCode(HttpStatus.CREATED)
+  lend(
+    @CurrentAuth() auth: AuthContext,
+    @Param('id', Id) id: string,
+    @Body(new ZodValidationPipe(LendHelperSchema)) body: LendHelper,
+  ) {
+    return this.teams.lend(auth, id, body);
+  }
+
+  @Delete(':id/day-helpers/:lendingId')
+  undoLend(
+    @CurrentAuth() auth: AuthContext,
+    @Param('id', Id) id: string,
+    @Param('lendingId', Id) lendingId: string,
+  ) {
+    return this.teams.undoLend(auth, id, lendingId);
   }
 
   @Patch(':id')

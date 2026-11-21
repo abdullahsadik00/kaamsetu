@@ -5,6 +5,8 @@ import { AppError } from '../common/app-error.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg, scoped } from '../tenancy/tenant.js';
+import { businessToday, dayLendings, lendHelper, teamDay, undoLending } from './day-helpers.js';
+import type { DayHelper, LendHelper } from './day-helpers.js';
 
 export const CreateTeamSchema = z.strictObject({
   name: z.string().trim().min(1, 'Enter a team name').max(40),
@@ -43,7 +45,7 @@ const teamInclude = {
 
 type TeamRow = Prisma.TeamGetPayload<{ include: typeof teamInclude }>;
 
-function present(t: TeamRow) {
+function present(t: TeamRow, day: string, lendings: DayHelper[]) {
   return {
     id: t.id,
     name: t.name,
@@ -55,6 +57,13 @@ function present(t: TeamRow) {
       name: m.member.user.name,
       phone: m.member.user.phone,
     })),
+    // That day's crew changes (T4.6, D-038): own helpers lent elsewhere, helpers borrowed.
+    day,
+    ...teamDay(
+      t.id,
+      t.members.map((m) => m.member.id),
+      lendings,
+    ),
   };
 }
 
@@ -66,22 +75,40 @@ const bad = (code: string, message: string) =>
 export class TeamsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async list(auth: AuthContext) {
-    const teams = await this.prisma.team.findMany({
-      where: scoped(auth),
-      orderBy: [{ active: 'desc' }, { createdAt: 'asc' }],
-      include: teamInclude,
-    });
-    return teams.map(present);
+  /** Teams with who works with whom on `day` (default: today in the business time zone). */
+  async list(auth: AuthContext, day?: string) {
+    const d = day ?? (await businessToday(this.prisma, auth));
+    const [teams, lendings] = await Promise.all([
+      this.prisma.team.findMany({
+        where: scoped(auth),
+        orderBy: [{ active: 'desc' }, { createdAt: 'asc' }],
+        include: teamInclude,
+      }),
+      dayLendings(this.prisma, auth, d),
+    ]);
+    return teams.map((t) => present(t, d, lendings));
   }
 
-  async get(auth: AuthContext, id: string) {
+  async get(auth: AuthContext, id: string, day?: string) {
     const t = await this.prisma.team.findFirst({
       where: scoped(auth, { id }),
       include: teamInclude,
     });
     if (!t) throw AppError.notFound('TEAM_NOT_FOUND');
-    return present(t);
+    const d = day ?? (await businessToday(this.prisma, auth));
+    return present(t, d, await dayLendings(this.prisma, auth, d));
+  }
+
+  /** One-day helper swap: `memberId` works with this team on `day` (D-038). Answers with the team that day. */
+  async lend(auth: AuthContext, teamId: string, input: LendHelper) {
+    await lendHelper(this.prisma, auth, teamId, input);
+    return this.get(auth, teamId, input.day);
+  }
+
+  /** Undoes a one-day swap; the helper is back with their own team that day. */
+  async undoLend(auth: AuthContext, teamId: string, lendingId: string) {
+    const day = await undoLending(this.prisma, auth, teamId, lendingId);
+    return this.get(auth, teamId, day);
   }
 
   async create(auth: AuthContext, input: CreateTeam) {

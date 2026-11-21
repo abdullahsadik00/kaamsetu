@@ -5,6 +5,7 @@ import { AppError } from '../common/app-error.js';
 import type { JobStatus, Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg, scoped } from '../tenancy/tenant.js';
+import { dayCrew } from '../teams/day-helpers.js';
 import { isOpen, nextStatus, type JobAction } from './jobs.state.js';
 
 export const JOB_TYPES = ['SERVICE', 'REPAIR', 'INSTALLATION', 'UNINSTALLATION', 'GAS_FILLING', 'OTHER'] as const;
@@ -154,6 +155,11 @@ export class JobsService {
         assignedAt: a.assignedAt,
         unassignedAt: a.unassignedAt,
       })),
+      // Who works on it that day, with one-day helper swaps (T4.6, D-038).
+      crew:
+        job.assignedTeamId && job.scheduledDate
+          ? await dayCrew(this.prisma, auth, job.assignedTeamId, fromDate(job.scheduledDate) as string)
+          : null,
     };
   }
 
