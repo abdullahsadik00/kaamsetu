@@ -5,8 +5,9 @@ import { CurrentAuth } from '../auth/auth.guard.js';
 import { Roles } from '../auth/roles.js';
 import type { AuthContext } from '../auth/token.service.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
-import type { JobStatus, Prisma } from '../generated/prisma/client.js';
-import { nextStatus, type JobAction } from '../jobs/jobs.state.js';
+import type { JobStatus, JobUpdateType, Prisma } from '../generated/prisma/client.js';
+import { SLOTS } from '../jobs/jobs.service.js';
+import { isOpen, nextStatus, type JobAction } from '../jobs/jobs.state.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg, scoped } from '../tenancy/tenant.js';
 import { everTeamIds, myTeamIds, presentJobs } from './scope.js';
@@ -14,10 +15,15 @@ import { SyncController, SyncService } from './sync.js';
 
 // ---------- Contracts (docs/09 §5–6) ----------
 
+/** Field updates that are not status changes (T4.7, docs/09 §7: append-only, never conflict). */
+export const UPDATE_OPS = ['job.appointment', 'job.part', 'job.note'] as const;
+type UpdateOp = (typeof UPDATE_OPS)[number];
+const isUpdateOp = (o: string): o is UpdateOp => (UPDATE_OPS as readonly string[]).includes(o);
+
 const OperationSchema = z.strictObject({
   /** Phone-generated UUID; also the idempotency key. */
   id: z.uuid(),
-  operation: z.enum(['job.start', 'job.hold', 'job.complete']),
+  operation: z.enum(['job.start', 'job.hold', 'job.complete', ...UPDATE_OPS]),
   entityType: z.literal('ServiceJob'),
   entityId: z.uuid(),
   payload: z.record(z.string(), z.unknown()).nullable().default({}),
@@ -64,9 +70,29 @@ const CompletePayload = z
   // "Couldn't do it" needs a reason (T4.8 validation).
   .refine((p) => p.outcome !== 'NOT_COMPLETED' || !!p.note, { path: ['note'] });
 
+/** Appointment fixed: the day and time slot agreed with the customer; also moves the job's schedule. */
+const AppointmentPayload = z.strictObject({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  slot: z.enum(SLOTS),
+});
+/** Part needed: recorded for the owner to arrange; the job's status does not change. */
+const PartPayload = z.strictObject({
+  part: z.string().trim().min(1).max(60),
+  qty: z.number().int().min(1).max(99).default(1),
+  canContinue: z.boolean().default(true),
+  note: z.string().trim().max(200).optional(),
+});
+const NotePayload = z.strictObject({ text: z.string().trim().min(1).max(500) });
+
+const UPDATE_TYPE: Record<UpdateOp, JobUpdateType> = {
+  'job.appointment': 'APPOINTMENT_FIXED',
+  'job.part': 'PART_NEEDED',
+  'job.note': 'NOTE',
+};
+
 type Result = { id: string; status: 'applied' | 'duplicate' | 'conflict' | 'rejected'; code?: string };
 
-const ACTION: Record<Operation['operation'], JobAction> = {
+const ACTION: Record<Exclude<Operation['operation'], UpdateOp>, JobAction> = {
   'job.start': 'start',
   'job.hold': 'hold',
   'job.complete': 'complete',
@@ -189,6 +215,8 @@ export class FieldService {
         : { id: op.id, status: 'rejected', code: 'JOB_NOT_ACCESSIBLE' };
     }
 
+    if (isUpdateOp(op.operation)) return this.addUpdate(auth, job, op, op.operation);
+
     // Already started on another phone of the team (docs/09 §10 #8): nothing to do.
     if (op.operation === 'job.start' && job.status === 'IN_PROGRESS') return { id: op.id, status: 'applied' };
     const to = nextStatus(job.status, ACTION[op.operation]);
@@ -269,6 +297,52 @@ export class FieldService {
                 collectedByMemberId: auth.memberId as string,
                 amount: report.collected.amount,
                 mode: report.collected.mode,
+              },
+            }),
+          ]
+        : []),
+    ]);
+    return { id: op.id, status: 'applied' };
+  }
+
+  /**
+   * Appointment fixed / Part needed / Note (T4.7): appended to the job's
+   * update feed. Appointment fixed also sets the job's day and slot while the
+   * job is open (the sync trigger then sends the job to the team's phones
+   * again); on a closed job it is only recorded.
+   */
+  private async addUpdate(
+    auth: AuthContext,
+    job: { id: string; organizationId: string; status: JobStatus },
+    op: Operation,
+    kind: UpdateOp,
+  ): Promise<Result> {
+    const schema = kind === 'job.appointment' ? AppointmentPayload : kind === 'job.part' ? PartPayload : NotePayload;
+    const p = schema.safeParse(op.payload ?? {});
+    if (!p.success) return { id: op.id, status: 'rejected', code: 'VALIDATION_FAILED' };
+    const savedAt = new Date(op.createdAt);
+    const reschedule = kind === 'job.appointment' && isOpen(job.status);
+    const appointment = p.data as z.infer<typeof AppointmentPayload>;
+    await this.prisma.$transaction([
+      this.prisma.jobUpdate.create({
+        data: {
+          id: op.id,
+          organizationId: job.organizationId,
+          jobId: job.id,
+          type: UPDATE_TYPE[kind],
+          payload: p.data as Prisma.InputJsonValue,
+          byMemberId: auth.memberId as string,
+          createdAt: Number.isNaN(savedAt.getTime()) ? new Date() : savedAt,
+        },
+      }),
+      ...(reschedule
+        ? [
+            this.prisma.serviceJob.update({
+              where: { id: job.id },
+              data: {
+                scheduledDate: new Date(`${appointment.date}T00:00:00.000Z`),
+                timeSlot: appointment.slot,
+                version: { increment: 1 },
               },
             }),
           ]
