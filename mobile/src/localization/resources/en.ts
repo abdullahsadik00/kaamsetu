@@ -317,6 +317,14 @@ export const en = {
     sending: 'Sending…',
     sent: 'Sent',
     attention: 'Needs attention',
+    refused: {
+      JOB_CANCELLED: 'The owner cancelled this job. What you saved is kept for the owner.',
+      JOB_REASSIGNED: 'This job was given to another team. What you saved is kept for the owner.',
+      JOB_ALREADY_COMPLETED: 'This job was already finished on another phone.',
+      other: 'This update could not be sent.',
+    },
+    gotIt: 'OK, got it',
+    gettingJobs: 'Getting your jobs…',
   },
   errors: {
     JOB_NOT_FOUND: 'This job was not found.',
