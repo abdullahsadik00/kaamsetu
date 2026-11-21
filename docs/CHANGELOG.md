@@ -2,6 +2,16 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-21 — Sync changes backend (T4.9, D-035)
+
+- Backend: `GET /api/v1/sync/bootstrap` and `GET /api/v1/sync/changes?cursor=` for senior technicians and helpers, scoped like `/my/jobs`. A database trigger gives every job write a per-business change number; customer, address, AC and team edits touch the jobs that show them. Jobs that leave a phone come back as removals. Clearer conflict codes on operations; refused operations keep their body; processed ids purged after 30 days. Migration `20261121190000_sync_changes`; e2e suite `sync.e2e-spec.ts`.
+- Not yet: the app still reloads `/my/jobs`; photo queue.
+
+## 2026-11-21 — Billing backend (T4.10/T4.11, D-034)
+
+- Backend: owner-only `/bills` (KS-0001) and `/quotations` (Q-001) with server totals in paise, discount over lines, GST per line as CGST + SGST (provisional until Q-04), draft edit with version check, issue, cancel with reason, bill prefill from a completed job, quotation → bill. `/bills/:id/payments` with idempotency key and over-pay guard, `/payments/:id/void`, `/customers/:id/outstanding`, `/billing/summary`, `/cash-collections` confirm/reject (confirmed cash is added to the job's bill). Migration `20261121180000_billing`; money unit tests and `billing.e2e-spec.ts`.
+- Not yet: app screens, PDF, WhatsApp share.
+
 ## 2026-11-21 — Enquiries (T4.5, D-033)
 
 - Backend: `ServiceRequest` (+ ACs) with per-business numbers from E-201; owner-only `/enquiries` list (open/closed), get, edit (version check), close with reason, convert to job in one transaction (one enquiry gives one job; ACs removed since are left out). Jobs show the enquiry they came from. Migration `20261121170000_enquiries`; 10 e2e tests incl. isolation, roles, double convert and numbering under concurrency.
