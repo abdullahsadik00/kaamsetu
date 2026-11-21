@@ -217,6 +217,31 @@ export class Outbox {
     return rows.map(fromRow);
   }
 
+  /** Every operation on one record still on the phone (sent ones too), oldest first. */
+  async allFor(entityType: string, entityId: string): Promise<OutboxOperation[]> {
+    const rows = await this.db.getAllAsync<Row>(
+      `SELECT * FROM outbox WHERE entity_type = ? AND entity_id = ? ORDER BY seq`,
+      [entityType, entityId],
+    );
+    return rows.map(fromRow);
+  }
+
+  /**
+   * "Got it" on a refused operation: the server already kept its body for the
+   * owner (docs/09 §7), so the phone may let it go. Only NEEDS_ATTENTION rows.
+   */
+  async dismissRefused(entityType: string, entityId: string): Promise<void> {
+    await this.db.runAsync(
+      `DELETE FROM outbox WHERE entity_type = ? AND entity_id = ? AND state = 'NEEDS_ATTENTION'`,
+      [entityType, entityId],
+    );
+  }
+
+  /** Business switch: work queued for the old business can no longer be sent. */
+  async clear(): Promise<void> {
+    await this.db.runAsync('DELETE FROM outbox', []);
+  }
+
   /** Saved on this phone but not yet accepted by the server. */
   async unsentCount(): Promise<number> {
     const row = await this.db.getFirstAsync<{ n: number }>(

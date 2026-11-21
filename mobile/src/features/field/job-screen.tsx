@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import type { TFunction } from 'i18next';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Linking, Pressable, StyleSheet, View } from 'react-native';
@@ -13,7 +14,7 @@ import { SyncLabel } from '@/components/ui/sync-label';
 import { useLanguage } from '@/localization/i18n';
 import { colors, radius, space } from '@/theme/tokens';
 
-import { rupees, shortDate, todayIso, useLocalState, useMyJobs, useSaveOp, type FieldJob } from './data';
+import { rupees, shortDate, todayIso, useDismissAttention, useLocalState, useMyJobs, useSaveOp, type FieldJob } from './data';
 import { FinishForm, type FinishPayload } from './finish-form';
 import { jobSummary, slotLabel, StatusBadge } from './parts';
 import { HoldSheet, UpdateStatusSheet, type HoldSide } from './status-sheets';
@@ -30,7 +31,11 @@ export function JobScreen({ id }: { id: string }) {
     return (
       <Screen edges={['top']}>
         <BackBar label={t('field.myWork')} onPress={goMyWork} />
-        {list.isPending ? <ActivityIndicator color={colors.teal} /> : <EmptyState title={t('field.noJobs')} body={t('field.noJobsSub')} />}
+        {list.isPending || !list.data?.ready ? (
+          <ActivityIndicator color={colors.teal} />
+        ) : (
+          <EmptyState title={t('field.noJobs')} body={t('field.noJobsSub')} />
+        )}
       </Screen>
     );
   }
@@ -55,9 +60,13 @@ function JobBody({ job }: { job: FieldJob }) {
     if (op === 'job.complete') setMode('done');
   });
 
+  const dismiss = useDismissAttention(job, goMyWork);
+
   const s = state.data?.status ?? job.status;
   const name = job.customer?.name ?? `#${job.jobNumber}`;
-  const sync = state.data?.attention ? 'attention' : state.data?.pending ? 'saved' : state.data ? 'sent' : null;
+  const sync = state.data?.sync ?? null;
+  // Taken off this phone by the server (cancelled, another team): nothing more can be done on it here.
+  const closed = s === 'COMPLETED' || s === 'CANCELLED' || !!job.gone;
 
   if (mode === 'done') return <Confirmation job={job} payload={finished} />;
 
@@ -94,7 +103,7 @@ function JobBody({ job }: { job: FieldJob }) {
     <Screen
       edges={['top']}
       footer={
-        s === 'COMPLETED' || s === 'CANCELLED' ? undefined : (
+        closed ? undefined : (
           <>
             {s === 'ASSIGNED' || s === 'ON_HOLD' ? (
               <Button
@@ -131,6 +140,8 @@ function JobBody({ job }: { job: FieldJob }) {
           <AppText weight="semibold" color={colors.bad}>
             {t('sync.attention')} · {t('field.callOwner')}
           </AppText>
+          <AppText>{refusedMessage(t, state.data.code)}</AppText>
+          <Button variant="soft" label={t('sync.gotIt')} onPress={() => dismiss.mutate()} loading={dismiss.isPending} />
         </Card>
       ) : null}
 
@@ -234,6 +245,13 @@ function JobBody({ job }: { job: FieldJob }) {
       />
     </Screen>
   );
+}
+
+const REFUSED = ['JOB_CANCELLED', 'JOB_REASSIGNED', 'JOB_ALREADY_COMPLETED'];
+
+/** Why the server did not take this work (docs/09 §7), in plain words. */
+function refusedMessage(t: TFunction, code: string | null): string {
+  return code && REFUSED.includes(code) ? t(`sync.refused.${code}`) : t('sync.refused.other');
 }
 
 /** "← My Work" row with the sync state on the right (screens 20/21). */

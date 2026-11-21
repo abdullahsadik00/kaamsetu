@@ -12,6 +12,8 @@ export type Transport = (op: OutboxOperation) => Promise<SendResult>;
 type Deps = {
   outbox: Outbox;
   transport: Transport;
+  /** Called after the server accepted an operation (e.g. to move the local record on). */
+  onSent?: (op: OutboxOperation) => Promise<void>;
   now?: () => number;
   setTimer?: (fn: () => void, ms: number) => unknown;
   clearTimer?: (handle: unknown) => void;
@@ -83,6 +85,7 @@ export class OutboxSender {
           await outbox.markNeedsAttention(op.id, res.code);
         } else {
           await outbox.markSent(op.id);
+          await this.deps.onSent?.(op).catch((e: unknown) => console.warn('After-send update failed', e));
         }
       } catch (error) {
         if (error instanceof ApiError && !error.isRetryable && error.status !== 401) {

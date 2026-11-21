@@ -1,12 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { randomUUID } from 'expo-crypto';
+import { useCallback, useState } from 'react';
 
-import { ApiError } from '@/api/errors';
-import { api } from '@/features/auth/session';
-import { currentDb, currentOutbox, notifyLocalSave } from '@/features/sync/sync-engine';
+import type { SyncState } from '@/components/ui/sync-label';
+import { useSession } from '@/features/auth/session';
+import { sameScope } from '@/features/sync/job-store';
+import { OP_STATUS } from '@/features/sync/job-sync';
+import { currentJobStore, currentOutbox, notifyLocalSave, syncNow } from '@/features/sync/sync-engine';
 import type { Language } from '@/localization/languages';
 
-// ---------- Data: my team's jobs, cached on the phone (docs/09 §2) ----------
+// ---------- Data: my team's jobs, kept on the phone (docs/09 §2–3, T4.9) ----------
 
 export type Status = 'ASSIGNED' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED' | 'NEW' | 'CANCELLED';
 export type Equipment = { id: string; type: string; brand: string | null; capacityTons: number | null; locationLabel: string | null };
@@ -21,49 +24,99 @@ export type FieldJob = {
   customer: { name: string; phone: string } | null;
   locality: string | null;
   senior: { name: string; phone: string | null } | null;
+  completedAt?: string | null;
   address?: string | null;
   landmark?: string | null;
   complaint?: string | null;
   amountToCollect?: number | null;
   equipment?: Equipment[];
+  /** The server took the job away (cancelled, another team) but it still has unsent or refused work. */
+  gone?: boolean;
 };
 
-const CACHE_KEY = 'myJobs';
 export const MY_JOBS = ['my-jobs'] as const;
 
-/** Online: fetch and keep a copy. Offline: the last copy, so field staff can keep working. */
-export async function loadMyJobs(): Promise<{ jobs: FieldJob[]; offline: boolean }> {
-  const db = currentDb();
-  try {
-    const jobs = await api.get<FieldJob[]>('/my/jobs');
-    await db?.runAsync('INSERT OR REPLACE INTO kv (key, value) VALUES (?, ?)', [CACHE_KEY, JSON.stringify(jobs)]);
-    return { jobs, offline: false };
-  } catch (error) {
-    if (!(error instanceof ApiError) || !error.isNetwork) throw error;
-    const row = await db?.getFirstAsync<{ value: string }>('SELECT value FROM kv WHERE key = ?', [CACHE_KEY]);
-    return { jobs: row ? (JSON.parse(row.value) as FieldJob[]) : [], offline: true };
+/**
+ * The jobs on the phone. Screens never wait for the network: the sync engine
+ * fills the store and refreshes this query when something changed.
+ * `ready` is false until the first download has finished.
+ */
+export async function loadMyJobs(): Promise<{ jobs: FieldJob[]; ready: boolean }> {
+  const store = currentJobStore<FieldJob>();
+  if (!store) return { jobs: [], ready: false };
+  const m = useSession.getState().profile?.membership;
+  const scope = await store.scope();
+  // Kept for another business or role: the sync engine is about to clear it.
+  if (!m || !sameScope(scope, { organizationId: m.organizationId, memberId: m.memberId, role: m.role })) {
+    return { jobs: [], ready: false };
   }
+  const [jobs, cursor] = await Promise.all([store.list(), store.cursor()]);
+  return { jobs, ready: cursor !== null };
 }
 
 export function useMyJobs() {
-  return useQuery({ queryKey: MY_JOBS, queryFn: loadMyJobs, refetchInterval: 60_000 });
+  return useQuery({ queryKey: MY_JOBS, queryFn: loadMyJobs, staleTime: Infinity });
+}
+
+/** Pull-to-refresh: send what is waiting, pull changes, then re-read the phone's list. */
+export function useRefresh() {
+  const qc = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await syncNow();
+      await qc.invalidateQueries({ queryKey: MY_JOBS });
+      await qc.invalidateQueries({ queryKey: ['job-local'] });
+    } finally {
+      setRefreshing(false);
+    }
+  }, [qc]);
+  return { refreshing, onRefresh };
 }
 
 export type Op = 'job.start' | 'job.hold' | 'job.complete';
-const NEXT: Record<Op, Status> = { 'job.start': 'IN_PROGRESS', 'job.hold': 'ON_HOLD', 'job.complete': 'COMPLETED' };
 
-export type LocalState = { status: Status; pending: boolean; attention: boolean };
+export type LocalState = {
+  status: Status;
+  /** Saved on phone · Sending… · Sent · Needs attention; null when nothing was done on this phone. */
+  sync: SyncState | null;
+  /** The server's reason shown with "Needs attention" (e.g. JOB_CANCELLED). */
+  code: string | null;
+  pending: boolean;
+  attention: boolean;
+};
 
 /** Status as the phone knows it: the server's, moved on by operations not sent yet. */
 export async function localState(job: FieldJob): Promise<LocalState> {
-  const ops = (await currentOutbox()?.unsentFor('ServiceJob', job.id)) ?? [];
+  const ops = (await currentOutbox()?.allFor('ServiceJob', job.id)) ?? [];
   let status = job.status;
-  for (const o of ops) if (o.state !== 'NEEDS_ATTENTION') status = NEXT[o.operation as Op] ?? status;
+  for (const o of ops) {
+    if (o.state !== 'SENT' && o.state !== 'NEEDS_ATTENTION') status = (OP_STATUS[o.operation] as Status | undefined) ?? status;
+  }
+  const refused = ops.find((o) => o.state === 'NEEDS_ATTENTION');
+  const sync: SyncState | null = refused
+    ? 'attention'
+    : ops.some((o) => o.state === 'SENDING')
+      ? 'sending'
+      : ops.some((o) => o.state === 'PENDING' || o.state === 'FAILED_RETRYABLE')
+        ? 'saved'
+        : ops.length > 0
+          ? 'sent'
+          : null;
   return {
     status,
-    pending: ops.some((o) => o.state !== 'NEEDS_ATTENTION'),
-    attention: ops.some((o) => o.state === 'NEEDS_ATTENTION'),
+    sync,
+    code: refused?.lastErrorCode ?? null,
+    pending: sync === 'saved' || sync === 'sending',
+    attention: !!refused,
   };
+}
+
+/** The most urgent label among several jobs (the "done today" line). */
+export function worstSync(states: (LocalState | undefined)[]): SyncState | null {
+  for (const s of ['attention', 'sending', 'saved', 'sent'] as const) if (states.some((x) => x?.sync === s)) return s;
+  return null;
 }
 
 /** Local state of one job, refreshed while the sender works through the outbox. */
@@ -106,6 +159,35 @@ export function useSaveOp(job: FieldJob | undefined, onSaved?: (op: Op) => void)
       onSaved?.(op);
     },
   });
+}
+
+/**
+ * "OK, got it" on Needs attention: the server kept the refused work for the
+ * owner (docs/09 §7), so the phone lets it go. A job the server took away
+ * then leaves the phone (`onGone`).
+ */
+export function useDismissAttention(job: FieldJob | undefined, onGone?: () => void) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const outbox = currentOutbox();
+      const store = currentJobStore<FieldJob>();
+      if (!outbox || !store || !job) throw new Error('Phone storage not ready');
+      await outbox.dismissRefused('ServiceJob', job.id);
+      await store.prune();
+      return (await store.get(job.id)) === null;
+    },
+    onSuccess: (removed) => {
+      void qc.invalidateQueries({ queryKey: MY_JOBS });
+      void qc.invalidateQueries({ queryKey: ['job-local'] });
+      if (removed) onGone?.();
+    },
+  });
+}
+
+/** Finished today (by the server, or on this phone and not sent yet). */
+export function doneToday(job: FieldJob, today = todayIso()): boolean {
+  return !job.completedAt || todayIso(new Date(job.completedAt)) === today;
 }
 
 /** Rupees typed by the technician → paise (docs/11 §3); empty or invalid → null. */

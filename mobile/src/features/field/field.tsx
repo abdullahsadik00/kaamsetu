@@ -8,14 +8,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, SectionLabel } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
-import { Icon } from '@/components/ui/icon';
+import { Icon, type IconName } from '@/components/ui/icon';
 import { Avatar } from '@/components/ui/list-row';
 import { OfflineBanner } from '@/components/ui/offline-banner';
-import { SyncLabel } from '@/components/ui/sync-label';
+import { SyncLabel, type SyncState } from '@/components/ui/sync-label';
 import { useLanguage } from '@/localization/i18n';
-import { colors, space, tones } from '@/theme/tokens';
+import { colors, space, tones, type Tone } from '@/theme/tokens';
 
-import { shortDate, todayIso, useLocalStates, useMyJobs, type FieldJob, type LocalState } from './data';
+import { doneToday, shortDate, todayIso, useLocalStates, useMyJobs, useRefresh, worstSync, type FieldJob, type LocalState } from './data';
 import { jobSummary, slotLabel, StatusBadge } from './parts';
 
 export { toPaise, type FieldJob } from './data';
@@ -31,31 +31,33 @@ export function MyWorkScreen() {
   const { t } = useTranslation();
   const language = useLanguage();
   const list = useMyJobs();
+  const refresh = useRefresh();
   const states = useLocalStates(list.data?.jobs);
   const today = todayIso();
 
-  const jobs = (list.data?.jobs ?? []).filter((j) => j.status !== 'CANCELLED');
+  const jobs = (list.data?.jobs ?? []).filter((j) => j.status !== 'CANCELLED' || j.gone);
   const statusOf = (j: FieldJob) => states.data?.[j.id]?.status ?? j.status;
   const now = jobs.filter((j) => statusOf(j) === 'IN_PROGRESS');
   const open = jobs.filter((j) => statusOf(j) !== 'IN_PROGRESS' && statusOf(j) !== 'COMPLETED');
   const todays = open.filter((j) => !j.scheduledDate || j.scheduledDate <= today);
   const later = open.filter((j) => j.scheduledDate && j.scheduledDate > today);
-  const done = jobs.filter((j) => statusOf(j) === 'COMPLETED');
-  const doneSync = done.some((j) => states.data?.[j.id]?.pending) ? 'saved' : 'sent';
+  const done = jobs.filter((j) => statusOf(j) === 'COMPLETED' && doneToday(j, today));
+  const doneSync = worstSync(done.map((j) => states.data?.[j.id]));
 
   return (
     <SafeAreaView style={styles.page} edges={['top']}>
       <OfflineBanner />
       <ScrollView
+        testID="my-work"
         contentContainerStyle={styles.body}
-        refreshControl={<RefreshControl refreshing={list.isRefetching} onRefresh={() => void list.refetch()} />}
+        refreshControl={<RefreshControl refreshing={refresh.refreshing} onRefresh={refresh.onRefresh} />}
       >
         <View>
           <AppText color={colors.slate}>{shortDate(new Date(), language)}</AppText>
           <AppText variant="title">{t('field.myWork')}</AppText>
         </View>
-        {list.isPending ? <ActivityIndicator color={colors.teal} /> : null}
-        {list.data && jobs.length === 0 ? <EmptyState title={t('field.noJobs')} body={t('field.noJobsSub')} /> : null}
+        <FirstDownload list={list.data} empty={jobs.length === 0} />
+        {list.data?.ready && jobs.length === 0 ? <EmptyState title={t('field.noJobs')} body={t('field.noJobsSub')} /> : null}
 
         {now.length > 0 ? (
           <View style={styles.section}>
@@ -83,7 +85,7 @@ export function MyWorkScreen() {
             <AppText variant="support" color={colors.slate}>
               {t('uiField.doneToday', { count: done.length })}
             </AppText>
-            <SyncLabel state={doneSync} />
+            {doneSync ? <SyncLabel state={doneSync} /> : null}
           </View>
         ) : null}
 
@@ -115,8 +117,7 @@ function JobCard({ job, state, active, showDate }: { job: FieldJob; state?: Loca
           {when || `#${job.jobNumber}`}
         </AppText>
         <View style={styles.badges}>
-          {state?.pending ? <Badge label={t('sync.saved')} tone="grey" icon="cellphone" /> : null}
-          {state?.attention ? <Badge label={t('sync.attention')} tone="bad" icon="alert-outline" /> : null}
+          {state?.sync ? <SyncBadge state={state.sync} /> : null}
           <StatusBadge status={s} />
         </View>
       </View>
@@ -127,13 +128,39 @@ function JobCard({ job, state, active, showDate }: { job: FieldJob; state?: Loca
   );
 }
 
+const SYNC_BADGE: Record<SyncState, { tone: Tone; icon: IconName }> = {
+  saved: { tone: 'grey', icon: 'cellphone' },
+  sending: { tone: 'info', icon: 'arrow-up' },
+  sent: { tone: 'ok', icon: 'check-all' },
+  attention: { tone: 'bad', icon: 'alert-outline' },
+};
+
+/** Saved on phone · Sending… · Sent · Needs attention, on a job card. */
+function SyncBadge({ state }: { state: SyncState }) {
+  const { t } = useTranslation();
+  return <Badge label={t(`sync.${state}`)} {...SYNC_BADGE[state]} />;
+}
+
+/** First time on this phone (or after a business switch): the jobs are still on their way. */
+function FirstDownload({ list, empty }: { list: { ready: boolean } | undefined; empty: boolean }) {
+  const { t } = useTranslation();
+  if (list?.ready || !empty) return null;
+  return (
+    <View style={styles.iconLine}>
+      <ActivityIndicator color={colors.teal} />
+      <AppText color={colors.slate}>{t('sync.gettingJobs')}</AppText>
+    </View>
+  );
+}
+
 // ---------- Helper: Today's work (screen 48, Q-01): view and call, nothing to fill ----------
 
 export function TodayScreen() {
   const { t } = useTranslation();
   const language = useLanguage();
   const list = useMyJobs();
-  const jobs = (list.data?.jobs ?? []).filter((j) => j.status !== 'CANCELLED' && j.status !== 'COMPLETED');
+  const refresh = useRefresh();
+  const jobs = (list.data?.jobs ?? []).filter((j) => j.status !== 'CANCELLED' && j.status !== 'COMPLETED' && !j.gone);
   const senior = list.data?.jobs.find((j) => j.senior)?.senior ?? null;
   const call = (phone: string) => Linking.openURL(`tel:${phone}`);
 
@@ -142,10 +169,10 @@ export function TodayScreen() {
       <OfflineBanner />
       <ScrollView
         contentContainerStyle={styles.body}
-        refreshControl={<RefreshControl refreshing={list.isRefetching} onRefresh={() => void list.refetch()} />}
+        refreshControl={<RefreshControl refreshing={refresh.refreshing} onRefresh={refresh.onRefresh} />}
       >
         <SectionLabel>{shortDate(new Date(), language)}</SectionLabel>
-        {list.isPending ? <ActivityIndicator color={colors.teal} /> : null}
+        <FirstDownload list={list.data} empty={jobs.length === 0} />
 
         {senior ? (
           <Card style={styles.seniorCard}>
@@ -162,7 +189,7 @@ export function TodayScreen() {
           </Card>
         ) : null}
 
-        {list.data && jobs.length === 0 ? <EmptyState title={t('field.noJobs')} body={t('helper.helperNote')} /> : null}
+        {list.data?.ready && jobs.length === 0 ? <EmptyState title={t('field.noJobs')} body={t('helper.helperNote')} /> : null}
 
         {jobs.map((j) => {
           const working = j.status === 'IN_PROGRESS';
