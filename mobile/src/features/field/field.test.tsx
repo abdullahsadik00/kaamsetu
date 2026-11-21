@@ -7,7 +7,7 @@ import { api } from '@/features/auth/session';
 import { Outbox } from '@/features/sync/outbox';
 import { renderScreen, setupI18n } from '@/testing/render';
 
-import { MyWorkScreen, TodayScreen, toPaise } from './field';
+import { JobScreen, MyWorkScreen, TodayScreen, toPaise } from './field';
 
 let mockDb: NodeSqlDatabase;
 let mockOutbox: Outbox;
@@ -17,6 +17,10 @@ jest.mock('@/features/sync/sync-engine', () => ({
   currentOutbox: () => mockOutbox,
   notifyLocalSave: () => mockNotify(),
 }));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories cannot use imports
+jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
+const mockPush = jest.fn();
+jest.mock('expo-router', () => ({ router: { push: (...a: unknown[]) => mockPush(...a), navigate: jest.fn(), back: jest.fn() } }));
 jest.mock('expo-crypto', () => ({ randomUUID: () => '7f1d6f0e-0000-4000-8000-000000000001' }));
 
 const job = {
@@ -43,6 +47,7 @@ beforeEach(async () => {
   await migrate(mockDb);
   mockOutbox = new Outbox(mockDb);
   mockNotify.mockClear();
+  mockPush.mockClear();
 });
 afterEach(() => {
   mockDb.close();
@@ -50,11 +55,18 @@ afterEach(() => {
 });
 
 describe('My Work (T4.7)', () => {
-  it('Start work is saved on the phone first and the job moves to In progress', async () => {
+  it('lists the job and opens its page', async () => {
     jest.spyOn(api, 'get').mockResolvedValue([job] as never);
     await renderScreen(<MyWorkScreen />);
+    await fireEvent.press(await screen.findByText('Meera'));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/job/[id]', params: { id: 'job-1' } });
+  });
+
+  it('Start work is saved on the phone first and the job moves to In progress', async () => {
+    jest.spyOn(api, 'get').mockResolvedValue([job] as never);
+    await renderScreen(<JobScreen id="job-1" />);
     expect(await screen.findByText('Meera')).toBeTruthy();
-    expect(screen.getByText('Collect: ₹800')).toBeTruthy();
+    expect(screen.getByText('₹800')).toBeTruthy();
 
     await fireEvent.press(screen.getByText('Start work'));
 
@@ -64,6 +76,20 @@ describe('My Work (T4.7)', () => {
     expect(await screen.findByText('In progress')).toBeTruthy();
     expect(screen.getByText('Saved on phone')).toBeTruthy();
     expect(screen.getByText('Finish work')).toBeTruthy();
+  });
+
+  it('Customer not ready is saved as job.hold with the side and reason', async () => {
+    jest.spyOn(api, 'get').mockResolvedValue([{ ...job, status: 'IN_PROGRESS' }] as never);
+    await renderScreen(<JobScreen id="job-1" />);
+    await fireEvent.press(await screen.findByText('Update status'));
+    await fireEvent.press(screen.getByText('Customer not ready'));
+    await fireEvent.press(screen.getByText('Customer not at home'));
+    await fireEvent.press(screen.getByText('Save'));
+
+    await waitFor(() => expect(mockNotify).toHaveBeenCalled());
+    const [op] = await mockOutbox.unsentFor('ServiceJob', 'job-1');
+    expect(op.operation).toBe('job.hold');
+    expect(op.payload).toEqual({ side: 'CUSTOMER', reason: 'Customer not at home' });
   });
 
   it('offline: shows the last list kept on the phone', async () => {
@@ -79,9 +105,11 @@ describe("Helper's Today's work (Q-01)", () => {
     const { address: _a, complaint: _c, amountToCollect: _m, equipment: _e, landmark: _l, ...slim } = job;
     jest.spyOn(api, 'get').mockResolvedValue([slim] as never);
     await renderScreen(<TodayScreen />);
-    expect(await screen.findByText('Service · Kothrud')).toBeTruthy();
-    expect(screen.getByText('Call Meera')).toBeTruthy();
-    expect(screen.getByText('Call Rakesh (senior)')).toBeTruthy();
+    expect(await screen.findByText('Kothrud')).toBeTruthy();
+    expect(screen.getByText('Meera')).toBeTruthy();
+    expect(screen.getByText('Rakesh')).toBeTruthy();
+    expect(screen.getByTestId('call-senior')).toBeTruthy();
+    expect(screen.getByTestId('call-customer-job-1')).toBeTruthy();
     expect(screen.queryByText('Start work')).toBeNull();
   });
 });
@@ -91,11 +119,11 @@ describe('Finish page (T4.8)', () => {
 
   it('sends outcome, work per AC, parts and money in paise with job.complete', async () => {
     jest.spyOn(api, 'get').mockResolvedValue([{ ...job, status: 'IN_PROGRESS' }] as never);
-    await renderScreen(<MyWorkScreen />);
+    await renderScreen(<JobScreen id="job-1" />);
     await fireEvent.press(await screen.findByText('Finish work'));
     await fireEvent.press(screen.getByText('Gas filled'));
     await fireEvent.press(screen.getByText('+ Add part used'));
-    await fireEvent.changeText(screen.getByLabelText('Part used'), 'Capacitor');
+    await fireEvent.press(screen.getByText('Capacitor'));
     await fireEvent.press(screen.getByText('UPI'));
     await pressLastFinish();
 
@@ -108,11 +136,12 @@ describe('Finish page (T4.8)', () => {
       parts: [{ name: 'Capacitor', qty: 1 }],
       collected: { amount: 80000, mode: 'UPI' }, // pre-filled with the amount to collect
     });
+    expect(await screen.findByText('Work completed')).toBeTruthy(); // confirmation page
   });
 
   it("needs a reason for couldn't do it", async () => {
     jest.spyOn(api, 'get').mockResolvedValue([{ ...job, status: 'IN_PROGRESS' }] as never);
-    await renderScreen(<MyWorkScreen />);
+    await renderScreen(<JobScreen id="job-1" />);
     await fireEvent.press(await screen.findByText('Finish work'));
     await fireEvent.press(screen.getByText("Couldn't do it"));
     await pressLastFinish();

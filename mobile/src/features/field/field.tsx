@@ -1,301 +1,142 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { randomUUID } from 'expo-crypto';
-import { useState } from 'react';
+import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Linking, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ApiError } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ChoiceChips, MultiChoiceChips } from '@/components/ui/choice-chips';
+import { Card, SectionLabel } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Icon } from '@/components/ui/icon';
+import { Avatar } from '@/components/ui/list-row';
 import { OfflineBanner } from '@/components/ui/offline-banner';
-import { TextField } from '@/components/ui/text-field';
-import { api } from '@/features/auth/session';
-import { currentDb, currentOutbox, notifyLocalSave } from '@/features/sync/sync-engine';
-import { colors, radius, space } from '@/theme/tokens';
+import { SyncLabel } from '@/components/ui/sync-label';
+import { useLanguage } from '@/localization/i18n';
+import { colors, space, tones } from '@/theme/tokens';
 
-// ---------- Data: my team's jobs, cached on the phone (docs/09 §2) ----------
+import { shortDate, todayIso, useLocalStates, useMyJobs, type FieldJob, type LocalState } from './data';
+import { jobSummary, slotLabel, StatusBadge } from './parts';
 
-type Status = 'ASSIGNED' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED' | 'NEW' | 'CANCELLED';
-export type FieldJob = {
-  id: string;
-  jobNumber: number;
-  type: string;
-  status: Status;
-  version: number;
-  scheduledDate: string | null;
-  timeSlot: string | null;
-  customer: { name: string; phone: string } | null;
-  locality: string | null;
-  senior: { name: string; phone: string | null } | null;
-  address?: string | null;
-  landmark?: string | null;
-  complaint?: string | null;
-  amountToCollect?: number | null;
-  equipment?: { id: string; type: string; brand: string | null; capacityTons: number | null; locationLabel: string | null }[];
-};
+export { toPaise, type FieldJob } from './data';
+export { JobScreen } from './job-screen';
 
-const CACHE_KEY = 'myJobs';
-const MY_JOBS = ['my-jobs'] as const;
-
-/** Online: fetch and keep a copy. Offline: the last copy, so field staff can keep working. */
-async function loadMyJobs(): Promise<{ jobs: FieldJob[]; offline: boolean }> {
-  const db = currentDb();
-  try {
-    const jobs = await api.get<FieldJob[]>('/my/jobs');
-    await db?.runAsync('INSERT OR REPLACE INTO kv (key, value) VALUES (?, ?)', [CACHE_KEY, JSON.stringify(jobs)]);
-    return { jobs, offline: false };
-  } catch (error) {
-    if (!(error instanceof ApiError) || !error.isNetwork) throw error;
-    const row = await db?.getFirstAsync<{ value: string }>('SELECT value FROM kv WHERE key = ?', [CACHE_KEY]);
-    return { jobs: row ? (JSON.parse(row.value) as FieldJob[]) : [], offline: true };
-  }
+function openJob(id: string) {
+  router.push({ pathname: '/job/[id]', params: { id } });
 }
 
-type Op = 'job.start' | 'job.hold' | 'job.complete';
-const NEXT: Record<Op, Status> = { 'job.start': 'IN_PROGRESS', 'job.hold': 'ON_HOLD', 'job.complete': 'COMPLETED' };
-
-/** Status as the phone knows it: the server's, moved on by operations not sent yet. */
-async function localState(job: FieldJob): Promise<{ status: Status; pending: boolean; attention: boolean }> {
-  const ops = (await currentOutbox()?.unsentFor('ServiceJob', job.id)) ?? [];
-  let status = job.status;
-  for (const o of ops) if (o.state !== 'NEEDS_ATTENTION') status = NEXT[o.operation as Op] ?? status;
-  return {
-    status,
-    pending: ops.some((o) => o.state !== 'NEEDS_ATTENTION'),
-    attention: ops.some((o) => o.state === 'NEEDS_ATTENTION'),
-  };
-}
-
-// ---------- Senior technician: My Work ----------
+// ---------- Senior technician: My Work (screens 19, 79) ----------
 
 export function MyWorkScreen() {
   const { t } = useTranslation();
-  const list = useQuery({ queryKey: MY_JOBS, queryFn: loadMyJobs, refetchInterval: 60_000 });
+  const language = useLanguage();
+  const list = useMyJobs();
+  const states = useLocalStates(list.data?.jobs);
+  const today = todayIso();
+
+  const jobs = (list.data?.jobs ?? []).filter((j) => j.status !== 'CANCELLED');
+  const statusOf = (j: FieldJob) => states.data?.[j.id]?.status ?? j.status;
+  const now = jobs.filter((j) => statusOf(j) === 'IN_PROGRESS');
+  const open = jobs.filter((j) => statusOf(j) !== 'IN_PROGRESS' && statusOf(j) !== 'COMPLETED');
+  const todays = open.filter((j) => !j.scheduledDate || j.scheduledDate <= today);
+  const later = open.filter((j) => j.scheduledDate && j.scheduledDate > today);
+  const done = jobs.filter((j) => statusOf(j) === 'COMPLETED');
+  const doneSync = done.some((j) => states.data?.[j.id]?.pending) ? 'saved' : 'sent';
+
   return (
-    <View style={styles.page}>
+    <SafeAreaView style={styles.page} edges={['top']}>
       <OfflineBanner />
       <ScrollView
         contentContainerStyle={styles.body}
         refreshControl={<RefreshControl refreshing={list.isRefetching} onRefresh={() => void list.refetch()} />}
       >
+        <View>
+          <AppText color={colors.slate}>{shortDate(new Date(), language)}</AppText>
+          <AppText variant="title">{t('field.myWork')}</AppText>
+        </View>
         {list.isPending ? <ActivityIndicator color={colors.teal} /> : null}
-        {list.data?.jobs.length === 0 ? (
-          <View style={styles.card}>
-            <AppText variant="section">{t('field.noJobs')}</AppText>
-            <AppText color={colors.slate}>{t('field.noJobsSub')}</AppText>
+        {list.data && jobs.length === 0 ? <EmptyState title={t('field.noJobs')} body={t('field.noJobsSub')} /> : null}
+
+        {now.length > 0 ? (
+          <View style={styles.section}>
+            <AppText variant="section">{t('uiField.workingNow')}</AppText>
+            {now.map((j) => (
+              <JobCard key={j.id} job={j} state={states.data?.[j.id]} active />
+            ))}
           </View>
         ) : null}
-        {list.data?.jobs.map((j) => <JobCard key={j.id} job={j} />)}
+
+        {todays.length > 0 ? (
+          <View style={styles.section}>
+            <AppText variant="section">
+              {t('uiField.today')} · {todays.length}
+            </AppText>
+            {todays.map((j) => (
+              <JobCard key={j.id} job={j} state={states.data?.[j.id]} />
+            ))}
+          </View>
+        ) : null}
+
+        {done.length > 0 ? (
+          <View style={styles.doneLine}>
+            <Icon name="check-circle-outline" size={18} color={colors.ok} />
+            <AppText variant="support" color={colors.slate}>
+              {t('uiField.doneToday', { count: done.length })}
+            </AppText>
+            <SyncLabel state={doneSync} />
+          </View>
+        ) : null}
+
+        {later.length > 0 ? (
+          <View style={styles.section}>
+            <AppText variant="section">
+              {t('uiField.later')} · {later.length}
+            </AppText>
+            {later.map((j) => (
+              <JobCard key={j.id} job={j} state={states.data?.[j.id]} showDate />
+            ))}
+          </View>
+        ) : null}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
-function JobCard({ job }: { job: FieldJob }) {
+function JobCard({ job, state, active, showDate }: { job: FieldJob; state?: LocalState; active?: boolean; showDate?: boolean }) {
   const { t } = useTranslation();
-  const qc = useQueryClient();
-  const state = useQuery({ queryKey: ['job-local', job.id, job.status], queryFn: () => localState(job), refetchInterval: 3000 });
-  const [panel, setPanel] = useState<'none' | 'hold' | 'finish'>('none');
-  const [side, setSide] = useState<'CUSTOMER' | 'OURS'>('CUSTOMER');
-  const [text, setText] = useState('');
-  const save = useMutation({
-    mutationFn: async ({ op, payload }: { op: Op; payload: object }) => {
-      const outbox = currentOutbox();
-      if (!outbox) throw new Error('Phone storage not ready');
-      // Saved on the phone first (docs/09 §5); the sender delivers it when online.
-      await outbox.enqueue({ id: randomUUID(), entityType: 'ServiceJob', entityId: job.id, operation: op, payload, baseVersion: job.version });
-      notifyLocalSave();
-    },
-    onSuccess: () => {
-      setPanel('none');
-      setText('');
-      void qc.invalidateQueries({ queryKey: ['job-local', job.id] });
-    },
-  });
-  const s = state.data?.status ?? job.status;
-
+  const language = useLanguage();
+  const s = state?.status ?? job.status;
+  const name = job.customer?.name ?? `#${job.jobNumber}`;
+  const when = [showDate && job.scheduledDate ? shortDate(job.scheduledDate, language) : null, slotLabel(t, job)].filter(Boolean).join(' · ');
   return (
-    <View style={styles.card}>
+    <Card tone={active ? 'active' : 'plain'} onPress={() => openJob(job.id)} accessibilityLabel={`${name}, ${t(`jobs.status.${s}`)}`}>
       <View style={styles.between}>
-        <AppText variant="section">{job.customer?.name ?? `#${job.jobNumber}`}</AppText>
-        <AppText weight="semibold" color={s === 'IN_PROGRESS' ? colors.info : s === 'ON_HOLD' ? colors.warn : s === 'COMPLETED' ? colors.ok : colors.assigned}>
-          {t(`jobs.status.${s}`)}
+        <AppText variant="section" weight="bold" color={active ? colors.tealDeep : colors.ink}>
+          {when || `#${job.jobNumber}`}
         </AppText>
-      </View>
-      <AppText color={colors.slate}>
-        #{job.jobNumber} · {t(`jobs.types.${job.type}`)}
-        {job.timeSlot ? ` · ${t(`jobs.slots.${job.timeSlot}`)}` : ''}
-      </AppText>
-      {job.address ? <AppText>{t('field.addr')}: {job.address}</AppText> : null}
-      {job.landmark ? <AppText color={colors.slate}>{job.landmark}</AppText> : null}
-      {job.complaint ? <AppText>{t('field.says')}: {job.complaint}</AppText> : null}
-      {job.equipment?.map((e) => (
-        <AppText key={e.id} variant="support">
-          • {[e.locationLabel, e.capacityTons ? `${e.capacityTons} ton` : null, t(`customers.acTypes.${e.type}`), e.brand].filter(Boolean).join(' · ')}
-        </AppText>
-      ))}
-      {job.amountToCollect ? (
-        <AppText weight="semibold">{t('field.collect')}: ₹{(job.amountToCollect / 100).toLocaleString('en-IN')}</AppText>
-      ) : null}
-      {state.data?.pending ? <AppText weight="semibold" color={colors.warn}>{t('sync.saved')}</AppText> : null}
-      {state.data?.attention ? <AppText weight="semibold" color={colors.bad}>{t('sync.attention')} · {t('field.callOwner')}</AppText> : null}
-      <View style={styles.row}>
-        {job.customer ? (
-          <View style={{ flex: 1 }}>
-            <Button variant="secondary" label={t('field.call')} onPress={() => Linking.openURL(`tel:${job.customer?.phone}`)} />
-          </View>
-        ) : null}
-        {job.address ? (
-          <View style={{ flex: 1 }}>
-            <Button
-              variant="secondary"
-              label={t('field.dir')}
-              onPress={() => Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.address ?? '')}`)}
-            />
-          </View>
-        ) : null}
-      </View>
-
-      {panel === 'hold' ? (
-        <View style={styles.panel}>
-          <ChoiceChips
-            label={t('field.why')}
-            options={[
-              { value: 'CUSTOMER', label: t('field.custHold') },
-              { value: 'OURS', label: t('field.ourHold') },
-            ]}
-            value={side}
-            onChange={setSide}
-          />
-          <TextField label={t('field.note')} value={text} onChangeText={setText} />
-          <Button label={t('field.save')} onPress={() => save.mutate({ op: 'job.hold', payload: { side, ...(text.trim() ? { reason: text.trim() } : {}) } })} />
+        <View style={styles.badges}>
+          {state?.pending ? <Badge label={t('sync.saved')} tone="grey" icon="cellphone" /> : null}
+          {state?.attention ? <Badge label={t('sync.attention')} tone="bad" icon="alert-outline" /> : null}
+          <StatusBadge status={s} />
         </View>
-      ) : null}
-      {panel === 'finish' ? (
-        <FinishForm job={job} busy={save.isPending} onSave={(payload) => save.mutate({ op: 'job.complete', payload })} />
-      ) : null}
-
-      {s === 'ASSIGNED' || s === 'ON_HOLD' ? (
-        <Button label={s === 'ON_HOLD' ? t('field.startAgain') : t('field.start')} onPress={() => save.mutate({ op: 'job.start', payload: {} })} loading={save.isPending} />
-      ) : null}
-      {s === 'IN_PROGRESS' ? (
-        <>
-          <Button label={t('field.finish')} onPress={() => setPanel(panel === 'finish' ? 'none' : 'finish')} />
-          <Button variant="text" label={t('field.hold')} onPress={() => setPanel(panel === 'hold' ? 'none' : 'hold')} />
-        </>
-      ) : null}
-      {save.error ? <AppText color={colors.bad}>{String(save.error)}</AppText> : null}
-    </View>
+      </View>
+      <AppText variant="section">{name}</AppText>
+      <AppText color={colors.slate}>{jobSummary(t, job)}</AppText>
+      {active ? <Button label={t('uiField.continueFinish')} size="large" onPress={() => openJob(job.id)} /> : null}
+    </Card>
   );
 }
 
-// ---------- Finish page (T4.8, D-032) ----------
-
-const WORK = ['CLEANED', 'GAS_FILLED', 'REPAIRED', 'PART_CHANGED', 'INSTALLED', 'CHECKED'] as const;
-type Work = (typeof WORK)[number];
-type Outcome = 'COMPLETED' | 'NEEDS_FOLLOW_UP' | 'NOT_COMPLETED';
-type Part = { name: string; qty: string };
-
-/** Rupees typed by the technician → paise (docs/11 §3); empty or invalid → null. */
-export function toPaise(rupees: string): number | null {
-  const n = Number(rupees.replace(/[,\s₹]/g, ''));
-  return Number.isFinite(n) && n > 0 ? Math.round(n * 100) : null;
-}
-
-function FinishForm({ job, busy, onSave }: { job: FieldJob; busy: boolean; onSave: (payload: object) => void }) {
-  const { t } = useTranslation();
-  const [outcome, setOutcome] = useState<Outcome>('COMPLETED');
-  const [work, setWork] = useState<Record<string, Work[]>>({});
-  const [parts, setParts] = useState<Part[]>([]);
-  const [money, setMoney] = useState(job.amountToCollect ? String(job.amountToCollect / 100) : '');
-  const [mode, setMode] = useState<'CASH' | 'UPI'>('CASH');
-  const [note, setNote] = useState('');
-  const [error, setError] = useState<string | null>(null);
-
-  const submit = () => {
-    if (outcome === 'NOT_COMPLETED' && !note.trim()) return setError(t('field.reasonNeeded'));
-    const amount = toPaise(money);
-    if (money.trim() && amount === null) return setError(t('field.badAmount'));
-    setError(null);
-    onSave({
-      outcome,
-      ...(note.trim() ? { note: note.trim() } : {}),
-      work: Object.entries(work)
-        .filter(([, w]) => w.length > 0)
-        .map(([equipmentId, w]) => ({ equipmentId, work: w })),
-      parts: parts
-        .filter((p) => p.name.trim())
-        .map((p) => ({ name: p.name.trim(), qty: Math.min(99, Math.max(1, Number(p.qty) || 1)) })),
-      ...(amount ? { collected: { amount, mode } } : {}),
-    });
-  };
-
-  return (
-    <View style={styles.panel}>
-      <ChoiceChips
-        label={t('field.result')}
-        options={[
-          { value: 'COMPLETED', label: t('field.done') },
-          { value: 'NEEDS_FOLLOW_UP', label: t('field.again') },
-          { value: 'NOT_COMPLETED', label: t('field.couldnt') },
-        ]}
-        value={outcome}
-        onChange={setOutcome}
-      />
-      {job.equipment?.map((e) => (
-        <MultiChoiceChips
-          key={e.id}
-          label={`${t('field.workOn')} ${[e.locationLabel, t(`customers.acTypes.${e.type}`)].filter(Boolean).join(' · ')}`}
-          options={WORK.map((w) => ({ value: w, label: t(`field.work.${w}`) }))}
-          value={work[e.id] ?? []}
-          onChange={(v) => setWork({ ...work, [e.id]: v })}
-        />
-      ))}
-      {parts.map((p, i) => (
-        <View key={i} style={styles.row}>
-          <View style={{ flex: 3 }}>
-            <TextField
-              label={t('field.part')}
-              value={p.name}
-              onChangeText={(name) => setParts(parts.map((x, j) => (j === i ? { ...x, name } : x)))}
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <TextField
-              label={t('field.qty')}
-              value={p.qty}
-              keyboardType="number-pad"
-              onChangeText={(qty) => setParts(parts.map((x, j) => (j === i ? { ...x, qty } : x)))}
-            />
-          </View>
-        </View>
-      ))}
-      <Button variant="text" label={t('field.addPart')} onPress={() => setParts([...parts, { name: '', qty: '1' }])} />
-      <TextField label={t('field.moneyTaken')} prefix="₹" keyboardType="decimal-pad" value={money} onChangeText={setMoney} />
-      {money.trim() ? (
-        <ChoiceChips
-          label={t('field.how')}
-          options={[
-            { value: 'CASH', label: t('field.cash') },
-            { value: 'UPI', label: t('field.upi') },
-          ]}
-          value={mode}
-          onChange={setMode}
-        />
-      ) : null}
-      <TextField label={outcome === 'NOT_COMPLETED' ? t('field.whyNot') : t('field.note')} value={note} onChangeText={setNote} multiline />
-      {error ? <AppText color={colors.bad}>{error}</AppText> : null}
-      <Button label={t('field.saveFinish')} onPress={submit} loading={busy} />
-    </View>
-  );
-}
-
-// ---------- Helper: Today's work (Q-01) ----------
+// ---------- Helper: Today's work (screen 48, Q-01): view and call, nothing to fill ----------
 
 export function TodayScreen() {
   const { t } = useTranslation();
-  const list = useQuery({ queryKey: MY_JOBS, queryFn: loadMyJobs, refetchInterval: 60_000 });
+  const language = useLanguage();
+  const list = useMyJobs();
+  const jobs = (list.data?.jobs ?? []).filter((j) => j.status !== 'CANCELLED' && j.status !== 'COMPLETED');
+  const senior = list.data?.jobs.find((j) => j.senior)?.senior ?? null;
+  const call = (phone: string) => Linking.openURL(`tel:${phone}`);
+
   return (
     <View style={styles.page}>
       <OfflineBanner />
@@ -303,29 +144,65 @@ export function TodayScreen() {
         contentContainerStyle={styles.body}
         refreshControl={<RefreshControl refreshing={list.isRefetching} onRefresh={() => void list.refetch()} />}
       >
+        <SectionLabel>{shortDate(new Date(), language)}</SectionLabel>
         {list.isPending ? <ActivityIndicator color={colors.teal} /> : null}
-        {list.data?.jobs.length === 0 ? (
-          <View style={styles.card}>
-            <AppText variant="section">{t('field.noJobs')}</AppText>
-            <AppText color={colors.slate}>{t('helper.helperNote')}</AppText>
-          </View>
+
+        {senior ? (
+          <Card style={styles.seniorCard}>
+            <Avatar name={senior.name} size={48} />
+            <View style={styles.flex}>
+              <AppText variant="small" color={colors.muted}>
+                {t('uiField.yourSenior')}
+              </AppText>
+              <AppText weight="semibold">{senior.name}</AppText>
+            </View>
+            {senior.phone ? (
+              <Button variant="soft" icon="phone-outline" label={t('field.call')} onPress={() => call(senior.phone ?? '')} testID="call-senior" />
+            ) : null}
+          </Card>
         ) : null}
-        {list.data?.jobs.map((j) => (
-          <View key={j.id} style={styles.card}>
-            <AppText variant="section">{t(`jobs.types.${j.type}`)} · {j.locality ?? ''}</AppText>
-            <AppText color={colors.slate}>
-              {t(`jobs.status.${j.status}`)}
-              {j.timeSlot ? ` · ${t(`jobs.slots.${j.timeSlot}`)}` : ''}
-            </AppText>
-            {j.customer ? (
-              <Button variant="secondary" label={`${t('field.call')} ${j.customer.name}`} onPress={() => Linking.openURL(`tel:${j.customer?.phone}`)} />
-            ) : null}
-            {j.senior?.phone ? (
-              <Button variant="secondary" label={`${t('field.call')} ${j.senior.name} (${t('helper.senior')})`} onPress={() => Linking.openURL(`tel:${j.senior?.phone}`)} />
-            ) : null}
-            <AppText variant="support" color={colors.slate}>{t('helper.helperNote')}</AppText>
-          </View>
-        ))}
+
+        {list.data && jobs.length === 0 ? <EmptyState title={t('field.noJobs')} body={t('helper.helperNote')} /> : null}
+
+        {jobs.map((j) => {
+          const working = j.status === 'IN_PROGRESS';
+          return (
+            <Card key={j.id} tone={working ? 'active' : 'plain'}>
+              <View style={styles.between}>
+                <SectionLabel color={working ? tones.warn.text : colors.muted}>
+                  {working ? t('uiField.workingNow') : t('uiField.nextJob')}
+                </SectionLabel>
+                {working ? (
+                  <StatusBadge status={j.status} />
+                ) : j.timeSlot ? (
+                  <AppText weight="bold" color={colors.tealDeep}>
+                    {slotLabel(t, j)}
+                  </AppText>
+                ) : null}
+              </View>
+              <AppText variant="title">{j.locality ?? `#${j.jobNumber}`}</AppText>
+              {j.customer ? (
+                <View style={styles.between}>
+                  <AppText weight="semibold" style={styles.flex}>
+                    {j.customer.name}
+                  </AppText>
+                  <Button variant="soft" icon="phone-outline" label={t('field.call')} onPress={() => call(j.customer?.phone ?? '')} testID={`call-customer-${j.id}`} />
+                </View>
+              ) : null}
+              {j.address ? <AppText color={colors.slate}>{[j.address, j.landmark].filter(Boolean).join(' · ')}</AppText> : null}
+              <View style={styles.hr} />
+              <View style={styles.iconLine}>
+                <Icon name="fan" size={20} color={colors.teal} />
+                <AppText style={styles.flex}>{jobSummary(t, j, false)}</AppText>
+              </View>
+              {!working && j.status !== 'ASSIGNED' ? <StatusBadge status={j.status} /> : null}
+            </Card>
+          );
+        })}
+
+        <AppText variant="support" color={colors.muted} style={styles.center}>
+          {t('helper.helperNote')}
+        </AppText>
       </ScrollView>
     </View>
   );
@@ -334,8 +211,13 @@ export function TodayScreen() {
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.paper },
   body: { padding: space.lg, gap: space.lg },
-  card: { backgroundColor: colors.surface, borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, padding: space.lg, gap: space.sm },
-  panel: { gap: space.sm, paddingTop: space.sm, borderTopWidth: 1, borderTopColor: colors.line },
+  section: { gap: space.md },
+  flex: { flex: 1 },
+  center: { textAlign: 'center' },
   between: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.sm },
-  row: { flexDirection: 'row', gap: space.sm },
+  badges: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: space.xs, flexShrink: 1 },
+  doneLine: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: space.xs },
+  seniorCard: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  hr: { height: 1, backgroundColor: colors.rowLine },
+  iconLine: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
 });

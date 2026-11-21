@@ -8,11 +8,11 @@ import { useLanguage } from '@/localization/i18n';
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-/** Senior technician: My Work, History, Profile (docs/02 §3, prototype labels). */
-const TABS: { name: string; label: string; icon: IconName }[] = [
-  { name: 'my-work', label: 'field.myWork', icon: 'briefcase-outline' },
-  { name: 'history', label: 'field.history', icon: 'time-outline' },
-  { name: 'profile', label: 'field.profile', icon: 'person-outline' },
+/** Senior technician: My Work, History, Profile (docs/02 §3, screens 19/31/32). */
+const TABS: { name: string; label: string; icon: IconName; header: boolean }[] = [
+  { name: 'my-work', label: 'field.myWork', icon: 'briefcase-outline', header: false },
+  { name: 'history', label: 'field.history', icon: 'time-outline', header: true },
+  { name: 'profile', label: 'field.profile', icon: 'person-outline', header: true },
 ];
 
 export default function FieldLayout() {
@@ -27,10 +27,13 @@ export default function FieldLayout() {
           name={tab.name}
           options={{
             title: t(tab.label),
+            headerShown: tab.header,
             tabBarIcon: ({ color }) => <Ionicons name={tab.icon} color={color as string} size={26} />,
           }}
         />
       ))}
+      {/* Job page: opened from My Work, keeps the tab bar (screens 20/21), no tab of its own. */}
+      <Tabs.Screen name="job/[id]" options={{ href: null, headerShown: false, title: t('field.myWork') }} />
     </Tabs>
   );
 }

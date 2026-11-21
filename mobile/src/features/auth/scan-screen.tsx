@@ -8,6 +8,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { errorMessage } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
+import { Icon } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
 import { colors, radius, space } from '@/theme/tokens';
 
@@ -33,8 +34,17 @@ export function ScanScreen() {
   if (!permission.granted) {
     return (
       <Screen>
-        <AppText>{t('join.cameraNeeded')}</AppText>
-        <Button label={t('join.allowCamera')} onPress={requestPermission} />
+        <View style={styles.ask}>
+          <View style={styles.askIcon}>
+            <Icon name="qrcode-scan" size={56} color={colors.teal} />
+          </View>
+          <AppText weight="semibold" style={styles.center}>
+            {t('join.cameraNeeded')}
+          </AppText>
+          <View style={styles.askButton}>
+            <Button label={t('join.allowCamera')} icon="camera-outline" size="large" onPress={requestPermission} />
+          </View>
+        </View>
       </Screen>
     );
   }
@@ -56,12 +66,28 @@ export function ScanScreen() {
         barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
         onBarcodeScanned={join.isPending ? undefined : onScanned}
       />
+      {/* Viewfinder frame over the camera (screen 55). */}
+      <View style={styles.overlay} pointerEvents="none">
+        <View style={styles.frame}>
+          <View style={[styles.corner, styles.tl]} />
+          <View style={[styles.corner, styles.tr]} />
+          <View style={[styles.corner, styles.bl]} />
+          <View style={[styles.corner, styles.br]} />
+          <View style={styles.scanLine} />
+        </View>
+      </View>
       <View style={styles.panel}>
-        {join.isPending ? <ActivityIndicator color={colors.teal} /> : null}
-        <AppText>{t('join.scanHint')}</AppText>
-        {notInvite ? <AppText color={colors.bad}>{t('join.notInvite')}</AppText> : null}
+        {join.isPending ? <ActivityIndicator color={colors.white} /> : null}
+        <AppText weight="semibold" color={colors.white} style={styles.center}>
+          {t('join.scanHint')}
+        </AppText>
+        {notInvite ? (
+          <AppText weight="semibold" color={colors.badTint} style={styles.center}>
+            {t('join.notInvite')}
+          </AppText>
+        ) : null}
         {join.error ? (
-          <AppText color={colors.bad} accessibilityLiveRegion="polite">
+          <AppText weight="semibold" color={colors.badTint} style={styles.center} accessibilityLiveRegion="polite">
             {errorMessage(t, join.error)}
           </AppText>
         ) : null}
@@ -70,14 +96,33 @@ export function ScanScreen() {
   );
 }
 
+const C = 28;
+
 const styles = StyleSheet.create({
-  wrap: { flex: 1, backgroundColor: colors.ink },
+  wrap: { flex: 1, backgroundColor: '#05111A' },
   camera: { flex: 1 },
+  center: { textAlign: 'center' },
+  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
+  frame: { width: 240, height: 240, justifyContent: 'center' },
+  corner: { position: 'absolute', width: C, height: C, borderColor: colors.teal },
+  tl: { top: 0, left: 0, borderTopWidth: 4, borderLeftWidth: 4, borderTopLeftRadius: radius.md },
+  tr: { top: 0, right: 0, borderTopWidth: 4, borderRightWidth: 4, borderTopRightRadius: radius.md },
+  bl: { bottom: 0, left: 0, borderBottomWidth: 4, borderLeftWidth: 4, borderBottomLeftRadius: radius.md },
+  br: { bottom: 0, right: 0, borderBottomWidth: 4, borderRightWidth: 4, borderBottomRightRadius: radius.md },
+  scanLine: { height: 2, marginHorizontal: space.lg, backgroundColor: colors.teal, opacity: 0.7 },
   panel: {
-    backgroundColor: colors.surface,
+    position: 'absolute',
+    left: space.lg,
+    right: space.lg,
+    bottom: space.xl,
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
     padding: space.lg,
     gap: space.sm,
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
+    borderRadius: radius.lg,
   },
+  ask: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: space.lg },
+  askIcon: { width: 140, height: 140, borderRadius: 70, backgroundColor: colors.tealTint, alignItems: 'center', justifyContent: 'center' },
+  askButton: { alignSelf: 'stretch' },
 });

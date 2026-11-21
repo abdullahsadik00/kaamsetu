@@ -4,16 +4,17 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 
 import { errorMessage } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
+import { Icon } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { ProfileSection } from '@/features/profile/profile-section';
-import { colors, space } from '@/theme/tokens';
+import { colors, radius, space } from '@/theme/tokens';
 
 import { acceptInvite, useSession } from './session';
 
@@ -49,17 +50,29 @@ export function JoinScreen() {
 
   return (
     <Screen edges={['top', 'bottom']}>
-      <View style={{ gap: space.sm, paddingTop: space.xl }}>
+      <View style={styles.head}>
         <AppText variant="title">{t('join.title')}</AppText>
         {email ? (
           <AppText variant="support" color={colors.slate}>
             {t('join.signedInAs', { email })}
           </AppText>
         ) : null}
-        <AppText color={colors.slate}>{t('join.body')}</AppText>
       </View>
 
-      <Button label={t('join.scan')} onPress={() => router.push('/scan')} testID="scan-invite" />
+      {manual ? null : (
+        <>
+          <AppText>{t('join.body')}</AppText>
+          <View style={styles.scanBox}>
+            <View style={styles.qr}>
+              <Icon name="qrcode" size={48} color={colors.ink} />
+            </View>
+            <AppText variant="support" color={colors.slate}>
+              {t('uiField.readyToScan')}
+            </AppText>
+          </View>
+          <Button label={t('join.scan')} icon="qrcode-scan" size="large" onPress={() => router.push('/scan')} testID="scan-invite" />
+        </>
+      )}
 
       {manual ? (
         <View style={{ gap: space.md }}>
@@ -94,11 +107,12 @@ export function JoinScreen() {
             )}
           />
           <Button
-            variant="secondary"
+            size="large"
             label={join.isPending ? t('join.joining') : t('join.join')}
             onPress={() => submit()}
             loading={join.isPending}
           />
+          <Button variant="text" icon="qrcode-scan" label={t('join.scan')} onPress={() => setManual(false)} />
         </View>
       ) : (
         <Button variant="text" label={t('join.enterCode')} onPress={() => setManual(true)} />
@@ -110,7 +124,7 @@ export function JoinScreen() {
         </AppText>
       ) : null}
 
-      <View style={{ gap: space.xs, paddingTop: space.md }}>
+      <View style={styles.newBiz}>
         <Button
           variant="secondary"
           label={t('join.newBusiness')}
@@ -124,3 +138,23 @@ export function JoinScreen() {
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  head: { gap: space.xs, paddingTop: space.xl, paddingBottom: space.md, borderBottomWidth: 1, borderBottomColor: colors.line },
+  scanBox: {
+    alignSelf: 'center',
+    width: 240,
+    height: 240,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: colors.line2,
+    borderRadius: radius.lg,
+    backgroundColor: colors.soft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: space.md,
+    padding: space.lg,
+  },
+  qr: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: space.lg },
+  newBiz: { gap: space.xs, paddingTop: space.xl },
+});
