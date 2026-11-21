@@ -1,3 +1,4 @@
+import { billingUi } from './ui/billing';
 import { enquiryUi } from './ui/enquiries';
 import { fieldUi } from './ui/field';
 import { ownerUi } from './ui/owner';
@@ -12,6 +13,7 @@ export const en = {
   uiPeople: peopleUi.en,
   uiField: fieldUi.en,
   uiEnquiry: enquiryUi.en,
+  uiBilling: billingUi.en,
   common: {
     appName: 'KaamSetu',
     tagline: 'Work made easier. Accounts made easier. Business made easier.',
