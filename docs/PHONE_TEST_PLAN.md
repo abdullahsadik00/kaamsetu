@@ -62,7 +62,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-24 | App closed while offline still sends later | T3.8 | Pending | | |
 | TP-25 | Reset login and remove an employee | T4.1 | Pending | | Run last: removes people |
 | TP-26 | Join by scanning the QR | T3.12 | Blocked | | Needs a second phone |
-| TP-30 | Enquiries | T4.5 | Not built yet | | |
+| TP-30 | Enquiries | T4.5 | Pending | | Needs the next APK |
 | TP-31 | Paste a service-centre ticket | T4.5a | Not built yet | | Needs ticket samples |
 | TP-32 | Job photos | T4.8 | Not built yet | | Needs a storage bucket (D-026) |
 | TP-33 | Three days offline | T4.9 | Not built yet | | |
@@ -291,6 +291,22 @@ Same as TP-06, with **Test Helper**, the helper's Google account and **900000300
 - After step 3, the helper is back on **Today's work**.
 - After step 4, Test Extra moves under **Removed**. In step 5 they can't get into the business (they see **Join your business** or a "not active" message).
 
+### TP-30 Enquiries (T4.5)
+1. Owner: **Jobs** › **New** (+). The page is called **New enquiry or job**.
+2. Choose **Rohan Kulkarni**, tick the **Hall** AC, Service **Repair**, Problem "Hall AC makes noise at night", When **Tomorrow**, **Evening**, Came from **WhatsApp**.
+3. Tap **Save enquiry**.
+4. Go to **Home**, then tap the "1 open enquiry" card.
+5. Open the enquiry. Tap **Convert to job**, choose team **Team 1**, then **Create job & assign**.
+6. Make a second enquiry (any customer, Came from **Call**) and on its page tap **Close enquiry**, try to close with an empty reason, then type "Customer found someone else".
+7. **Jobs** › **Enquiries** › **Closed**.
+
+**Expected**
+- After step 3 the enquiry page opens: "Enquiry E-201", "via WhatsApp", what they asked, Service Repair, ACs Hall, When Tomorrow, Evening.
+- Home shows "1 open enquiry" with "Newest: Rohan Kulkarni"; the card opens **Jobs** on **Enquiries · 1**.
+- In step 5 the form is already filled (Hall AC, Repair, the problem, tomorrow evening) and has only **Create job & assign**. The job opens as **Assigned** to Team 1 with "From enquiry E-201".
+- In step 6 the close button stays disabled until a reason is typed.
+- **Closed** lists both: E-201 as "Job made" (its page has **Open job #…**) and the second as "Closed" with the reason.
+
 ## Part C — Needs a second phone
 
 ### TP-26 Join by scanning the QR (T3.12)
@@ -306,7 +322,6 @@ Same as TP-06, with **Test Helper**, the helper's Google account and **900000300
 
 Claude writes the full steps when each feature ships and changes its status to **Pending**. What each test will check:
 
-- **TP-30 Enquiries (T4.5):** save a WhatsApp or phone enquiry with the source and complaint; see open enquiries on Home; turn one into a job in one tap without typing it again; close one with a reason.
 - **TP-31 Service-centre ticket paste (T4.5a):** paste a brand ticket message and get name, phone, address, pincode, job type, ticket number and charges filled in; a duplicate ticket shows a warning; unknown text falls back to manual entry without losing what was pasted.
 - **TP-32 Job photos (T4.8):** add photos on the finish page; they upload, also later when you're back online; the owner sees them on the job.
 - **TP-33 Three days offline (T4.9):** 5 jobs and 20 photos across 3 days offline; everything arrives with no loss and no duplicates; the **Saved / Sending / Sent / Needs attention** labels are correct.

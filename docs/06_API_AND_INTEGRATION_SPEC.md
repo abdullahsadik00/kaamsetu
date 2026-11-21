@@ -94,8 +94,10 @@ Search should support customer name and phone number.
 - `POST /enquiries`
 - `GET /enquiries/:id`
 - `PATCH /enquiries/:id`
-- `POST /enquiries/:id/convert` (creates a job, copies customer/site/ACs/complaint)
-- `POST /enquiries/:id/close`
+- `POST /enquiries/:id/convert` (creates a job, copies customer/site/ACs/type/complaint/preferred day; body may set `scheduledDate`, `timeSlot`, `teamId`, `amountToCollect` and change `equipmentIds`, `type`, `complaint`; returns the job; a second convert gives `INVALID_STATUS_TRANSITION`)
+- `POST /enquiries/:id/close` (body `{ reason }`)
+
+`GET /enquiries?status=CLOSED` lists closed and converted enquiries. Numbers are per business from E-201 (D-033).
 
 ## 6. Jobs
 

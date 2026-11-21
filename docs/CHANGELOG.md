@@ -2,6 +2,12 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-21 — Enquiries (T4.5, D-033)
+
+- Backend: `ServiceRequest` (+ ACs) with per-business numbers from E-201; owner-only `/enquiries` list (open/closed), get, edit (version check), close with reason, convert to job in one transaction (one enquiry gives one job; ACs removed since are left out). Jobs show the enquiry they came from. Migration `20261121170000_enquiries`; 10 e2e tests incl. isolation, roles, double convert and numbering under concurrency.
+- App: Jobs tab Enquiries · N | Jobs switch, enquiry page (Stitch 07), one "New enquiry or job" form with "Came from" and Save enquiry / Create job & assign, open-enquiries card on Home. 4 component tests.
+- `PHONE_TEST_PLAN.md`: TP-30 written out and set to Pending.
+
 ## 2026-11-21 — Phone test plan
 
 - `docs/PHONE_TEST_PLAN.md`: every phone check in order, with IDs TP-01 to TP-38. Each has steps using the app's exact labels, the expected result and a status table. TP-01 to TP-04 passed in chat. TP-05 to TP-25 cover what is built but not yet phone-tested: join, teams, customers, ACs, jobs, technician Start/Hold/Finish, offline and helper view. TP-26 (QR scan) needs a second phone. TP-30 to TP-38 are outlines for features not built yet. The tracker's "phone test pending" notes now point to their TP IDs.

@@ -106,7 +106,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Validation:** AC belongs to a site of the same customer. **Tests:** isolation; history query.
 - **Acceptance:** AC added in < 30 s; shows past jobs.
 
-### T4.5 Enquiries (service requests) — High — Not Started — depends T4.3
+### T4.5 Enquiries (service requests) — High — In Progress (built early under D-033: save with source, Open/Closed lists, enquiry page with Call/WhatsApp, close with reason, convert to job in one tap, open count on Home; backend 3c348d5/f1ed1d2, app 9b8f738; phone test pending, see PHONE_TEST_PLAN TP-30) — depends T4.3
 - **Objective:** never lose a WhatsApp/phone enquiry.
 - **Stories:** save enquiry with source and complaint; see open enquiries on Home; convert to job; close with reason.
 - **DB:** ServiceRequest (+ request number sequence). **API:** doc 06 §5a.
@@ -119,7 +119,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Work:** parser per known format (pure function, fully unit-tested against T1.9 samples); review screen; ticket number, source partner; duplicate-ticket warning; "Closed in brand portal" tick.
 - **Acceptance:** every sample format fills name, phone, address, pincode, job type, ticket number and charges correctly; unknown text falls back to manual entry without losing what was pasted.
 
-### T4.6 Job creation and assignment — Critical — In Progress (owner side built early under D-030: create with ACs/type/day/slot/team/amount, assign and change team with history, reschedule with version check, cancel with reason, follow-up; backend 7c86feb; helper swap and enquiry link later; phone test pending, see PHONE_TEST_PLAN TP-13–15, TP-22) — depends T4.4, T4.5, T4.2
+### T4.6 Job creation and assignment — Critical — In Progress (owner side built early under D-030: create with ACs/type/day/slot/team/amount, assign and change team with history, reschedule with version check, cancel with reason, follow-up; backend 7c86feb; enquiry link done under D-033; helper swap later; phone test pending, see PHONE_TEST_PLAN TP-13–15, TP-22) — depends T4.4, T4.5, T4.2
 - **Objective:** create and assign a job in about a minute.
 - **Stories:** create job with ACs, service type, complaint, day and slot, team, amount to collect; reassign; one-day helper swap; cancel with reason; follow-up job linked.
 - **DB:** ServiceJob, JobEquipment, JobAssignment, JobTechnician, JobStatusHistory, job number sequence. **API:** doc 06 §6.
