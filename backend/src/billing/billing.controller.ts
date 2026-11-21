@@ -182,5 +182,7 @@ export class PaymentsController {
 @Module({
   controllers: [BillsController, QuotationsController, PaymentsController],
   providers: [BillingService],
+  // The owner home reuses the Billing tab summary (T4.12).
+  exports: [BillingService],
 })
 export class BillingModule {}

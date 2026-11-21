@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module.js';
 import { BillingModule } from './billing/billing.controller.js';
 import { validateEnv } from './config/env.js';
 import { CustomersModule } from './customers/customers.module.js';
+import { DashboardModule } from './dashboard/dashboard.controller.js';
 import { EnquiriesModule } from './enquiries/enquiries.controller.js';
 import { HealthController } from './health/health.controller.js';
 import { OrganizationModule } from './organization/organization.module.js';
@@ -29,6 +30,7 @@ import { TeamsModule } from './teams/teams.controller.js';
     EnquiriesModule,
     FieldModule,
     BillingModule,
+    DashboardModule,
   ],
   controllers: [HealthController, SiteController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
