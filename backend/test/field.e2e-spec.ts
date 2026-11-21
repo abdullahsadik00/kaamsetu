@@ -7,8 +7,8 @@ import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
 import { TenantFactory, type TestTenant } from './helpers/tenants.js';
 
-const PREFIX_A = '90000097';
-const PREFIX_B = '90000098';
+const PREFIX_A = '90000061'; // own prefixes: enquiries uses 97/98 and the files run in parallel
+const PREFIX_B = '90000062';
 
 describe('Field: my jobs and sync operations (e2e, T4.7)', () => {
   let app: INestApplication<App>;
