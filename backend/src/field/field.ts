@@ -5,10 +5,12 @@ import { CurrentAuth } from '../auth/auth.guard.js';
 import { Roles } from '../auth/roles.js';
 import type { AuthContext } from '../auth/token.service.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
-import type { JobStatus } from '../generated/prisma/client.js';
+import type { JobStatus, Prisma } from '../generated/prisma/client.js';
 import { nextStatus, type JobAction } from '../jobs/jobs.state.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg, scoped } from '../tenancy/tenant.js';
+import { everTeamIds, myTeamIds, presentJobs } from './scope.js';
+import { SyncController, SyncService } from './sync.js';
 
 // ---------- Contracts (docs/09 §5–6) ----------
 
@@ -70,6 +72,9 @@ const ACTION: Record<Operation['operation'], JobAction> = {
   'job.complete': 'complete',
 };
 
+/** Processed operation ids are kept this long (docs/09 §6: at least 30 days). */
+export const OPERATION_RETENTION_DAYS = 30;
+
 const MyJobsQuery = z.strictObject({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional() });
 
 /**
@@ -80,18 +85,10 @@ const MyJobsQuery = z.strictObject({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$
 export class FieldService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async myTeamIds(auth: AuthContext): Promise<string[]> {
-    const rows = await this.prisma.teamMember.findMany({
-      where: { organizationMemberId: auth.memberId as string, leftAt: null, team: { active: true } },
-      select: { teamId: true },
-    });
-    return rows.map((r) => r.teamId);
-  }
 
   /** Open jobs of my teams (plus today's finished ones), slimmer for helpers (Q-01). */
   async myJobs(auth: AuthContext, date?: string) {
-    const teamIds = await this.myTeamIds(auth);
-    const helper = auth.role === 'HELPER';
+    const teamIds = await myTeamIds(this.prisma, auth);
     const day = date ? new Date(`${date}T00:00:00.000Z`) : undefined;
     const jobs = await this.prisma.serviceJob.findMany({
       where: scoped(auth, {
@@ -104,50 +101,9 @@ export class FieldService {
       take: 50,
       include: { equipment: { select: { equipmentId: true } } },
     });
-    const customers = await this.prisma.customer.findMany({
-      where: scoped(auth, { id: { in: jobs.map((j) => j.customerId) } }),
-      select: { id: true, name: true, phone: true },
-    });
-    const sites = await this.prisma.site.findMany({
-      where: scoped(auth, { id: { in: jobs.map((j) => j.siteId) } }),
-    });
-    const acs = await this.prisma.equipment.findMany({
-      where: scoped(auth, { id: { in: jobs.flatMap((j) => j.equipment.map((e) => e.equipmentId)) } }),
-      select: { id: true, type: true, brand: true, capacityTons: true, locationLabel: true },
-    });
-    const seniors = await this.prisma.teamMember.findMany({
-      where: { teamId: { in: teamIds }, leftAt: null, isPrimary: true },
-      select: { teamId: true, member: { select: { user: { select: { name: true, phone: true } } } } },
-    });
-    const c = new Map(customers.map((x) => [x.id, x]));
-    const s = new Map(sites.map((x) => [x.id, x]));
-    const a = new Map(acs.map((x) => [x.id, { ...x, capacityTons: x.capacityTons === null ? null : Number(x.capacityTons) }]));
-    const lead = new Map(seniors.map((x) => [x.teamId, x.member.user]));
-    return jobs.map((j) => {
-      const site = s.get(j.siteId);
-      const base = {
-        id: j.id,
-        jobNumber: j.jobNumber,
-        type: j.type,
-        status: j.status,
-        version: j.version,
-        scheduledDate: j.scheduledDate?.toISOString().slice(0, 10) ?? null,
-        timeSlot: j.timeSlot,
-        customer: c.get(j.customerId) ?? null,
-        locality: site?.locality ?? site?.city ?? null,
-        senior: j.assignedTeamId ? (lead.get(j.assignedTeamId) ?? null) : null,
-      };
-      if (helper) return base;
-      return {
-        ...base,
-        address: site ? [site.addressLine1, site.locality, site.city].filter(Boolean).join(', ') : null,
-        landmark: site?.landmark ?? null,
-        complaint: j.complaint,
-        amountToCollect: j.amountToCollect,
-        equipment: j.equipment.map((e) => a.get(e.equipmentId)).filter(Boolean),
-      };
-    });
+    return presentJobs(this.prisma, auth, jobs, teamIds);
   }
+
 
   /**
    * Applies a batch in order. Each operation answers on its own (partial
@@ -175,12 +131,17 @@ export class FieldService {
       .digest('hex');
     const seen = await this.prisma.syncOperation.findUnique({ where: { id: op.id } });
     if (seen) {
-      return seen.organizationId === organizationId && seen.payloadHash === hash
+      if (seen.organizationId !== organizationId || seen.payloadHash !== hash) {
+        return { id: op.id, status: 'rejected', code: 'OPERATION_ID_REUSED' };
+      }
+      // A repeat gets the stored verdict: applied → duplicate; a refusal stays a refusal.
+      return seen.result === 'applied'
         ? { id: op.id, status: 'duplicate' }
-        : { id: op.id, status: 'rejected', code: 'OPERATION_ID_REUSED' };
+        : { id: op.id, status: seen.result as Result['status'], ...(seen.errorCode ? { code: seen.errorCode } : {}) };
     }
 
     const result = await this.decide(auth, op);
+    const refused = result.status === 'conflict' || result.status === 'rejected';
     await this.prisma.syncOperation.create({
       data: {
         id: op.id,
@@ -191,26 +152,53 @@ export class FieldService {
         payloadHash: hash,
         result: result.status,
         errorCode: result.code ?? null,
+        // Field work the server could not apply is kept for the owner to see (docs/09 §7).
+        ...(refused ? { payload: (op.payload ?? {}) as Prisma.InputJsonValue } : {}),
       },
     });
     return result;
+  }
+
+  /**
+   * Retention (docs/09 §6): processed operation ids are kept 30 days to spot
+   * repeats, then removed. Not scheduled yet; call it from a job or script.
+   */
+  async purgeOldOperations(now = new Date(), days = OPERATION_RETENTION_DAYS): Promise<number> {
+    const before = new Date(now.getTime() - days * 24 * 3600_000);
+    const res = await this.prisma.syncOperation.deleteMany({ where: { receivedAt: { lt: before } } });
+    return res.count;
   }
 
   private async decide(auth: AuthContext, op: Operation): Promise<Result> {
     if (auth.role !== 'SENIOR_TECHNICIAN') {
       return { id: op.id, status: 'rejected', code: 'FORBIDDEN_ROLE' };
     }
-    const teamIds = await this.myTeamIds(auth);
+    const teamIds = await myTeamIds(this.prisma, auth);
     const job = await this.prisma.serviceJob.findFirst({
       where: scoped(auth, { id: op.entityId, assignedTeamId: { in: teamIds } }),
     });
-    // Not found, another business, or no longer my team's job: the same answer (docs/10 §3).
-    if (!job) return { id: op.id, status: 'rejected', code: 'JOB_NOT_ACCESSIBLE' };
+    if (!job) {
+      // Given to another team after this phone saw it (docs/09 §7): a conflict the phone can explain.
+      const moved = await this.prisma.jobAssignment.findFirst({
+        where: { organizationId: requireOrg(auth), jobId: op.entityId, teamId: { in: await everTeamIds(this.prisma, auth) } },
+        select: { id: true },
+      });
+      // Otherwise not found, another business, or never mine: the same answer (docs/10 §3).
+      return moved
+        ? { id: op.id, status: 'conflict', code: 'JOB_REASSIGNED' }
+        : { id: op.id, status: 'rejected', code: 'JOB_NOT_ACCESSIBLE' };
+    }
 
+    // Already started on another phone of the team (docs/09 §10 #8): nothing to do.
+    if (op.operation === 'job.start' && job.status === 'IN_PROGRESS') return { id: op.id, status: 'applied' };
     const to = nextStatus(job.status, ACTION[op.operation]);
-    // e.g. the owner cancelled meanwhile (docs/09 §7): the field work is not lost on the
-    // phone; the full report is kept with T4.8.
-    if (!to) return { id: op.id, status: 'conflict', code: 'INVALID_STATUS_TRANSITION' };
+    // e.g. the owner cancelled meanwhile (docs/09 §7): the phone shows "Needs attention"
+    // with the reason, and the operation body is kept on the server for the owner.
+    if (!to) {
+      const code =
+        job.status === 'CANCELLED' ? 'JOB_CANCELLED' : job.status === 'COMPLETED' ? 'JOB_ALREADY_COMPLETED' : 'INVALID_STATUS_TRANSITION';
+      return { id: op.id, status: 'conflict', code };
+    }
 
     let note: string | null = null;
     let report: z.infer<typeof CompletePayload> | null = null;
@@ -315,5 +303,5 @@ export class FieldController {
   }
 }
 
-@Module({ controllers: [FieldController], providers: [FieldService] })
+@Module({ controllers: [FieldController, SyncController], providers: [FieldService, SyncService] })
 export class FieldModule {}
