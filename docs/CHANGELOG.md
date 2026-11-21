@@ -2,6 +2,10 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-21 — Phone test plan
+
+- `docs/PHONE_TEST_PLAN.md`: every phone check in order, with IDs TP-01 to TP-38. Each has steps using the app's exact labels, the expected result and a status table. TP-01 to TP-04 passed in chat. TP-05 to TP-25 cover what is built but not yet phone-tested: join, teams, customers, ACs, jobs, technician Start/Hold/Finish, offline and helper view. TP-26 (QR scan) needs a second phone. TP-30 to TP-38 are outlines for features not built yet. The tracker's "phone test pending" notes now point to their TP IDs.
+
 ## 2026-11-20 — Design brief for Google Stitch
 
 ### Added
