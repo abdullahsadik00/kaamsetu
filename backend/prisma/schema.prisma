@@ -43,13 +43,16 @@ model Organization {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
-  members      OrganizationMember[]
-  subscription Subscription?
-  customers    Customer[]
-  teams        Team[]
-  jobs         ServiceJob[]
+  members           OrganizationMember[]
+  subscription      Subscription?
+  customers         Customer[]
+  teams             Team[]
+  jobs              ServiceJob[]
   /// Next job number for this business (#1001, #1002, …).
-  nextJobNumber Int         @default(1001)
+  nextJobNumber     Int                  @default(1001)
+  enquiries         ServiceRequest[]
+  /// Next enquiry number for this business (E-201, E-202, …).
+  nextRequestNumber Int                  @default(201)
 }
 
 enum SubscriptionStatus {
@@ -169,8 +172,8 @@ model OrganizationMember {
   joinedAt       DateTime     @default(now())
   deactivatedAt  DateTime?
 
-  organization Organization @relation(fields: [organizationId], references: [id])
-  user         User         @relation(fields: [userId], references: [id])
+  organization Organization   @relation(fields: [organizationId], references: [id])
+  user         User           @relation(fields: [userId], references: [id])
   invites      MemberInvite[]
   teamSlots    TeamMember[]
 
@@ -333,27 +336,29 @@ enum TimeSlot {
 
 /// One visit / work order. Status changes go through the state machine (jobs.state.ts).
 model ServiceJob {
-  id                   String     @id @default(uuid()) @db.Uuid
-  organizationId       String     @db.Uuid
-  jobNumber            Int
-  customerId           String     @db.Uuid
-  siteId               String     @db.Uuid
-  type                 JobType    @default(SERVICE)
-  complaint            String?
+  id                String    @id @default(uuid()) @db.Uuid
+  organizationId    String    @db.Uuid
+  jobNumber         Int
+  customerId        String    @db.Uuid
+  siteId            String    @db.Uuid
+  type              JobType   @default(SERVICE)
+  complaint         String?
   /// Day of the visit (calendar date, organization time zone).
-  scheduledDate        DateTime?  @db.Date
-  timeSlot             TimeSlot?
-  assignedTeamId       String?    @db.Uuid
-  status               JobStatus  @default(NEW)
+  scheduledDate     DateTime? @db.Date
+  timeSlot          TimeSlot?
+  assignedTeamId    String?   @db.Uuid
+  status            JobStatus @default(NEW)
   /// Paise (docs/11 §3).
-  amountToCollect      Int?
-  cancelReason         String?
-  followUpOfJobId      String?    @db.Uuid
-  createdByMemberId    String     @db.Uuid
-  version              Int        @default(1)
-  completedAt          DateTime?
-  createdAt            DateTime   @default(now())
-  updatedAt            DateTime   @updatedAt
+  amountToCollect   Int?
+  cancelReason      String?
+  followUpOfJobId   String?   @db.Uuid
+  /// The enquiry this job was made from (T4.5); one enquiry gives at most one job.
+  serviceRequestId  String?   @unique @db.Uuid
+  createdByMemberId String    @db.Uuid
+  version           Int       @default(1)
+  completedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   organization Organization       @relation(fields: [organizationId], references: [id])
   equipment    JobEquipment[]
@@ -407,6 +412,61 @@ model JobStatusHistory {
   job ServiceJob @relation(fields: [jobId], references: [id])
 
   @@index([jobId, at])
+}
+
+// ---------- Enquiries (docs/05 §5, T4.5, D-033) ----------
+
+enum EnquirySource {
+  WHATSAPP
+  PHONE
+  WALK_IN
+  SERVICE_CENTRE
+  B2B
+  OTHER
+}
+
+enum EnquiryStatus {
+  OPEN
+  CONVERTED
+  CLOSED
+}
+
+/// A customer's request before it becomes a job (shown as E-213).
+model ServiceRequest {
+  id                String        @id @default(uuid()) @db.Uuid
+  organizationId    String        @db.Uuid
+  requestNumber     Int
+  customerId        String        @db.Uuid
+  siteId            String        @db.Uuid
+  source            EnquirySource @default(WHATSAPP)
+  type              JobType       @default(SERVICE)
+  complaint         String?
+  /// Customer's preferred day (calendar date) and time.
+  preferredDate     DateTime?     @db.Date
+  preferredSlot     TimeSlot?
+  status            EnquiryStatus @default(OPEN)
+  closeReason       String?
+  createdByMemberId String        @db.Uuid
+  version           Int           @default(1)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  organization Organization              @relation(fields: [organizationId], references: [id])
+  equipment    ServiceRequestEquipment[]
+
+  @@unique([organizationId, requestNumber])
+  @@index([organizationId, status, createdAt])
+}
+
+model ServiceRequestEquipment {
+  id             String @id @default(uuid()) @db.Uuid
+  organizationId String @db.Uuid
+  requestId      String @db.Uuid
+  equipmentId    String @db.Uuid
+
+  request ServiceRequest @relation(fields: [requestId], references: [id])
+
+  @@unique([requestId, equipmentId])
 }
 
 // ---------- Sync (docs/09 §5–6, T4.7, D-031) ----------

@@ -7,10 +7,10 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg, scoped } from '../tenancy/tenant.js';
 import { isOpen, nextStatus, type JobAction } from './jobs.state.js';
 
-const JOB_TYPES = ['SERVICE', 'REPAIR', 'INSTALLATION', 'UNINSTALLATION', 'GAS_FILLING', 'OTHER'] as const;
-const SLOTS = ['MORNING', 'AFTERNOON', 'EVENING'] as const;
-const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date as YYYY-MM-DD');
-const paise = z.number().int().min(0).max(10_000_000);
+export const JOB_TYPES = ['SERVICE', 'REPAIR', 'INSTALLATION', 'UNINSTALLATION', 'GAS_FILLING', 'OTHER'] as const;
+export const SLOTS = ['MORNING', 'AFTERNOON', 'EVENING'] as const;
+export const day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date as YYYY-MM-DD');
+export const paise = z.number().int().min(0).max(10_000_000);
 
 export const CreateJobSchema = z.strictObject({
   customerId: z.uuid(),
@@ -47,8 +47,8 @@ export type ListJobs = z.infer<typeof ListJobsSchema>;
 export const AssignSchema = z.strictObject({ teamId: z.uuid() });
 export const CancelSchema = z.strictObject({ reason: z.string().trim().min(2, 'Give a reason').max(200) });
 
-const toDate = (d?: string | null) => (d ? new Date(`${d}T00:00:00.000Z`) : d === null ? null : undefined);
-const fromDate = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
+export const toDate = (d?: string | null) => (d ? new Date(`${d}T00:00:00.000Z`) : d === null ? null : undefined);
+export const fromDate = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : null);
 
 const listSelect = {
   id: true,
@@ -112,11 +112,18 @@ export class JobsService {
       where: scoped(auth, { id: job.customerId }),
       select: { id: true, name: true, phone: true },
     });
+    const enquiry = job.serviceRequestId
+      ? await this.prisma.serviceRequest.findFirst({
+          where: scoped(auth, { id: job.serviceRequestId }),
+          select: { id: true, requestNumber: true },
+        })
+      : null;
     return {
       ...row,
       complaint: job.complaint,
       cancelReason: job.cancelReason,
       followUpOfJobId: job.followUpOfJobId,
+      enquiry: enquiry && { id: enquiry.id, number: enquiry.requestNumber },
       version: job.version,
       customer,
       site: site && {
@@ -152,60 +159,64 @@ export class JobsService {
 
   /** Creates a job with the next job number; optionally assigns a team straight away. */
   async create(auth: AuthContext, input: CreateJob) {
+    const id = await this.prisma.$transaction((tx) => this.createIn(tx, auth, input));
+    return this.get(auth, id);
+  }
+
+  /** The job-creating part of `create`, inside the caller's transaction (also used to convert an enquiry). */
+  async createIn(tx: Prisma.TransactionClient, auth: AuthContext, input: CreateJob, serviceRequestId?: string) {
     const organizationId = requireOrg(auth);
     const memberId = auth.memberId as string;
-    const id = await this.prisma.$transaction(async (tx) => {
-      const site = await tx.site.findFirst({
-        where: scoped(auth, { id: input.siteId, customerId: input.customerId }),
-        include: { customer: true },
-      });
-      if (!site || site.customer.archivedAt) throw AppError.notFound('SITE_NOT_FOUND');
-      const acs = new Set(input.equipmentIds);
-      if (acs.size) {
-        const found = await tx.equipment.count({
-          where: scoped(auth, { id: { in: [...acs] }, siteId: site.id, status: 'ACTIVE' as const }),
-        });
-        if (found !== acs.size) {
-          throw new AppError(HttpStatus.BAD_REQUEST, 'EQUIPMENT_NOT_AT_SITE', 'Choose ACs at this address.');
-        }
-      }
-      if (input.teamId) await this.activeTeam(tx, auth, input.teamId);
-      const org = await tx.organization.update({
-        where: { id: organizationId },
-        data: { nextJobNumber: { increment: 1 } },
-        select: { nextJobNumber: true },
-      });
-      const job = await tx.serviceJob.create({
-        data: {
-          organizationId,
-          jobNumber: org.nextJobNumber - 1,
-          customerId: input.customerId,
-          siteId: site.id,
-          type: input.type,
-          complaint: input.complaint || null,
-          scheduledDate: toDate(input.scheduledDate) ?? null,
-          timeSlot: input.timeSlot ?? null,
-          amountToCollect: input.amountToCollect ?? null,
-          createdByMemberId: memberId,
-          status: input.teamId ? 'ASSIGNED' : 'NEW',
-          assignedTeamId: input.teamId ?? null,
-          equipment: { create: [...acs].map((equipmentId) => ({ organizationId, equipmentId })) },
-          history: {
-            create: [
-              { organizationId, toStatus: 'NEW', byMemberId: memberId },
-              ...(input.teamId
-                ? [{ organizationId, fromStatus: 'NEW' as const, toStatus: 'ASSIGNED' as const, byMemberId: memberId }]
-                : []),
-            ],
-          },
-          ...(input.teamId
-            ? { assignments: { create: { organizationId, teamId: input.teamId, assignedByMemberId: memberId } } }
-            : {}),
-        },
-      });
-      return job.id;
+    const site = await tx.site.findFirst({
+      where: scoped(auth, { id: input.siteId, customerId: input.customerId }),
+      include: { customer: true },
     });
-    return this.get(auth, id);
+    if (!site || site.customer.archivedAt) throw AppError.notFound('SITE_NOT_FOUND');
+    const acs = new Set(input.equipmentIds);
+    if (acs.size) {
+      const found = await tx.equipment.count({
+        where: scoped(auth, { id: { in: [...acs] }, siteId: site.id, status: 'ACTIVE' as const }),
+      });
+      if (found !== acs.size) {
+        throw new AppError(HttpStatus.BAD_REQUEST, 'EQUIPMENT_NOT_AT_SITE', 'Choose ACs at this address.');
+      }
+    }
+    if (input.teamId) await this.activeTeam(tx, auth, input.teamId);
+    const org = await tx.organization.update({
+      where: { id: organizationId },
+      data: { nextJobNumber: { increment: 1 } },
+      select: { nextJobNumber: true },
+    });
+    const job = await tx.serviceJob.create({
+      data: {
+        organizationId,
+        jobNumber: org.nextJobNumber - 1,
+        customerId: input.customerId,
+        siteId: site.id,
+        type: input.type,
+        complaint: input.complaint || null,
+        scheduledDate: toDate(input.scheduledDate) ?? null,
+        timeSlot: input.timeSlot ?? null,
+        amountToCollect: input.amountToCollect ?? null,
+        createdByMemberId: memberId,
+        serviceRequestId: serviceRequestId ?? null,
+        status: input.teamId ? 'ASSIGNED' : 'NEW',
+        assignedTeamId: input.teamId ?? null,
+        equipment: { create: [...acs].map((equipmentId) => ({ organizationId, equipmentId })) },
+        history: {
+          create: [
+            { organizationId, toStatus: 'NEW', byMemberId: memberId },
+            ...(input.teamId
+              ? [{ organizationId, fromStatus: 'NEW' as const, toStatus: 'ASSIGNED' as const, byMemberId: memberId }]
+              : []),
+          ],
+        },
+        ...(input.teamId
+          ? { assignments: { create: { organizationId, teamId: input.teamId, assignedByMemberId: memberId } } }
+          : {}),
+      },
+    });
+    return job.id;
   }
 
   /** Edits details (not status). Refuses closed jobs and stale versions. */

@@ -5,6 +5,7 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module.js';
 import { validateEnv } from './config/env.js';
 import { CustomersModule } from './customers/customers.module.js';
+import { EnquiriesModule } from './enquiries/enquiries.controller.js';
 import { HealthController } from './health/health.controller.js';
 import { OrganizationModule } from './organization/organization.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
@@ -24,6 +25,7 @@ import { TeamsModule } from './teams/teams.controller.js';
     CustomersModule,
     TeamsModule,
     JobsModule,
+    EnquiriesModule,
     FieldModule,
   ],
   controllers: [HealthController, SiteController],
