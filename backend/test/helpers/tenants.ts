@@ -82,6 +82,7 @@ export class TenantFactory {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- same call on each delegate
       await (this.prisma[model] as any).deleteMany({ where: { organizationId: { in: orgIds } } });
     }
+    await this.prisma.teamDayHelper.deleteMany({ where: { organizationId: { in: orgIds } } });
     await this.prisma.teamMember.deleteMany({
       where: { organizationId: { in: orgIds } },
     });
