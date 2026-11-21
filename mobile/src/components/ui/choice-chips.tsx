@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
-import { colors, radius, space, touch } from '@/theme/tokens';
+import { colors, radius, space } from '@/theme/tokens';
 
 import { AppText } from './app-text';
 
@@ -17,7 +17,7 @@ type Props<T extends string> = {
 export function ChoiceChips<T extends string>({ label, options, value, onChange }: Props<T>) {
   return (
     <View style={styles.wrap}>
-      <AppText variant="support" weight="semibold" color={colors.slate}>
+      <AppText variant="support" weight="semibold">
         {label}
       </AppText>
       <View style={styles.row} accessibilityRole="radiogroup" accessibilityLabel={label}>
@@ -31,7 +31,7 @@ export function ChoiceChips<T extends string>({ label, options, value, onChange 
               onPress={() => onChange(o.value)}
               style={[styles.chip, on && styles.chipOn]}
             >
-              <AppText weight="semibold" color={on ? colors.white : colors.ink}>
+              <AppText variant="support" weight="semibold" color={on ? colors.tealTintText : colors.ink}>
                 {o.label}
               </AppText>
             </Pressable>
@@ -56,7 +56,7 @@ export function MultiChoiceChips<T extends string>({
 }) {
   return (
     <View style={styles.wrap}>
-      <AppText variant="support" weight="semibold" color={colors.slate}>
+      <AppText variant="support" weight="semibold">
         {label}
       </AppText>
       <View style={styles.row} accessibilityLabel={label}>
@@ -70,7 +70,7 @@ export function MultiChoiceChips<T extends string>({
               onPress={() => onChange(on ? value.filter((v) => v !== o.value) : [...value, o.value])}
               style={[styles.chip, on && styles.chipOn]}
             >
-              <AppText weight="semibold" color={on ? colors.white : colors.ink}>
+              <AppText variant="support" weight="semibold" color={on ? colors.tealTintText : colors.ink}>
                 {o.label}
               </AppText>
             </Pressable>
@@ -85,13 +85,13 @@ const styles = StyleSheet.create({
   wrap: { gap: space.sm },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   chip: {
-    minHeight: touch.min,
-    paddingHorizontal: space.lg,
-    borderRadius: radius.xl,
-    borderWidth: 1.5,
+    minHeight: 44,
+    paddingHorizontal: space.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
     borderColor: colors.line2,
     backgroundColor: colors.surface,
     justifyContent: 'center',
   },
-  chipOn: { backgroundColor: colors.teal, borderColor: colors.teal },
+  chipOn: { backgroundColor: colors.tealTint, borderColor: colors.teal },
 });

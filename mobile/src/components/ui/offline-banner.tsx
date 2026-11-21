@@ -6,9 +6,10 @@ import { useSession } from '@/features/auth/session';
 import { colors, space } from '@/theme/tokens';
 
 import { AppText } from './app-text';
+import { Icon } from './icon';
 
 /**
- * OfflineBanner (docs/02 §6): tells field staff they can keep working.
+ * Offline bar (component reference): tells staff they can keep working.
  * Shown only when signed in and the phone reports no internet; unknown
  * states (null) count as online, so it never flashes at start-up.
  */
@@ -20,7 +21,8 @@ export function OfflineBanner() {
   if (!signedIn || !offline) return null;
   return (
     <View style={styles.bar} accessibilityRole="alert" accessibilityLiveRegion="polite">
-      <AppText variant="support" weight="semibold" color={colors.ink}>
+      <Icon name="wifi-off" size={18} color={colors.grey} />
+      <AppText variant="support" weight="semibold" color={colors.grey} style={styles.text}>
         {t('sync.noNet')}
       </AppText>
     </View>
@@ -29,10 +31,14 @@ export function OfflineBanner() {
 
 const styles = StyleSheet.create({
   bar: {
-    backgroundColor: colors.warnTint,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.sm,
+    backgroundColor: colors.greyTint,
     borderBottomWidth: 1,
-    borderBottomColor: colors.warn,
+    borderBottomColor: colors.line,
     paddingHorizontal: space.lg,
     paddingVertical: space.sm,
   },
+  text: { flex: 1 },
 });

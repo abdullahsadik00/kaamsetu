@@ -1,9 +1,15 @@
+import { fieldUi } from './ui/field';
+import { ownerUi } from './ui/owner';
+import { peopleUi } from './ui/people';
 /**
  * English strings. This object defines the key structure; `hi` and `mr`
  * must provide every key (checked by the `Translations` type).
  * Technician/helper wording comes from the clickable prototype (docs/design).
  */
 export const en = {
+  uiOwner: ownerUi.en,
+  uiPeople: peopleUi.en,
+  uiField: fieldUi.en,
   common: {
     appName: 'KaamSetu',
     tagline: 'Work made easier. Accounts made easier. Business made easier.',

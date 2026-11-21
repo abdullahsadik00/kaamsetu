@@ -1,51 +1,72 @@
-import { ActivityIndicator, Pressable, StyleSheet } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { colors, radius, space, touch } from '@/theme/tokens';
 
 import { AppText } from './app-text';
+import { Icon, type IconName } from './icon';
+
+/**
+ * DESIGN.md buttons:
+ * - primary: teal fill (main action)
+ * - secondary: white, teal outline
+ * - tonal: teal tint fill (Call, WhatsApp)
+ * - soft: grey fill (Update status, Directions)
+ * - destructive: red outline (Log out, Cancel job)
+ * - dashed: dashed outline (+ Add AC)
+ * - text: link-style (Skip for now)
+ */
+export type ButtonVariant = 'primary' | 'secondary' | 'tonal' | 'soft' | 'destructive' | 'dashed' | 'text';
 
 type Props = {
   label: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'text';
+  variant?: ButtonVariant;
+  icon?: IconName;
+  /** `large` = 56 dp technician action. */
+  size?: 'normal' | 'large';
   disabled?: boolean;
   loading?: boolean;
   testID?: string;
 };
 
-/** PrimaryButton / SecondaryButton from docs/02 §6, 56 dp high. */
-export function Button({
-  label,
-  onPress,
-  variant = 'primary',
-  disabled,
-  loading,
-  testID,
-}: Props) {
+const TEXT: Record<ButtonVariant, string> = {
+  primary: colors.white,
+  secondary: colors.teal,
+  tonal: colors.tealTintText,
+  soft: colors.ink,
+  destructive: colors.bad,
+  dashed: colors.tealTintText,
+  text: colors.tealTintText,
+};
+
+export function Button({ label, onPress, variant = 'primary', icon, size = 'normal', disabled, loading, testID }: Props) {
   const inactive = disabled || loading;
-  const textColor = variant === 'primary' ? colors.white : colors.teal;
+  const textColor = TEXT[variant];
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
       accessibilityState={{ disabled: inactive, busy: loading }}
       testID={testID}
       onPress={onPress}
       disabled={inactive}
       style={({ pressed }) => [
         styles.base,
-        variant === 'primary' && styles.primary,
-        variant === 'secondary' && styles.secondary,
-        variant === 'text' && styles.text,
+        size === 'large' && styles.large,
+        styles[variant],
+        pressed && pressedStyle[variant],
         inactive && styles.inactive,
-        pressed && styles.pressed,
       ]}
     >
       {loading ? (
         <ActivityIndicator color={textColor} />
       ) : (
-        <AppText weight="semibold" color={textColor}>
-          {label}
-        </AppText>
+        <View style={styles.row}>
+          {icon ? <Icon name={icon} size={size === 'large' ? 22 : 20} color={textColor} /> : null}
+          <AppText weight="semibold" color={textColor} variant={size === 'large' ? 'body' : 'support'} style={size === 'large' ? styles.largeText : null}>
+            {label}
+          </AppText>
+        </View>
       )}
     </Pressable>
   );
@@ -53,19 +74,31 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: touch.action,
+    minHeight: touch.min,
     borderRadius: radius.md,
     paddingHorizontal: space.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  large: { minHeight: touch.action },
+  largeText: { fontSize: 17 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
   primary: { backgroundColor: colors.teal },
-  secondary: {
-    backgroundColor: colors.surface,
-    borderWidth: 1.5,
-    borderColor: colors.teal,
-  },
-  text: { minHeight: touch.min, backgroundColor: 'transparent' },
-  inactive: { opacity: 0.55 },
-  pressed: { opacity: 0.85 },
+  secondary: { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.teal },
+  tonal: { backgroundColor: colors.tealTint },
+  soft: { backgroundColor: colors.soft },
+  destructive: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.bad },
+  dashed: { backgroundColor: colors.surface, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.line2 },
+  text: { backgroundColor: 'transparent' },
+  inactive: { backgroundColor: colors.soft, borderColor: colors.soft, opacity: 0.8 },
+});
+
+const pressedStyle = StyleSheet.create({
+  primary: { backgroundColor: colors.tealDark },
+  secondary: { backgroundColor: colors.tealTint },
+  tonal: { backgroundColor: '#D3E9E4' },
+  soft: { backgroundColor: colors.line },
+  destructive: { backgroundColor: colors.badTint },
+  dashed: { backgroundColor: colors.tealTint },
+  text: { backgroundColor: colors.tealTint },
 });

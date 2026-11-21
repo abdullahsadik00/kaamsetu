@@ -4,14 +4,16 @@ import { useLanguage } from '@/localization/i18n';
 import { fontFamily, type FontWeight } from '@/theme/fonts';
 import { colors, fontSize } from '@/theme/tokens';
 
-type Variant = 'title' | 'section' | 'body' | 'support' | 'small';
+/** `label` = small uppercase section stamp ("ADDRESS", "ACS · 2"). */
+type Variant = 'title' | 'section' | 'body' | 'support' | 'small' | 'label';
 
 const lineHeight: Record<Variant, number> = {
-  title: 32,
-  section: 26,
-  body: 25,
-  support: 22,
-  small: 18,
+  title: 34,
+  section: 24,
+  body: 24,
+  support: 20,
+  small: 16,
+  label: 14,
 };
 
 export type AppTextProps = TextProps & {
@@ -23,7 +25,7 @@ export type AppTextProps = TextProps & {
 /** All app text goes through this, so the font follows the UI language. */
 export function AppText({
   variant = 'body',
-  weight = variant === 'title' ? 'bold' : variant === 'section' ? 'semibold' : 'regular',
+  weight = variant === 'title' ? 'bold' : variant === 'section' || variant === 'label' ? 'semibold' : 'regular',
   color = colors.ink,
   style,
   ...rest
@@ -39,6 +41,7 @@ export function AppText({
           lineHeight: lineHeight[variant],
           color,
         },
+        variant === 'label' && language === 'en' ? { textTransform: 'uppercase', letterSpacing: 0.6 } : null,
         style,
       ]}
     />

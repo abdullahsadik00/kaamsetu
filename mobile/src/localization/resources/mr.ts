@@ -1,4 +1,7 @@
 import type { Translations } from './en';
+import { fieldUi } from './ui/field';
+import { ownerUi } from './ui/owner';
+import { peopleUi } from './ui/people';
 
 /**
  * Marathi. Technician/helper labels are the prototype's own; login, owner and
@@ -6,6 +9,9 @@ import type { Translations } from './en';
  * native speaker (the prototype shows those screens in English only).
  */
 export const mr: Translations = {
+  uiOwner: ownerUi.mr,
+  uiPeople: peopleUi.mr,
+  uiField: fieldUi.mr,
   common: {
     appName: 'कामसेतु',
     tagline: 'काम सोपे। हिशोब सोपा। व्यवसाय सोपा।',
