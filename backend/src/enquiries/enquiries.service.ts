@@ -36,8 +36,11 @@ export type UpdateEnquiry = z.infer<typeof UpdateEnquirySchema>;
 export const ListEnquiriesSchema = z.strictObject({ status: z.enum(['OPEN', 'CLOSED']).default('OPEN') });
 export type ListEnquiries = z.infer<typeof ListEnquiriesSchema>;
 
-/** What the owner can still decide when converting; the rest is copied from the enquiry. */
+/** What the owner can still change when converting; anything left out is copied from the enquiry. */
 export const ConvertSchema = z.strictObject({
+  equipmentIds: z.array(z.uuid()).max(20).optional(),
+  type: z.enum(JOB_TYPES).optional(),
+  complaint: z.string().trim().max(500).nullable().optional(),
   scheduledDate: day.nullable().optional(),
   timeSlot: z.enum(SLOTS).nullable().optional(),
   teamId: z.uuid().optional(),
@@ -215,15 +218,16 @@ export class EnquiriesService {
       });
       const scheduledDate = input.scheduledDate !== undefined ? input.scheduledDate : fromDate(e.preferredDate);
       const timeSlot = input.timeSlot !== undefined ? input.timeSlot : e.preferredSlot;
+      const complaint = input.complaint !== undefined ? input.complaint : e.complaint;
       return this.jobs.createIn(
         tx,
         auth,
         {
           customerId: e.customerId,
           siteId: e.siteId,
-          equipmentIds: stillThere.map((x) => x.id),
-          type: e.type,
-          complaint: e.complaint ?? undefined,
+          equipmentIds: input.equipmentIds ?? stillThere.map((x) => x.id),
+          type: input.type ?? e.type,
+          complaint: complaint ?? undefined,
           scheduledDate: scheduledDate ?? undefined,
           timeSlot: scheduledDate ? (timeSlot ?? undefined) : undefined,
           teamId: input.teamId,
