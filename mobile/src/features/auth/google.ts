@@ -47,8 +47,16 @@ export async function googleIdToken(): Promise<string | null> {
   }
 }
 
-/** Forget the chosen account, so the next login shows the picker (shared phones). */
+/**
+ * Forget the chosen account, so the next login shows the picker (shared phones).
+ * Loads the module if needed: after an app restart the session comes from
+ * SecureStore and Google was never touched, but it still remembers the account.
+ */
 export async function googleSignOut(): Promise<void> {
-  if (!googleAvailable || !mod) return;
-  await mod.GoogleSignin.signOut().catch(() => undefined);
+  if (!googleAvailable) return;
+  try {
+    await google().GoogleSignin.signOut();
+  } catch {
+    // Never block logout on Google.
+  }
 }
