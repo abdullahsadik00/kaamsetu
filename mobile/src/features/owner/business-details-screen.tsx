@@ -2,14 +2,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
 import { ActivityIndicator, StyleSheet, Switch, View } from 'react-native';
 import { z } from 'zod';
 
 import { errorMessage } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
+import { displayPhone } from '@/features/customers/api';
 import {
   ORGANIZATION_KEY,
   updateBusiness,
@@ -41,7 +44,58 @@ export function BusinessDetailsScreen() {
   const business = useQuery(useBusiness());
   if (business.isPending) return <ActivityIndicator style={{ flex: 1 }} color={colors.teal} />;
   if (business.isError) return <ErrorView error={business.error} />;
-  return <BusinessForm business={business.data} />;
+  return <BusinessView business={business.data} />;
+}
+
+/** Stitch 68: read-only details first, "Edit details" opens the form. */
+function BusinessView({ business }: { business: Business }) {
+  const { t } = useTranslation();
+  const [editing, setEditing] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
+  if (editing) {
+    return (
+      <BusinessForm
+        business={business}
+        onSaved={() => {
+          setEditing(false);
+          setJustSaved(true);
+        }}
+      />
+    );
+  }
+  const rows: { label: string; value: string | null }[] = [
+    { label: t('onboarding.name'), value: business.name },
+    { label: t('onboarding.phone'), value: displayPhone(business.phone) },
+    { label: t('onboarding.city'), value: business.city },
+    { label: t('uiOwner.gstin'), value: business.gstBills ? business.gstin : null },
+  ];
+  return (
+    <Screen>
+      <Card style={styles.viewCard}>
+        {rows.map((r, i) => (
+          <View key={r.label} style={[styles.viewRow, i < rows.length - 1 && styles.divider]}>
+            <AppText variant="support" color={colors.muted}>
+              {r.label}
+            </AppText>
+            <AppText variant="section" weight={r.value ? 'semibold' : 'regular'} color={r.value ? colors.ink : colors.muted}>
+              {r.value || t('uiOwner.notAdded')}
+            </AppText>
+          </View>
+        ))}
+        <View style={styles.viewRow}>
+          <AppText variant="support" color={business.gstBills ? colors.ok : colors.muted}>
+            {t(business.gstBills ? 'uiOwner.gstOn' : 'uiOwner.gstOff')}
+          </AppText>
+        </View>
+      </Card>
+      {justSaved ? (
+        <AppText color={colors.ok} accessibilityLiveRegion="polite">
+          {t('business.saved')}
+        </AppText>
+      ) : null}
+      <Button variant="soft" icon="pencil-outline" label={t('uiOwner.editDetails')} onPress={() => setEditing(true)} />
+    </Screen>
+  );
 }
 
 function ErrorView({ error }: { error: unknown }) {
@@ -53,7 +107,7 @@ function ErrorView({ error }: { error: unknown }) {
   );
 }
 
-function BusinessForm({ business }: { business: Business }) {
+function BusinessForm({ business, onSaved }: { business: Business; onSaved: () => void }) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const form = useForm<FormIn, unknown, FormOut>({
@@ -79,6 +133,7 @@ function BusinessForm({ business }: { business: Business }) {
     onSuccess: (saved) => {
       qc.setQueryData(ORGANIZATION_KEY, saved);
       form.reset(form.getValues());
+      onSaved();
     },
   });
   const submit = form.handleSubmit((v) => save.mutate(v));
@@ -174,6 +229,9 @@ function BusinessForm({ business }: { business: Business }) {
 }
 
 const styles = StyleSheet.create({
+  viewCard: { paddingVertical: space.xs, gap: 0 },
+  viewRow: { paddingVertical: space.md, gap: 2 },
+  divider: { borderBottomWidth: 1, borderBottomColor: colors.rowLine },
   switchCard: {
     flexDirection: 'row',
     alignItems: 'center',

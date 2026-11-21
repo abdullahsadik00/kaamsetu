@@ -10,7 +10,7 @@ import { restoreSession, useSession } from '@/features/auth/session';
 import { SyncEngine } from '@/features/sync/sync-engine';
 import { initErrorReporting, withErrorReporting } from '@/monitoring/error-reporting';
 import { i18n, initI18n } from '@/localization/i18n';
-import { fontFiles } from '@/theme/fonts';
+import { fontFamily, fontFiles } from '@/theme/fonts';
 import { colors } from '@/theme/tokens';
 
 initErrorReporting();
@@ -57,7 +57,18 @@ function RootLayout() {
       <StatusBar style="dark" />
       {signedIn && userId ? <SyncEngine userId={userId} /> : null}
       {/* Each role only has its own screens; index.tsx sends people to their home. */}
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.paper } }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.paper },
+          // Stitch app bar: paper background, ink title, no shadow.
+          headerStyle: { backgroundColor: colors.paper },
+          headerTintColor: colors.ink,
+          headerShadowVisible: false,
+          headerBackButtonDisplayMode: 'minimal',
+          headerTitleStyle: { fontFamily: fontFamily(i18n.language === 'en' ? 'en' : 'hi', 'semibold'), fontSize: 18 },
+        }}
+      >
         <Stack.Screen name="index" />
         <Stack.Protected guard={!signedIn}>
           <Stack.Screen name="(auth)" />

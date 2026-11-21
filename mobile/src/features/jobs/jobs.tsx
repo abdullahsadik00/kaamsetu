@@ -6,20 +6,27 @@ import { ActivityIndicator, Linking, Pressable, StyleSheet, View } from 'react-n
 
 import { ApiError, errorMessage } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
+import { Badge, STATUS_TONE } from '@/components/ui/badge';
+import { BottomSheet } from '@/components/ui/bottom-sheet';
 import { Button } from '@/components/ui/button';
-import { ChoiceChips } from '@/components/ui/choice-chips';
+import { Card, Field, SectionLabel } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Icon } from '@/components/ui/icon';
+import { ListRow } from '@/components/ui/list-row';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { api } from '@/features/auth/session';
 import { acSummary, displayPhone, useCustomer, useCustomers } from '@/features/customers/api';
-import { useTeams } from '@/features/teams/teams';
-import { colors, radius, space, touch } from '@/theme/tokens';
+import { useTeams, type Team } from '@/features/teams/teams';
+import { colors, radius, space } from '@/theme/tokens';
+
+import { ConfirmDialog, FilterChips, FormSection, OptionChips, SheetRow } from './parts';
 
 // ---------- API (docs/06 §6, D-030) ----------
 
 type JobType = 'SERVICE' | 'REPAIR' | 'INSTALLATION' | 'UNINSTALLATION' | 'GAS_FILLING' | 'OTHER';
 type Slot = 'MORNING' | 'AFTERNOON' | 'EVENING';
-type Status = 'NEW' | 'ASSIGNED' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED' | 'CANCELLED';
+export type Status = 'NEW' | 'ASSIGNED' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED' | 'CANCELLED';
 
 export type JobRow = {
   id: string;
@@ -53,7 +60,8 @@ type Job = JobRow & {
 };
 
 const JOBS_KEY = ['jobs'] as const;
-const useJobs = (filter: string) =>
+/** Job list for a query string (`date=…` or `status=OPEN|COMPLETED`); also used by owner Home. */
+export const useJobs = (filter: string) =>
   queryOptions({ queryKey: [...JOBS_KEY, 'list', filter], queryFn: () => api.get<JobRow[]>(`/jobs?${filter}`) });
 const useJob = (id: string) =>
   queryOptions({ queryKey: [...JOBS_KEY, id], queryFn: () => api.get<Job>(`/jobs/${id}`) });
@@ -70,13 +78,22 @@ export function dayString(offset: number, from = new Date()): string {
 
 const rupees = (paise: number | null) => (paise === null ? null : `₹${(paise / 100).toLocaleString('en-IN')}`);
 
-function useDayLabel() {
-  const { t } = useTranslation();
-  return (d: string | null) =>
-    !d ? t('jobs.noDate') : d === dayString(0) ? t('jobs.today') : d === dayString(1) ? t('jobs.tomorrow') : d;
+/** "20 Nov" for a YYYY-MM-DD date. */
+function shortDate(d: string): string {
+  const [y, m, day] = d.split('-').map(Number);
+  const date = new Date(y, m - 1, day);
+  return Number.isNaN(date.getTime()) ? d : date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 }
 
-// ---------- Jobs tab ----------
+export function useDayLabel() {
+  const { t } = useTranslation();
+  return (d: string | null) =>
+    !d ? t('jobs.noDate') : d === dayString(0) ? t('jobs.today') : d === dayString(1) ? t('jobs.tomorrow') : shortDate(d);
+}
+
+const isOpen = (s: Status) => s !== 'COMPLETED' && s !== 'CANCELLED';
+
+// ---------- Jobs tab (Stitch 05, 80) ----------
 
 export function JobsScreen() {
   const { t } = useTranslation();
@@ -84,11 +101,14 @@ export function JobsScreen() {
   const filter =
     view === 'today' ? `date=${dayString(0)}` : view === 'tomorrow' ? `date=${dayString(1)}` : view === 'open' ? 'status=OPEN' : 'status=COMPLETED';
   const jobs = useQuery(useJobs(filter));
-  const dayLabel = useDayLabel();
 
   return (
-    <Screen footer={<Button label={t('jobs.new')} onPress={() => router.push('/jobs/new')} />}>
-      <ChoiceChips
+    <Screen>
+      <View style={styles.titleRow}>
+        <AppText variant="title">{t('owner.jobs')}</AppText>
+        <Button icon="plus" label={t('uiOwner.newShort')} onPress={() => router.push('/jobs/new')} />
+      </View>
+      <FilterChips
         label={t('jobs.show')}
         options={(['today', 'tomorrow', 'open', 'done'] as const).map((v) => ({ value: v, label: t(`jobs.views.${v}`) }))}
         value={view}
@@ -96,46 +116,44 @@ export function JobsScreen() {
       />
       {jobs.isPending ? <ActivityIndicator color={colors.teal} /> : null}
       {jobs.isError ? <AppText color={colors.bad}>{errorMessage(t, jobs.error)}</AppText> : null}
-      {jobs.data?.length === 0 ? <AppText color={colors.slate}>{t('jobs.empty')}</AppText> : null}
-      {jobs.data?.map((j) => (
-        <Pressable
-          key={j.id}
-          accessibilityRole="button"
-          onPress={() => router.push({ pathname: '/jobs/[id]', params: { id: j.id } })}
-          style={({ pressed }) => [styles.row, pressed && { opacity: 0.8 }]}
-        >
-          <View style={styles.between}>
-            <AppText weight="semibold">
-              #{j.jobNumber} · {j.customerName}
-            </AppText>
-            <AppText variant="small" weight="semibold" color={STATUS_COLOR[j.status]}>
-              {t(`jobs.status.${j.status}`)}
-            </AppText>
-          </View>
-          <AppText variant="support" color={colors.slate}>
-            {[t(`jobs.types.${j.type}`), j.place, dayLabel(j.scheduledDate), j.timeSlot && t(`jobs.slots.${j.timeSlot}`)]
-              .filter(Boolean)
-              .join(' · ')}
-          </AppText>
-          <AppText variant="support" color={j.teamName ? colors.ink : colors.warn}>
-            {j.teamName ?? t('jobs.notAssigned')}
-          </AppText>
-        </Pressable>
-      ))}
+      {jobs.data?.length === 0 ? <EmptyState title={t('jobs.empty')} body={t('uiOwner.emptyJobsBody')} /> : null}
+      {jobs.data?.map((j) => <JobCard key={j.id} job={j} />)}
     </Screen>
   );
 }
 
-const STATUS_COLOR: Record<Status, string> = {
-  NEW: colors.warn,
-  ASSIGNED: colors.assigned,
-  IN_PROGRESS: colors.info,
-  ON_HOLD: colors.warn,
-  COMPLETED: colors.ok,
-  CANCELLED: colors.muted,
-};
+/** One job in a list (Stitch 05): number + when, status badge, customer, type · place · ACs, team. */
+export function JobCard({ job: j }: { job: JobRow }) {
+  const { t } = useTranslation();
+  const dayLabel = useDayLabel();
+  const when = [dayLabel(j.scheduledDate), j.timeSlot && t(`jobs.slots.${j.timeSlot}`)].filter(Boolean).join(', ');
+  return (
+    <Card
+      onPress={() => router.push({ pathname: '/jobs/[id]', params: { id: j.id } })}
+      accessibilityLabel={`#${j.jobNumber}, ${j.customerName}, ${t(`jobs.status.${j.status}`)}`}
+    >
+      <View style={styles.between}>
+        <AppText variant="support" color={colors.slate} style={styles.flex}>
+          #{j.jobNumber} · {when}
+        </AppText>
+        <Badge label={t(`jobs.status.${j.status}`)} tone={STATUS_TONE[j.status]} />
+      </View>
+      <AppText variant="section" numberOfLines={1}>
+        {j.customerName}
+      </AppText>
+      <AppText variant="support" color={colors.slate}>
+        {[t(`jobs.types.${j.type}`), j.place, j.acCount ? t('customers.acCount', { count: j.acCount }) : null]
+          .filter(Boolean)
+          .join(' · ')}
+      </AppText>
+      <AppText variant="support" weight={j.teamName ? 'regular' : 'semibold'} color={j.teamName ? colors.slate : colors.warn}>
+        {j.teamName ?? t('uiOwner.noTeamYet')}
+      </AppText>
+    </Card>
+  );
+}
 
-// ---------- New job ----------
+// ---------- New job (Stitch 08 / 09) ----------
 
 export function NewJobScreen() {
   const { t } = useTranslation();
@@ -146,23 +164,40 @@ export function NewJobScreen() {
 
   if (!customerId) {
     return (
-      <Screen footer={<Button variant="secondary" label={t('customers.add')} onPress={() => router.push('/customers/new')} />}>
-        <TextField label={t('jobs.whichCustomer')} placeholder={t('customers.searchHint')} value={q} onChangeText={setQ} />
-        {found.data?.map((c) => (
-          <Pressable key={c.id} accessibilityRole="button" onPress={() => setCustomerId(c.id)} style={styles.row}>
-            <AppText weight="semibold">{c.name}</AppText>
-            <AppText variant="support" color={colors.slate}>
-              {[displayPhone(c.phone), c.place].filter(Boolean).join(' · ')}
-            </AppText>
-          </Pressable>
-        ))}
+      <Screen footer={<Button variant="secondary" icon="account-plus-outline" label={t('customers.add')} onPress={() => router.push('/customers/new')} />}>
+        <TextField
+          label={t('jobs.whichCustomer')}
+          optionalLabel={t('uiOwner.searchByHint')}
+          placeholder={t('customers.searchHint')}
+          value={q}
+          onChangeText={setQ}
+        />
+        {found.data?.length ? (
+          <Card style={styles.listCard}>
+            {found.data.map((c, i) => (
+              <ListRow
+                key={c.id}
+                avatar={c.name}
+                title={c.name}
+                subtitle={[displayPhone(c.phone), c.place].filter(Boolean).join(' · ')}
+                onPress={() => setCustomerId(c.id)}
+                divider={i < found.data.length - 1}
+              />
+            ))}
+          </Card>
+        ) : null}
+        {q.trim() && found.data?.length === 0 ? (
+          <EmptyState icon="account-search-outline" title={t('customers.noneFound')} />
+        ) : null}
       </Screen>
     );
   }
-  return <JobForm customerId={customerId} />;
+  return <JobForm customerId={customerId} onChangeCustomer={() => setCustomerId(null)} />;
 }
 
-function JobForm({ customerId }: { customerId: string }) {
+const TAGS = ['tagNotCooling', 'tagWaterLeak', 'tagNoise', 'tagBadSmell'] as const;
+
+function JobForm({ customerId, onChangeCustomer }: { customerId: string; onChangeCustomer: () => void }) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const customer = useQuery(useCustomer(customerId));
@@ -193,82 +228,171 @@ function JobForm({ customerId }: { customerId: string }) {
     },
   });
 
-  if (customer.isPending) return <ActivityIndicator style={{ flex: 1 }} color={colors.teal} />;
+  if (customer.isPending) return <ActivityIndicator style={styles.flex} color={colors.teal} />;
   if (customer.isError) return <Screen><AppText color={colors.bad}>{errorMessage(t, customer.error)}</AppText></Screen>;
   const c = customer.data;
   const site = c.sites.find((s) => s.id === siteId) ?? c.sites[0];
   const activeTeams = (teams.data ?? []).filter((tm) => tm.active);
+  const addTag = (text: string) => setComplaint((v) => (v.trim() ? `${v.trim()}, ${text}` : text));
 
   return (
-    <Screen footer={<Button label={t('jobs.save')} onPress={() => site && save.mutate(site.id)} loading={save.isPending} />}>
-      <AppText variant="section">{c.name}</AppText>
-      {c.sites.length > 1 ? (
-        <ChoiceChips
-          label={t('customers.address')}
-          options={c.sites.map((s) => ({ value: s.id, label: s.label || s.locality || s.addressLine1 }))}
-          value={site?.id ?? null}
-          onChange={(v) => {
-            setSiteId(v);
-            setAcs([]);
-          }}
+    <Screen
+      footer={
+        <Button
+          icon="arrow-right"
+          size="large"
+          label={t('jobs.save')}
+          onPress={() => site && save.mutate(site.id)}
+          loading={save.isPending}
         />
-      ) : null}
-      {site?.equipment.length ? (
-        <View style={{ gap: space.sm }}>
-          <AppText variant="support" weight="semibold" color={colors.slate}>{t('jobs.whichAcs')}</AppText>
-          <View style={styles.chips}>
-            {site.equipment.map((e) => {
-              const on = acs.includes(e.id);
-              return (
-                <Pressable
-                  key={e.id}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: on }}
-                  onPress={() => setAcs((a) => (on ? a.filter((x) => x !== e.id) : [...a, e.id]))}
-                  style={[styles.chip, on && styles.chipOn]}
-                >
-                  <AppText weight="semibold" color={on ? colors.white : colors.ink}>
-                    {e.locationLabel || acSummary(e, t(`customers.acTypes.${e.type}`))}
-                  </AppText>
-                </Pressable>
-              );
-            })}
+      }
+    >
+      <FormSection label={t('uiOwner.customer')}>
+        <Card style={styles.customerCard}>
+          <View style={styles.between}>
+            <AppText variant="section" style={styles.flex}>
+              {c.name}
+            </AppText>
+            <Pressable accessibilityRole="button" onPress={onChangeCustomer} hitSlop={12}>
+              <AppText weight="semibold" color={colors.teal}>
+                {t('uiOwner.change')}
+              </AppText>
+            </Pressable>
           </View>
-        </View>
+          <AppText variant="support" color={colors.slate}>
+            {displayPhone(c.phone)}
+          </AppText>
+          {site ? (
+            <View style={styles.iconLine}>
+              <Icon name="map-marker-outline" size={18} color={colors.slate} />
+              <AppText variant="support" style={styles.flex}>
+                {[site.locality || site.addressLine1, site.label].filter(Boolean).join(' · ')}
+              </AppText>
+            </View>
+          ) : null}
+        </Card>
+      </FormSection>
+
+      {c.sites.length > 1 ? (
+        <FormSection label={t('customers.address')}>
+          <OptionChips
+            label={t('customers.address')}
+            options={c.sites.map((s) => ({ value: s.id, label: s.label || s.locality || s.addressLine1 }))}
+            value={site?.id ?? null}
+            onChange={(v) => {
+              setSiteId(v);
+              setAcs([]);
+            }}
+          />
+        </FormSection>
       ) : null}
-      <ChoiceChips label={t('jobs.type')} options={TYPES.map((v) => ({ value: v, label: t(`jobs.types.${v}`) }))} value={type} onChange={setType} />
-      <TextField label={t('jobs.complaint')} value={complaint} onChangeText={setComplaint} multiline />
-      <ChoiceChips
-        label={t('jobs.day')}
-        options={[
-          { value: dayString(0), label: t('jobs.today') },
-          { value: dayString(1), label: t('jobs.tomorrow') },
-          { value: dayString(2), label: t('jobs.dayAfter') },
-          { value: 'none', label: t('jobs.noDate') },
-        ]}
-        value={day}
-        onChange={setDay}
-      />
-      {day !== 'none' ? (
-        <ChoiceChips label={t('jobs.slot')} options={SLOTS.map((v) => ({ value: v, label: t(`jobs.slots.${v}`) }))} value={slot} onChange={setSlot} />
-      ) : null}
-      {activeTeams.length ? (
-        <ChoiceChips
-          label={t('jobs.team')}
-          options={activeTeams.map((tm) => ({ value: tm.id, label: tm.name }))}
-          value={teamId}
-          onChange={setTeamId}
+
+      <FormSection label={t('uiOwner.whichAc')} hint={t('uiOwner.tickAll')}>
+        {site?.equipment.length ? (
+          <OptionChips
+            multi
+            label={t('uiOwner.whichAc')}
+            options={site.equipment.map((e) => ({
+              value: e.id,
+              label: e.locationLabel || acSummary(e, t(`customers.acTypes.${e.type}`)),
+            }))}
+            value={acs}
+            onChange={setAcs}
+          />
+        ) : (
+          <Card tone="recessed">
+            <AppText variant="support" color={colors.slate}>
+              {t('uiOwner.noAcsHere')}
+            </AppText>
+            {site ? (
+              <Button
+                variant="dashed"
+                icon="plus"
+                label={t('customers.addAc')}
+                onPress={() => router.push({ pathname: '/customers/[id]/ac', params: { id: c.id, siteId: site.id } })}
+              />
+            ) : null}
+          </Card>
+        )}
+      </FormSection>
+
+      <FormSection label={t('uiOwner.service')}>
+        <OptionChips label={t('jobs.type')} options={TYPES.map((v) => ({ value: v, label: t(`jobs.types.${v}`) }))} value={type} onChange={setType} />
+      </FormSection>
+
+      <View style={styles.section}>
+        <TextField
+          label={t('uiOwner.problem')}
+          optionalLabel={t('uiOwner.optional')}
+          placeholder={t('uiOwner.problemHint')}
+          value={complaint}
+          onChangeText={setComplaint}
+          multiline
         />
-      ) : (
-        <AppText variant="support" color={colors.slate}>{t('jobs.noTeams')}</AppText>
-      )}
-      <TextField label={t('jobs.amount')} prefix="₹" keyboardType="number-pad" value={amount} onChangeText={(v) => setAmount(v.replace(/\D/g, ''))} />
-      {save.error ? <AppText color={colors.bad}>{errorMessage(t, save.error)}</AppText> : null}
+        <View style={styles.tags}>
+          {TAGS.map((k) => (
+            <Pressable key={k} accessibilityRole="button" onPress={() => addTag(t(`uiOwner.${k}`))} style={styles.tag}>
+              <AppText variant="small" weight="semibold" color={colors.slate}>
+                + {t(`uiOwner.${k}`)}
+              </AppText>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      <FormSection label={t('uiOwner.when')}>
+        <OptionChips
+          grid
+          label={t('jobs.day')}
+          options={[
+            { value: dayString(0), label: t('jobs.today') },
+            { value: dayString(1), label: t('jobs.tomorrow') },
+            { value: dayString(2), label: t('jobs.dayAfter') },
+            { value: 'none', label: t('jobs.noDate') },
+          ]}
+          value={day}
+          onChange={setDay}
+        />
+        {day !== 'none' ? (
+          <OptionChips grid label={t('jobs.slot')} options={SLOTS.map((v) => ({ value: v, label: t(`jobs.slots.${v}`) }))} value={slot} onChange={setSlot} />
+        ) : null}
+      </FormSection>
+
+      <FormSection label={t('jobs.team')} hint={t('uiOwner.optional')}>
+        {activeTeams.length ? (
+          <OptionChips
+            label={t('jobs.team')}
+            options={activeTeams.map((tm) => ({ value: tm.id, label: tm.name }))}
+            value={teamId}
+            onChange={setTeamId}
+          />
+        ) : (
+          <AppText variant="support" color={colors.slate}>{t('jobs.noTeams')}</AppText>
+        )}
+      </FormSection>
+
+      <TextField
+        label={t('jobs.amount')}
+        prefix="₹"
+        keyboardType="number-pad"
+        value={amount}
+        onChangeText={(v) => setAmount(v.replace(/\D/g, ''))}
+      />
+      {save.error ? <AppText color={colors.bad} accessibilityLiveRegion="polite">{errorMessage(t, save.error)}</AppText> : null}
     </Screen>
   );
 }
 
-// ---------- Job page ----------
+// ---------- Job page (Stitch 13–18) ----------
+
+/** Senior first, then helpers. */
+function teamLines(tm: Team | undefined) {
+  const members = tm?.members ?? [];
+  const senior = members.find((m) => m.position === 'SENIOR_TECHNICIAN' && m.isPrimary) ?? members.find((m) => m.position === 'SENIOR_TECHNICIAN');
+  const helpers = members.filter((m) => m.position === 'HELPER');
+  const phone = senior?.phone ?? members.find((m) => m.phone)?.phone ?? null;
+  return { senior, helpers, phone };
+}
 
 export function JobScreen() {
   const { t } = useTranslation();
@@ -277,8 +401,9 @@ export function JobScreen() {
   const job = useQuery(useJob(id));
   const teams = useQuery(useTeams());
   const dayLabel = useDayLabel();
-  const [panel, setPanel] = useState<'none' | 'team' | 'reschedule' | 'cancel'>('none');
-  const [day, setDay] = useState(dayString(0));
+  const [panel, setPanel] = useState<'none' | 'more' | 'assign' | 'cancel'>('none');
+  const [sheetTeam, setSheetTeam] = useState<string | null>(null);
+  const [day, setDay] = useState<string | null>(null);
   const [slot, setSlot] = useState<Slot>('MORNING');
   const [reason, setReason] = useState('');
   const done = (j: Job) => {
@@ -286,10 +411,16 @@ export function JobScreen() {
     void qc.invalidateQueries({ queryKey: JOBS_KEY });
     setPanel('none');
   };
-  const assign = useMutation({ mutationFn: (teamId: string) => api.post<Job>(`/jobs/${id}/assign-team`, { teamId }), onSuccess: done });
-  const reschedule = useMutation({
-    mutationFn: (version: number) =>
-      api.request<Job>('PATCH', `/jobs/${id}`, { body: { version, scheduledDate: day, timeSlot: slot } }),
+  /** Assign the team and/or change the day, using the existing endpoints one after the other. */
+  const apply = useMutation({
+    mutationFn: async ({ j, teamId, newDay, newSlot }: { j: Job; teamId: string | null; newDay: string | null; newSlot: Slot }) => {
+      let cur = j;
+      if (teamId && teamId !== j.teamId) cur = await api.post<Job>(`/jobs/${id}/assign-team`, { teamId });
+      if (newDay && (newDay !== j.scheduledDate || newSlot !== j.timeSlot)) {
+        cur = await api.request<Job>('PATCH', `/jobs/${id}`, { body: { version: cur.version, scheduledDate: newDay, timeSlot: newSlot } });
+      }
+      return cur;
+    },
     onSuccess: done,
     onError: (e) => {
       if (e instanceof ApiError && e.code === 'VERSION_CONFLICT') void job.refetch();
@@ -304,138 +435,312 @@ export function JobScreen() {
     },
   });
 
-  if (job.isPending) return <ActivityIndicator style={{ flex: 1 }} color={colors.teal} />;
+  if (job.isPending) return <ActivityIndicator style={styles.flex} color={colors.teal} />;
   if (job.isError) return <Screen><AppText color={colors.bad}>{errorMessage(t, job.error)}</AppText></Screen>;
   const j = job.data;
-  const open = j.status !== 'COMPLETED' && j.status !== 'CANCELLED';
-  const error = assign.error ?? reschedule.error ?? cancel.error ?? followUp.error;
+  const open = isOpen(j.status);
+  const error = apply.error ?? cancel.error ?? followUp.error;
+  const activeTeams = (teams.data ?? []).filter((tm) => tm.active);
+  const team = (teams.data ?? []).find((tm) => tm.id === j.teamId);
+  const { helpers, phone: teamPhone } = teamLines(team);
+  const phoneDigits = j.customer?.phone.replace(/\D/g, '') ?? '';
+  const address = j.site ? [j.site.addressLine1, j.site.locality, j.site.city].filter(Boolean).join(', ') : null;
+
+  const openAssign = () => {
+    setSheetTeam(j.teamId);
+    setDay(j.scheduledDate);
+    setSlot(j.timeSlot ?? 'MORNING');
+    apply.reset();
+    setPanel('assign');
+  };
+
+  // Assign sheet choices
+  const dayOptions = [0, 1, 2, 3].map((n) => ({
+    value: dayString(n),
+    label: n === 0 ? t('jobs.today') : n === 1 ? t('jobs.tomorrow') : shortDate(dayString(n)),
+  }));
+  if (j.scheduledDate && !dayOptions.some((o) => o.value === j.scheduledDate)) {
+    dayOptions.unshift({ value: j.scheduledDate, label: shortDate(j.scheduledDate) });
+  }
+  const slotOptions = (j.timeSlot && !SLOTS.includes(j.timeSlot) ? [...SLOTS, j.timeSlot] : SLOTS).map((v) => ({
+    value: v,
+    label: t(`jobs.slots.${v}`),
+  }));
+  const teamChanged = !!sheetTeam && sheetTeam !== j.teamId;
+  const schedChanged = !!day && (day !== j.scheduledDate || slot !== j.timeSlot);
+  const sheetTeamName = activeTeams.find((tm) => tm.id === sheetTeam)?.name ?? '';
 
   return (
-    <Screen>
-      <Stack.Screen options={{ title: `#${j.jobNumber}` }} />
-      <View style={styles.card}>
-        <View style={styles.between}>
+    <>
+      <Stack.Screen
+        options={{
+          title: `#${j.jobNumber}`,
+          headerRight: () => (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={t('uiOwner.more')}
+              onPress={() => setPanel('more')}
+              hitSlop={8}
+              style={styles.headerMore}
+            >
+              <AppText weight="semibold">{t('uiOwner.more')}</AppText>
+              <Icon name="dots-vertical" />
+            </Pressable>
+          ),
+        }}
+      />
+      <Screen
+        footer={
+          open ? (
+            j.teamId ? (
+              <View style={styles.footerRow}>
+                <View style={styles.flex}>
+                  <Button variant="soft" label={t('uiOwner.changeTeamTime')} onPress={openAssign} />
+                </View>
+                {teamPhone ? (
+                  <View style={styles.flex}>
+                    <Button variant="tonal" icon="phone-outline" label={t('uiOwner.callTeam')} onPress={() => Linking.openURL(`tel:${teamPhone}`)} />
+                  </View>
+                ) : null}
+              </View>
+            ) : (
+              <Button size="large" icon="account-group-outline" label={t('uiOwner.assignTeam')} onPress={openAssign} />
+            )
+          ) : undefined
+        }
+      >
+        <Badge label={t(`jobs.status.${j.status}`)} tone={STATUS_TONE[j.status]} />
+
+        <Card>
           <AppText variant="section">{j.customerName}</AppText>
-          <AppText weight="semibold" color={STATUS_COLOR[j.status]}>{t(`jobs.status.${j.status}`)}</AppText>
-        </View>
-        {j.site ? (
-          <AppText color={colors.slate}>{[j.site.addressLine1, j.site.locality, j.site.city].filter(Boolean).join(', ')}</AppText>
+          <AppText variant="support" color={colors.slate}>
+            {[j.customer ? displayPhone(j.customer.phone) : null, address].filter(Boolean).join(' · ')}
+          </AppText>
+          <View style={styles.actions}>
+            {j.customer ? (
+              <>
+                <View style={styles.flex}>
+                  <Button variant="soft" icon="phone-outline" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${j.customer?.phone}`)} />
+                </View>
+                <View style={styles.flex}>
+                  <Button variant="soft" icon="whatsapp" label={t('uiOwner.whatsapp')} onPress={() => Linking.openURL(`https://wa.me/${phoneDigits}`)} />
+                </View>
+              </>
+            ) : null}
+            <View style={styles.flex}>
+              <Button
+                variant="soft"
+                icon="account-outline"
+                label={t('uiOwner.customer')}
+                onPress={() => router.push({ pathname: '/customers/[id]', params: { id: j.customerId } })}
+              />
+            </View>
+          </View>
+        </Card>
+
+        <Card>
+          <SectionLabel>{t('uiOwner.jobSection')}</SectionLabel>
+          <Field label={t('uiOwner.service')} value={t(`jobs.types.${j.type}`)} />
+          {j.equipment.length ? (
+            <Field
+              label={t('uiOwner.ac')}
+              value={j.equipment
+                .map((e) => [e.locationLabel, acSummary(e as never, t(`customers.acTypes.${e.type}`))].filter(Boolean).join(' · '))
+                .join('\n')}
+            />
+          ) : null}
+          {j.complaint ? <Field label={t('uiOwner.problem')} value={j.complaint} /> : null}
+          <Field
+            label={t('uiOwner.team')}
+            value={j.teamName ?? t('uiOwner.noTeamYet')}
+            valueColor={j.teamName ? undefined : colors.info}
+            hint={helpers.length ? t('uiOwner.helperLine', { name: helpers.map((h) => h.name).join(', ') }) : undefined}
+          />
+          <Field
+            label={t('uiOwner.appointment')}
+            value={
+              j.scheduledDate
+                ? [dayLabel(j.scheduledDate), j.timeSlot && t(`jobs.slots.${j.timeSlot}`)].filter(Boolean).join(', ')
+                : t('uiOwner.notFixed')
+            }
+            valueColor={j.scheduledDate ? undefined : colors.info}
+          />
+          <Field
+            label={t('uiOwner.toCollect')}
+            value={rupees(j.amountToCollect) ?? t('uiOwner.nothing')}
+            valueColor={j.amountToCollect ? colors.tealTintText : undefined}
+          />
+          {j.cancelReason ? <Field label={t('jobs.cancelled')} value={j.cancelReason} valueColor={colors.bad} /> : null}
+        </Card>
+
+        {j.report ? (
+          <Card>
+            <View style={styles.between}>
+              <AppText variant="section">{t('jobs.report')}</AppText>
+              <Badge label={t(`jobs.outcome.${j.report.outcome}`)} tone={j.report.outcome === 'COMPLETED' ? 'ok' : 'warn'} />
+            </View>
+            {j.report.note ? <AppText>{j.report.note}</AppText> : null}
+            {j.report.work.map((w) => {
+              const e = j.equipment.find((x) => x.id === w.equipmentId);
+              return (
+                <Field
+                  key={w.equipmentId}
+                  label={[e?.locationLabel, e && t(`customers.acTypes.${e.type}`)].filter(Boolean).join(' · ') || t('uiOwner.ac')}
+                  value={w.work.map((code) => t(`field.work.${code}`)).join(', ')}
+                />
+              );
+            })}
+            {j.report.parts.length ? (
+              <Field label={t('jobs.parts')} value={j.report.parts.map((p) => `${p.name} × ${p.qty}`).join(', ')} />
+            ) : null}
+            {j.collections.map((c) => (
+              <Field
+                key={c.id}
+                label={t('jobs.taken')}
+                value={`${rupees(c.amount)} · ${t(c.mode === 'CASH' ? 'field.cash' : 'field.upi')}`}
+                valueColor={colors.tealTintText}
+                hint={t(c.status === 'WITH_TEAM' ? 'jobs.withTeam' : 'jobs.confirmed')}
+              />
+            ))}
+          </Card>
         ) : null}
-        <AppText>
-          {[t(`jobs.types.${j.type}`), dayLabel(j.scheduledDate), j.timeSlot && t(`jobs.slots.${j.timeSlot}`)].filter(Boolean).join(' · ')}
-        </AppText>
-        {j.complaint ? <AppText color={colors.slate}>{t('jobs.says')}: {j.complaint}</AppText> : null}
-        {j.equipment.map((e) => (
-          <AppText key={e.id} variant="support">
-            • {[e.locationLabel, acSummary(e as never, t(`customers.acTypes.${e.type}`))].filter(Boolean).join(' · ')}
+
+        {followUp.isPending ? <ActivityIndicator color={colors.teal} /> : null}
+        {error && panel === 'none' ? <AppText color={colors.bad} accessibilityLiveRegion="polite">{errorMessage(t, error)}</AppText> : null}
+      </Screen>
+
+      {/* Stitch 17: more options */}
+      <BottomSheet visible={panel === 'more'} onClose={() => setPanel('none')} title={t('uiOwner.jobTitle', { n: j.jobNumber })}>
+        <View style={styles.sheetList}>
+          {open ? <SheetRow icon="account-group-outline" label={t('uiOwner.changeTeamTime')} onPress={openAssign} /> : null}
+          <SheetRow
+            icon="calendar-refresh-outline"
+            label={t('jobs.followUp')}
+            onPress={() => {
+              setPanel('none');
+              followUp.mutate();
+            }}
+          />
+          {open ? (
+            <SheetRow
+              danger
+              icon="close-circle-outline"
+              label={t('jobs.cancelJob')}
+              onPress={() => {
+                cancel.reset();
+                setPanel('cancel');
+              }}
+            />
+          ) : null}
+        </View>
+      </BottomSheet>
+
+      {/* Stitch 12: assign team / change day and time */}
+      <BottomSheet
+        visible={panel === 'assign'}
+        onClose={() => setPanel('none')}
+        title={j.teamId ? t('uiOwner.changeTeamTime') : t('uiOwner.assignTeam')}
+        subtitle={[t(`jobs.types.${j.type}`), j.acCount ? t('customers.acCount', { count: j.acCount }) : null, j.place].filter(Boolean).join(' · ')}
+        footer={
+          <>
+            {apply.error ? <AppText color={colors.bad}>{errorMessage(t, apply.error)}</AppText> : null}
+            <Button
+              size="large"
+              label={teamChanged ? t('uiOwner.assignCta', { team: sheetTeamName }) : t('jobs.saveDay')}
+              onPress={() => apply.mutate({ j, teamId: sheetTeam, newDay: day, newSlot: slot })}
+              loading={apply.isPending}
+              disabled={!teamChanged && !schedChanged}
+            />
+          </>
+        }
+      >
+        <FormSection label={t('uiOwner.dayAndTime')}>
+          <OptionChips label={t('jobs.day')} options={dayOptions} value={day} onChange={setDay} />
+          {day ? <OptionChips label={t('jobs.slot')} options={slotOptions} value={slot} onChange={setSlot} /> : null}
+        </FormSection>
+        <FormSection label={t('uiOwner.team')}>
+          {activeTeams.length ? (
+            activeTeams.map((tm) => (
+              <TeamOption key={tm.id} team={tm} selected={sheetTeam === tm.id} onPress={() => setSheetTeam(tm.id)} />
+            ))
+          ) : (
+            <AppText variant="support" color={colors.slate}>{t('jobs.noTeams')}</AppText>
+          )}
+        </FormSection>
+      </BottomSheet>
+
+      {/* Stitch 18: cancel dialog */}
+      <ConfirmDialog
+        visible={panel === 'cancel'}
+        title={t('uiOwner.cancelTitle', { n: j.jobNumber })}
+        body={t('uiOwner.cancelBody')}
+        keepLabel={t('uiOwner.keepJob')}
+        confirmLabel={t('jobs.cancelJob')}
+        onKeep={() => setPanel('none')}
+        onConfirm={() => cancel.mutate()}
+        confirmDisabled={reason.trim().length < 2}
+        busy={cancel.isPending}
+      >
+        <TextField label={t('jobs.cancelReason')} value={reason} onChangeText={setReason} />
+        {cancel.error ? <AppText color={colors.bad}>{errorMessage(t, cancel.error)}</AppText> : null}
+      </ConfirmDialog>
+    </>
+  );
+}
+
+/** Radio card for one team (Stitch 12): name, senior, helpers. */
+function TeamOption({ team, selected, onPress }: { team: Team; selected: boolean; onPress: () => void }) {
+  const { t } = useTranslation();
+  const { senior, helpers } = teamLines(team);
+  return (
+    <Pressable
+      accessibilityRole="radio"
+      accessibilityState={{ checked: selected }}
+      onPress={onPress}
+      style={[styles.teamOption, selected && styles.teamOptionOn]}
+    >
+      <Icon name={selected ? 'radiobox-marked' : 'radiobox-blank'} size={24} color={selected ? colors.teal : colors.line2} />
+      <View style={styles.flex}>
+        <AppText weight="semibold">{team.name}</AppText>
+        {senior ? (
+          <AppText variant="support">
+            {senior.name} · {t('uiOwner.senior')}
+          </AppText>
+        ) : (
+          <AppText variant="support" color={colors.muted}>{t('teams.noSenior')}</AppText>
+        )}
+        {helpers.map((h) => (
+          <AppText key={h.memberId} variant="small" color={colors.slate}>
+            {h.name} · {t('uiOwner.helper')}
           </AppText>
         ))}
-        {rupees(j.amountToCollect) ? <AppText weight="semibold">{t('jobs.collect')}: {rupees(j.amountToCollect)}</AppText> : null}
-        <AppText weight="semibold" color={j.teamName ? colors.ink : colors.warn}>{j.teamName ?? t('jobs.notAssigned')}</AppText>
-        {j.cancelReason ? <AppText color={colors.muted}>{t('jobs.cancelled')}: {j.cancelReason}</AppText> : null}
-        {j.customer ? (
-          <Button variant="secondary" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${j.customer?.phone}`)} />
-        ) : null}
       </View>
-
-      {j.report ? (
-        <View style={styles.card}>
-          <AppText variant="section">{t('jobs.report')}</AppText>
-          <AppText weight="semibold" color={j.report.outcome === 'COMPLETED' ? colors.ok : colors.warn}>
-            {t(`jobs.outcome.${j.report.outcome}`)}
-          </AppText>
-          {j.report.note ? <AppText>{j.report.note}</AppText> : null}
-          {j.report.work.map((w) => {
-            const e = j.equipment.find((x) => x.id === w.equipmentId);
-            return (
-              <AppText key={w.equipmentId} variant="support">
-                • {[e?.locationLabel, e && t(`customers.acTypes.${e.type}`)].filter(Boolean).join(' · ')}:{' '}
-                {w.work.map((code) => t(`field.work.${code}`)).join(', ')}
-              </AppText>
-            );
-          })}
-          {j.report.parts.length ? (
-            <AppText variant="support">
-              {t('jobs.parts')}: {j.report.parts.map((p) => `${p.name} × ${p.qty}`).join(', ')}
-            </AppText>
-          ) : null}
-          {j.collections.map((c) => (
-            <AppText key={c.id} weight="semibold">
-              {t('jobs.taken')}: {rupees(c.amount)} · {t(c.mode === 'CASH' ? 'field.cash' : 'field.upi')} ·{' '}
-              {t(c.status === 'WITH_TEAM' ? 'jobs.withTeam' : 'jobs.confirmed')}
-            </AppText>
-          ))}
-        </View>
-      ) : null}
-
-      {open && panel === 'team' ? (
-        <ChoiceChips
-          label={t('jobs.team')}
-          options={(teams.data ?? []).filter((tm) => tm.active).map((tm) => ({ value: tm.id, label: tm.name }))}
-          value={j.teamId}
-          onChange={(v) => assign.mutate(v)}
-        />
-      ) : null}
-      {open && panel === 'reschedule' ? (
-        <View style={styles.card}>
-          <ChoiceChips
-            label={t('jobs.day')}
-            options={[0, 1, 2, 3].map((n) => ({ value: dayString(n), label: n === 0 ? t('jobs.today') : n === 1 ? t('jobs.tomorrow') : dayString(n) }))}
-            value={day}
-            onChange={setDay}
-          />
-          <ChoiceChips label={t('jobs.slot')} options={SLOTS.map((v) => ({ value: v, label: t(`jobs.slots.${v}`) }))} value={slot} onChange={setSlot} />
-          <Button label={t('jobs.saveDay')} onPress={() => reschedule.mutate(j.version)} loading={reschedule.isPending} />
-        </View>
-      ) : null}
-      {open && panel === 'cancel' ? (
-        <View style={styles.card}>
-          <TextField label={t('jobs.cancelReason')} value={reason} onChangeText={setReason} />
-          <Button label={t('jobs.cancelJob')} onPress={() => cancel.mutate()} loading={cancel.isPending} disabled={reason.trim().length < 2} />
-        </View>
-      ) : null}
-
-      {open ? (
-        <>
-          <Button label={j.teamId ? t('jobs.changeTeam') : t('jobs.assign')} onPress={() => setPanel(panel === 'team' ? 'none' : 'team')} />
-          <Button variant="secondary" label={t('jobs.reschedule')} onPress={() => setPanel(panel === 'reschedule' ? 'none' : 'reschedule')} />
-          <Button variant="text" label={t('jobs.cancelJob')} onPress={() => setPanel(panel === 'cancel' ? 'none' : 'cancel')} />
-        </>
-      ) : null}
-      <Button variant="text" label={t('jobs.followUp')} onPress={() => followUp.mutate()} loading={followUp.isPending} />
-      {error ? <AppText color={colors.bad}>{errorMessage(t, error)}</AppText> : null}
-    </Screen>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    minHeight: touch.action + 8,
-    padding: space.md,
-    gap: 2,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
+  flex: { flex: 1 },
+  section: { gap: space.sm },
+  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.md },
   between: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.sm },
-  card: {
-    backgroundColor: colors.surface,
+  listCard: { paddingVertical: space.xs },
+  customerCard: { borderColor: colors.ink },
+  iconLine: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
+  tag: { minHeight: 36, justifyContent: 'center', paddingHorizontal: space.md, borderRadius: radius.full, backgroundColor: colors.soft },
+  actions: { flexDirection: 'row', gap: space.sm, marginTop: space.xs },
+  footerRow: { flexDirection: 'row', gap: space.sm },
+  headerMore: { flexDirection: 'row', alignItems: 'center', gap: 2, minHeight: 44, paddingLeft: space.sm },
+  sheetList: { borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, overflow: 'hidden' },
+  teamOption: {
+    flexDirection: 'row',
+    gap: space.md,
+    padding: space.md,
     borderRadius: radius.md,
     borderWidth: 1,
     borderColor: colors.line,
-    padding: space.lg,
-    gap: space.sm,
-  },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
-  chip: {
-    minHeight: touch.min,
-    paddingHorizontal: space.lg,
-    borderRadius: radius.xl,
-    borderWidth: 1.5,
-    borderColor: colors.line2,
     backgroundColor: colors.surface,
-    justifyContent: 'center',
   },
-  chipOn: { backgroundColor: colors.teal, borderColor: colors.teal },
+  teamOptionOn: { borderColor: colors.teal, backgroundColor: colors.soft },
 });
