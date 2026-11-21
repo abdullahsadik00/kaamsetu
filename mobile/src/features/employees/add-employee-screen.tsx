@@ -3,15 +3,15 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 
 import { errorMessage } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
+import { ChoiceChips } from '@/components/ui/choice-chips';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
-import { colors, radius, space, touch } from '@/theme/tokens';
+import { colors } from '@/theme/tokens';
 
 import { addEmployee, EMPLOYEES_KEY, type StaffRole } from './api';
 
@@ -26,7 +26,7 @@ const schema = z.object({
 
 const ROLES: StaffRole[] = ['SENIOR_TECHNICIAN', 'HELPER'];
 
-/** Owner adds a senior technician or helper (D-027), then shows the invite QR. */
+/** Owner adds a senior technician or helper (screen 64, D-027), then shows the invite QR. */
 export function AddEmployeeScreen() {
   const { t } = useTranslation();
   const qc = useQueryClient();
@@ -47,7 +47,7 @@ export function AddEmployeeScreen() {
 
   return (
     <Screen
-      footer={<Button label={t('employees.save')} onPress={() => submit()} loading={add.isPending} />}
+      footer={<Button icon="qrcode" label={t('employees.save')} onPress={() => submit()} loading={add.isPending} />}
     >
       <Controller
         control={form.control}
@@ -55,9 +55,22 @@ export function AddEmployeeScreen() {
         render={({ field, fieldState }) => (
           <TextField
             label={t('employees.nameLabel')}
+            placeholder={t('uiPeople.namePlaceholder')}
             value={field.value}
             onChangeText={field.onChange}
             error={fieldState.error ? t('employees.nameError') : undefined}
+          />
+        )}
+      />
+      <Controller
+        control={form.control}
+        name="role"
+        render={({ field }) => (
+          <ChoiceChips
+            label={t('employees.roleLabel')}
+            options={ROLES.map((r) => ({ value: r, label: t(`roles.${r}`) }))}
+            value={field.value}
+            onChange={field.onChange}
           />
         )}
       />
@@ -76,35 +89,6 @@ export function AddEmployeeScreen() {
           />
         )}
       />
-      <Controller
-        control={form.control}
-        name="role"
-        render={({ field }) => (
-          <View style={{ gap: space.sm }}>
-            <AppText variant="support" weight="semibold" color={colors.slate}>
-              {t('employees.roleLabel')}
-            </AppText>
-            <View style={styles.row} accessibilityRole="radiogroup">
-              {ROLES.map((r) => {
-                const on = field.value === r;
-                return (
-                  <Pressable
-                    key={r}
-                    accessibilityRole="radio"
-                    accessibilityState={{ checked: on }}
-                    onPress={() => field.onChange(r)}
-                    style={[styles.chip, on && styles.chipOn]}
-                  >
-                    <AppText weight="semibold" color={on ? colors.white : colors.ink}>
-                      {t(`roles.${r}`)}
-                    </AppText>
-                  </Pressable>
-                );
-              })}
-            </View>
-          </View>
-        )}
-      />
       <AppText variant="support" color={colors.slate}>
         {t('employees.addHint')}
       </AppText>
@@ -116,17 +100,3 @@ export function AddEmployeeScreen() {
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
-  chip: {
-    minHeight: touch.min,
-    paddingHorizontal: space.lg,
-    borderRadius: radius.xl,
-    borderWidth: 1.5,
-    borderColor: colors.line2,
-    backgroundColor: colors.surface,
-    justifyContent: 'center',
-  },
-  chipOn: { backgroundColor: colors.teal, borderColor: colors.teal },
-});

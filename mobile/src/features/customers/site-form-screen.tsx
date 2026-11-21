@@ -54,6 +54,7 @@ export function SiteFormScreen() {
     <Screen
       footer={
         <Button
+          icon="content-save-outline"
           label={t('customers.saveAddress')}
           onPress={() => form.handleSubmit((v) => save.mutate(v))()}
           loading={save.isPending}
@@ -79,6 +80,7 @@ export function SiteFormScreen() {
           <TextField
             label={t('customers.addressLine')}
             placeholder={t('customers.addressHint')}
+            multiline
             value={field.value}
             onChangeText={field.onChange}
             error={fieldState.error ? t('customers.addressError') : undefined}
@@ -96,7 +98,12 @@ export function SiteFormScreen() {
         control={form.control}
         name="landmark"
         render={({ field }) => (
-          <TextField label={t('customers.landmarkOptional')} value={field.value} onChangeText={field.onChange} />
+          <TextField
+            label={t('customers.landmark')}
+            optionalLabel={t('uiPeople.optional')}
+            value={field.value}
+            onChangeText={field.onChange}
+          />
         )}
       />
       <Controller

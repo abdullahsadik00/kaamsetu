@@ -29,13 +29,13 @@ describe('Your business (T4.1)', () => {
 
   it('shows GSTIN only when GST bills are on, and checks its format', async () => {
     await renderScreen(<BusinessScreen />);
-    expect(screen.queryByLabelText('GSTIN (optional now)')).toBeNull();
+    expect(screen.queryByLabelText('GSTIN')).toBeNull();
 
     await fireEvent(screen.getByLabelText('We give GST bills'), 'valueChange', true);
     await fireEvent.changeText(screen.getByLabelText('Business name'), 'Cool Care AC');
     await fireEvent.changeText(screen.getByLabelText('Your name'), 'Sadik');
     await fireEvent.changeText(screen.getByLabelText('Business mobile number'), '9876501234');
-    await fireEvent.changeText(await screen.findByLabelText('GSTIN (optional now)'), '27ABC');
+    await fireEvent.changeText(await screen.findByLabelText('GSTIN'), '27ABC');
     await fireEvent.press(screen.getByText('Create my business'));
 
     expect(await screen.findByText('GSTIN should look like 27ABCDE1234F1Z5')).toBeTruthy();
@@ -50,7 +50,7 @@ describe('Your business (T4.1)', () => {
     await fireEvent.changeText(screen.getByLabelText('Business mobile number'), '098765 01234');
     await fireEvent.changeText(screen.getByLabelText('City'), 'Pune');
     await fireEvent(screen.getByLabelText('We give GST bills'), 'valueChange', true);
-    await fireEvent.changeText(await screen.findByLabelText('GSTIN (optional now)'), '27abcde1234f1z5');
+    await fireEvent.changeText(await screen.findByLabelText('GSTIN'), '27abcde1234f1z5');
     await fireEvent.press(screen.getByText('Create my business'));
 
     await waitFor(() =>

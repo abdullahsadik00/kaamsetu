@@ -1,18 +1,21 @@
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { errorMessage } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
-import { Placeholder } from '@/components/ui/placeholder';
+import { Card, SectionLabel } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
+import { Icon } from '@/components/ui/icon';
+import { ListRow } from '@/components/ui/list-row';
 import { Screen } from '@/components/ui/screen';
-import { colors, radius, space, touch } from '@/theme/tokens';
+import { colors, space } from '@/theme/tokens';
 
-import { useEmployees } from './api';
+import { useEmployees, type Employee } from './api';
 
-/** Owner: everyone in the business, with whether their login is linked (D-025). */
+/** Owner: everyone in the business (screen 63), with whether their login is linked (D-025). */
 export function EmployeesScreen() {
   const { t } = useTranslation();
   const list = useQuery(useEmployees());
@@ -26,68 +29,70 @@ export function EmployeesScreen() {
       </Screen>
     );
   }
-  const addButton = (
-    <Button label={t('employees.add')} onPress={() => router.push('/employees/new')} />
-  );
+  const add = () => router.push('/employees/new');
+  const addButton = <Button icon="plus" label={t('employees.add')} onPress={add} />;
   if (list.data.length === 0) {
     return (
       <Screen>
-        <Placeholder title={t('employees.empty')} body="" />
-        {addButton}
+        <EmptyState
+          icon="account-hard-hat-outline"
+          title={t('uiPeople.employeesEmptyTitle')}
+          body={t('uiPeople.employeesEmptyBody')}
+          action={addButton}
+        />
       </Screen>
     );
   }
 
+  const active = list.data.filter((e) => e.status === 'ACTIVE');
+  const removed = list.data.filter((e) => e.status !== 'ACTIVE');
+
+  const group = (people: Employee[]) => (
+    <Card style={styles.list}>
+      {people.map((e, i) => {
+        const status =
+          e.status !== 'ACTIVE'
+            ? { label: t('employees.removed'), color: colors.muted }
+            : e.loginLinked
+              ? { label: t('employees.linked'), color: colors.tealTintText }
+              : { label: t('employees.notLinked'), color: colors.muted };
+        return (
+          <ListRow
+            key={e.id}
+            avatar={e.user.name || e.user.phone || '?'}
+            title={e.user.name || e.user.phone || ''}
+            subtitle={t(`roles.${e.role}`)}
+            divider={i < people.length - 1}
+            right={
+              <View style={styles.right}>
+                <AppText variant="small" weight="semibold" color={status.color}>
+                  {status.label}
+                </AppText>
+                <Icon name="chevron-right" color={colors.muted} />
+              </View>
+            }
+            onPress={() => router.push({ pathname: '/employees/[id]', params: { id: e.id } })}
+          />
+        );
+      })}
+    </Card>
+  );
+
   return (
     <Screen footer={addButton}>
-      {[...list.data]
-        .sort((a, b) => Number(a.status !== 'ACTIVE') - Number(b.status !== 'ACTIVE'))
-        .map((e) => (
-        <Pressable
-          key={e.id}
-          accessibilityRole="button"
-          onPress={() => router.push({ pathname: '/employees/[id]', params: { id: e.id } })}
-          style={({ pressed }) => [styles.row, pressed && { opacity: 0.8 }]}
-        >
-          <View style={{ flex: 1, gap: 2 }}>
-            <AppText weight="semibold">{e.user.name || e.user.phone}</AppText>
-            <AppText variant="support" color={colors.slate}>
-              {t(`roles.${e.role}`)}
-            </AppText>
-          </View>
-          {e.status !== 'ACTIVE' ? (
-            <View style={[styles.chip, styles.chipOff]}>
-              <AppText variant="small" weight="semibold" color={colors.muted}>
-                {t('employees.removed')}
-              </AppText>
-            </View>
-          ) : (
-            <View style={[styles.chip, e.loginLinked ? styles.chipOk : styles.chipWait]}>
-              <AppText variant="small" weight="semibold" color={e.loginLinked ? colors.ok : colors.warn}>
-                {e.loginLinked ? t('employees.linked') : t('employees.notLinked')}
-              </AppText>
-            </View>
-          )}
-        </Pressable>
-      ))}
+      <SectionLabel>{t('uiPeople.activeStaff', { count: active.length })}</SectionLabel>
+      {active.length ? group(active) : null}
+      {removed.length ? (
+        <>
+          <SectionLabel>{t('uiPeople.removedStaff', { count: removed.length })}</SectionLabel>
+          {group(removed)}
+        </>
+      ) : null}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    minHeight: touch.action + 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.md,
-    padding: space.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-  chip: { paddingHorizontal: space.sm, paddingVertical: 2, borderRadius: radius.sm },
-  chipOk: { backgroundColor: colors.okTint },
-  chipOff: { backgroundColor: colors.soft },
-  chipWait: { backgroundColor: colors.warnTint },
+  list: { paddingVertical: space.xs, gap: 0 },
+  right: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
 });

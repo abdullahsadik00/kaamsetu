@@ -1,17 +1,20 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { StyleSheet, View } from 'react-native';
 
 import { errorMessage } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
+import { Card, SectionLabel } from '@/components/ui/card';
 import { ChoiceChips } from '@/components/ui/choice-chips';
+import { Icon } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
-import { colors } from '@/theme/tokens';
+import { colors, radius, space } from '@/theme/tokens';
 
-import { addEquipment, CUSTOMERS_KEY, type AcType } from './api';
+import { addEquipment, CUSTOMERS_KEY, useCustomer, type AcType } from './api';
 
 const TYPES: AcType[] = ['SPLIT', 'WINDOW', 'CASSETTE', 'DUCTABLE', 'TOWER', 'OTHER'];
 const BRANDS = ['Voltas', 'LG', 'Daikin', 'Blue Star', 'Samsung', 'Hitachi', 'Lloyd', 'Carrier'] as const;
@@ -19,11 +22,13 @@ const ROOMS = ['Bedroom', 'Hall', 'Kitchen', 'Office'] as const;
 const TONS = ['0.75', '1', '1.5', '2', '2.5', '3', 'unknown'] as const;
 const GASES = ['R32', 'R22', 'R410A', 'unknown'] as const;
 
-/** Add an AC at one of the customer's addresses; extra details hidden by default (T4.4). */
+/** Add an AC (screen 47) at one of the customer's addresses; extra details hidden by default (T4.4). */
 export function AcFormScreen() {
   const { t } = useTranslation();
   const { id, siteId } = useLocalSearchParams<{ id: string; siteId: string }>();
   const qc = useQueryClient();
+  const customer = useQuery(useCustomer(id));
+  const site = customer.data?.sites.find((s) => s.id === siteId);
   const [type, setType] = useState<AcType>('SPLIT');
   const [brand, setBrand] = useState<string | null>(null);
   const [otherBrand, setOtherBrand] = useState('');
@@ -59,52 +64,68 @@ export function AcFormScreen() {
 
   return (
     <Screen
-      footer={<Button label={t('customers.saveAc')} onPress={() => save.mutate()} loading={save.isPending} />}
+      footer={<Button icon="content-save-outline" label={t('customers.saveAc')} onPress={() => save.mutate()} loading={save.isPending} />}
     >
-      <ChoiceChips
-        label={t('customers.room')}
-        options={ROOMS.map((r) => ({ value: r, label: t(`customers.rooms.${r}`) }))}
-        value={room as (typeof ROOMS)[number] | null}
-        onChange={(r) => {
-          setRoom(r);
-          setRoomText('');
-        }}
-      />
-      <TextField
-        label={t('customers.roomOther')}
-        placeholder={t('customers.roomOtherHint')}
-        value={roomText}
-        onChangeText={setRoomText}
-      />
-      <ChoiceChips
-        label={t('customers.acType')}
-        options={TYPES.map((v) => ({ value: v, label: t(`customers.acTypes.${v}`) }))}
-        value={type}
-        onChange={setType}
-      />
-      <ChoiceChips
-        label={t('customers.brand')}
-        options={[
-          ...BRANDS.map((b) => ({ value: b as string, label: b })),
-          { value: 'other', label: t('customers.other') },
-        ]}
-        value={brand}
-        onChange={setBrand}
-      />
-      {brand === 'other' ? (
-        <TextField label={t('customers.brandName')} value={otherBrand} onChangeText={setOtherBrand} />
+      {customer.data ? (
+        <View style={styles.head}>
+          <SectionLabel>{t('uiPeople.acFor')}</SectionLabel>
+          <AppText weight="semibold">
+            {[customer.data.name, site?.label || site?.addressLine1].filter(Boolean).join(' · ')}
+          </AppText>
+        </View>
       ) : null}
-      <ChoiceChips
-        label={t('customers.capacity')}
-        options={TONS.map((v) => ({
-          value: v,
-          label: v === 'unknown' ? t('customers.notSure') : `${v} ton`,
-        }))}
-        value={tons}
-        onChange={setTons}
-      />
+      <Card>
+        <ChoiceChips
+          label={t('customers.room')}
+          options={ROOMS.map((r) => ({ value: r, label: t(`customers.rooms.${r}`) }))}
+          value={room as (typeof ROOMS)[number] | null}
+          onChange={(r) => {
+            setRoom(r);
+            setRoomText('');
+          }}
+        />
+        <TextField
+          label={t('customers.roomOther')}
+          placeholder={t('customers.roomOtherHint')}
+          value={roomText}
+          onChangeText={setRoomText}
+        />
+      </Card>
+      <Card>
+        <ChoiceChips
+          label={t('customers.acType')}
+          options={TYPES.map((v) => ({ value: v, label: t(`customers.acTypes.${v}`) }))}
+          value={type}
+          onChange={setType}
+        />
+      </Card>
+      <Card>
+        <ChoiceChips
+          label={t('customers.brand')}
+          options={[
+            ...BRANDS.map((b) => ({ value: b as string, label: b })),
+            { value: 'other', label: t('customers.other') },
+          ]}
+          value={brand}
+          onChange={setBrand}
+        />
+        {brand === 'other' ? (
+          <TextField label={t('customers.brandName')} value={otherBrand} onChangeText={setOtherBrand} />
+        ) : null}
+      </Card>
+      <Card>
+        <ChoiceChips
+          label={t('customers.capacity')}
+          options={TONS.map((v) => ({
+            value: v,
+            label: v === 'unknown' ? t('customers.notSure') : `${v} ton`,
+          }))}
+          value={tons}
+          onChange={setTons}
+        />
+      </Card>
       {more ? (
-        <>
+        <Card>
           <TextField label={t('customers.model')} value={model} onChangeText={setModel} />
           <TextField label={t('customers.serial')} value={serial} onChangeText={setSerial} />
           <ChoiceChips
@@ -113,11 +134,28 @@ export function AcFormScreen() {
             value={gas}
             onChange={setGas}
           />
-        </>
+        </Card>
       ) : (
-        <Button variant="text" label={t('customers.moreDetails')} onPress={() => setMore(true)} />
+        <Button variant="dashed" icon="plus-circle-outline" label={t('customers.moreDetails')} onPress={() => setMore(true)} />
       )}
+      <View style={styles.tip}>
+        <Icon name="check-decagram-outline" size={20} color={colors.teal} />
+        <AppText variant="support" color={colors.slate} style={{ flex: 1 }}>
+          {t('uiPeople.acTip')}
+        </AppText>
+      </View>
       {save.error ? <AppText color={colors.bad}>{errorMessage(t, save.error)}</AppText> : null}
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  head: { gap: 2 },
+  tip: {
+    flexDirection: 'row',
+    gap: space.sm,
+    padding: space.md,
+    borderRadius: radius.md,
+    backgroundColor: colors.soft,
+  },
+});

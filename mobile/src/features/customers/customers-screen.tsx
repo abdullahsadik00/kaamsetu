@@ -2,35 +2,35 @@ import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useDeferredValue, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 import { errorMessage } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ListRow } from '@/components/ui/list-row';
 import { Screen } from '@/components/ui/screen';
-import { TextField } from '@/components/ui/text-field';
-import { colors, radius, space, touch } from '@/theme/tokens';
+import { colors, space } from '@/theme/tokens';
 
 import { displayPhone, useCustomers } from './api';
+import { SearchBox } from './people-ui';
 
-/** Customers tab: find a repeat customer fast by name or last digits of the mobile (T4.3). */
+/** Customers tab (screen 43): find a repeat customer fast by name or last digits of the mobile (T4.3). */
 export function CustomersScreen() {
   const { t } = useTranslation();
   const [q, setQ] = useState('');
   const query = useDeferredValue(q.trim());
   const list = useQuery(useCustomers(query));
+  const add = () => router.push('/customers/new');
 
   return (
-    <Screen
-      footer={<Button label={t('customers.add')} onPress={() => router.push('/customers/new')} />}
-    >
-      <TextField
+    <Screen footer={<Button label={t('customers.add')} icon="plus" onPress={add} />}>
+      <SearchBox
         label={t('customers.search')}
-        placeholder={t('customers.searchHint')}
+        placeholder={t('uiPeople.searchPlaceholder')}
         value={q}
         onChangeText={setQ}
-        autoCorrect={false}
-        returnKeyType="search"
       />
       {list.isPending ? <ActivityIndicator color={colors.teal} /> : null}
       {list.isError ? (
@@ -40,40 +40,34 @@ export function CustomersScreen() {
         </View>
       ) : null}
       {list.data?.length === 0 ? (
-        <AppText color={colors.slate}>{query ? t('customers.noneFound') : t('customers.empty')}</AppText>
+        query ? (
+          <EmptyState
+            icon="account-search-outline"
+            title={t('customers.noneFound')}
+            body={t('uiPeople.noneFoundBody')}
+            action={<Button icon="plus" label={t('uiPeople.addAsNew')} onPress={add} />}
+          />
+        ) : (
+          <EmptyState icon="account-group-outline" title={t('customers.empty')} body={t('uiPeople.emptyCustomersBody')} />
+        )
       ) : null}
-      {list.data?.map((c) => (
-        <Pressable
-          key={c.id}
-          accessibilityRole="button"
-          onPress={() => router.push({ pathname: '/customers/[id]', params: { id: c.id } })}
-          style={({ pressed }) => [styles.row, pressed && { opacity: 0.8 }]}
-        >
-          <View style={{ flex: 1, gap: 2 }}>
-            <AppText weight="semibold">{c.name}</AppText>
-            <AppText variant="support" color={colors.slate}>
-              {[displayPhone(c.phone), c.place].filter(Boolean).join(' · ')}
-            </AppText>
-          </View>
-          <AppText variant="support" color={colors.slate}>
-            {t('customers.acCount', { count: c.acCount })}
-          </AppText>
-        </Pressable>
-      ))}
+      {list.data?.length ? (
+        <Card style={{ paddingVertical: space.xs, gap: 0 }}>
+          {list.data.map((c, i) => (
+            <ListRow
+              key={c.id}
+              avatar={c.name}
+              title={c.name}
+              subtitle={[displayPhone(c.phone), c.place, t('customers.acCount', { count: c.acCount })]
+                .filter(Boolean)
+                .join(' · ')}
+              right={c.archivedAt ? <AppText variant="small" color={colors.muted}>{t('customers.archived')}</AppText> : undefined}
+              divider={i < list.data.length - 1}
+              onPress={() => router.push({ pathname: '/customers/[id]', params: { id: c.id } })}
+            />
+          ))}
+        </Card>
+      ) : null}
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    minHeight: touch.action + 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.md,
-    padding: space.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
-});

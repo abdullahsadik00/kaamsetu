@@ -1,29 +1,36 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Stack, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 
 import { errorMessage } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Avatar } from '@/components/ui/list-row';
 import { Screen } from '@/components/ui/screen';
 import { useSession } from '@/features/auth/session';
+import { ConfirmSheet, ContactButtons } from '@/features/customers/people-ui';
 import { colors, radius, space } from '@/theme/tokens';
 
 import { createInvite, deactivateEmployee, resetLogin, useEmployee, EMPLOYEES_KEY } from './api';
 
-/** Owner: one employee. Show an invite QR to link their Google login, or reset it. */
+/** Owner: one employee (screens 65, 66). Show an invite QR to link their Google login, or reset it. */
 export function EmployeeScreen() {
   const { t, i18n } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const me = useSession((s) => s.profile?.membership?.memberId);
   const qc = useQueryClient();
   const employee = useQuery(useEmployee(id));
+  const [confirm, setConfirm] = useState<'reset' | 'remove' | null>(null);
   const invite = useMutation({ mutationFn: () => createInvite(id) });
   const reset = useMutation({
     mutationFn: () => resetLogin(id),
     onSuccess: () => {
+      setConfirm(null);
       invite.reset();
       void qc.invalidateQueries({ queryKey: EMPLOYEES_KEY });
     },
@@ -32,6 +39,7 @@ export function EmployeeScreen() {
   const remove = useMutation({
     mutationFn: () => deactivateEmployee(id),
     onSuccess: () => {
+      setConfirm(null);
       invite.reset();
       void qc.invalidateQueries({ queryKey: EMPLOYEES_KEY });
     },
@@ -57,72 +65,85 @@ export function EmployeeScreen() {
         minute: '2-digit',
       })
     : '';
-
-  const confirmRemove = () =>
-    Alert.alert(t('employees.removeTitle'), t('employees.removeBody', { name }), [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('employees.remove'), style: 'destructive', onPress: () => remove.mutate() },
-    ]);
-
-  const confirmReset = () =>
-    Alert.alert(t('employees.resetTitle'), t('employees.resetBody', { name }), [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('employees.resetLogin'), style: 'destructive', onPress: () => reset.mutate() },
-    ]);
+  const canInvite = !isMe && !removed;
+  const error = invite.error ?? reset.error ?? remove.error;
 
   return (
     <Screen>
       <Stack.Screen options={{ title: name }} />
-      <View style={styles.card}>
-        <AppText variant="section">{name}</AppText>
-        <AppText color={colors.slate}>{t(`roles.${e.role}`)}</AppText>
-        {e.user.phone ? <AppText color={colors.slate}>{e.user.phone.replace(/^\+91/, '+91 ')}</AppText> : null}
+      <Card>
+        <View style={styles.who}>
+          <Avatar name={name} size={56} />
+          <View style={{ flex: 1, gap: 2 }}>
+            <AppText variant="section">{name}</AppText>
+            <AppText variant="support" color={colors.slate}>
+              {t(`roles.${e.role}`)}
+            </AppText>
+            {e.user.phone ? (
+              <AppText variant="support" color={colors.slate}>
+                {e.user.phone.replace(/^\+91/, '+91 ')}
+              </AppText>
+            ) : null}
+          </View>
+        </View>
         {removed ? (
-          <AppText weight="semibold" color={colors.muted}>
-            {t('employees.removed')}
-          </AppText>
+          <Badge tone="grey" icon="account-off-outline" label={t('employees.removed')} />
         ) : (
-          <AppText weight="semibold" color={e.loginLinked ? colors.ok : colors.warn}>
-            {e.loginLinked ? t('employees.linked') : t('employees.notLinked')}
-          </AppText>
+          <Badge
+            tone={e.loginLinked ? 'ok' : 'grey'}
+            icon={e.loginLinked ? 'check-circle-outline' : 'circle-medium'}
+            label={e.loginLinked ? t('employees.linked') : t('employees.notLinked')}
+          />
         )}
-      </View>
+        {e.user.phone && !isMe ? <ContactButtons phone={e.user.phone} /> : null}
+        {canInvite && !invite.data ? (
+          <Button icon="qrcode" label={t('employees.invite')} onPress={() => invite.mutate()} loading={invite.isPending} />
+        ) : null}
+      </Card>
 
       {invite.data ? (
-        <View style={[styles.card, { alignItems: 'center' }]}>
-          <AppText variant="support" color={colors.slate} style={{ textAlign: 'center' }}>
-            {t('employees.inviteHint', { name, time: until })}
-          </AppText>
+        <Card style={styles.qrCard}>
           <View style={styles.qr}>
             <QRCode value={invite.data.qr} size={220} color={colors.ink} backgroundColor={colors.white} />
           </View>
-          <AppText variant="support" color={colors.slate}>
+          <AppText style={styles.center}>{t('employees.inviteHint', { name, time: until })}</AppText>
+          <AppText variant="support" color={colors.slate} style={styles.center}>
             {t('employees.orCode')}
           </AppText>
-          <AppText variant="title" style={{ letterSpacing: 6 }} selectable>
+          <AppText variant="title" style={styles.code} selectable>
             {invite.data.code}
           </AppText>
-        </View>
+          {canInvite ? (
+            <Button
+              variant="text"
+              icon="refresh"
+              label={t('employees.newInvite')}
+              onPress={() => invite.mutate()}
+              loading={invite.isPending}
+            />
+          ) : null}
+        </Card>
       ) : null}
 
-      {!isMe && !removed ? (
+      {reset.isSuccess ? (
+        <Card tone="recessed">
+          <AppText color={colors.ok}>{t('employees.resetDone')}</AppText>
+        </Card>
+      ) : null}
+      {canInvite && e.loginLinked ? (
         <Button
-          label={invite.data ? t('employees.newInvite') : t('employees.invite')}
-          variant={invite.data ? 'secondary' : 'primary'}
-          onPress={() => invite.mutate()}
-          loading={invite.isPending}
+          variant="destructive"
+          icon="restore"
+          label={t('employees.resetLogin')}
+          onPress={() => setConfirm('reset')}
         />
       ) : null}
-      {!isMe && !removed && e.loginLinked ? (
-        <Button variant="text" label={t('employees.resetLogin')} onPress={confirmReset} loading={reset.isPending} />
-      ) : null}
-      {reset.isSuccess ? <AppText color={colors.ok}>{t('employees.resetDone')}</AppText> : null}
-      {!isMe && !removed && e.role !== 'OWNER' ? (
+      {canInvite && e.role !== 'OWNER' ? (
         <Button
           variant="text"
+          icon="account-remove-outline"
           label={t('employees.remove')}
-          onPress={confirmRemove}
-          loading={remove.isPending}
+          onPress={() => setConfirm('remove')}
         />
       ) : null}
       {removed ? (
@@ -130,21 +151,40 @@ export function EmployeeScreen() {
           {t('employees.removedHint')}
         </AppText>
       ) : null}
-      {invite.error || reset.error || remove.error ? (
-        <AppText color={colors.bad}>{errorMessage(t, invite.error ?? reset.error ?? remove.error)}</AppText>
-      ) : null}
+      {error && !confirm ? <AppText color={colors.bad}>{errorMessage(t, error)}</AppText> : null}
+
+      <ConfirmSheet
+        visible={confirm === 'reset'}
+        title={t('employees.resetTitle')}
+        body={`${t('employees.resetBody', { name })}${reset.error ? `\n\n${errorMessage(t, reset.error)}` : ''}`}
+        confirmLabel={t('employees.resetLogin')}
+        onConfirm={() => reset.mutate()}
+        onClose={() => setConfirm(null)}
+        loading={reset.isPending}
+      />
+      <ConfirmSheet
+        visible={confirm === 'remove'}
+        title={t('employees.removeTitle')}
+        body={`${t('employees.removeBody', { name })}${remove.error ? `\n\n${errorMessage(t, remove.error)}` : ''}`}
+        confirmLabel={t('employees.remove')}
+        onConfirm={() => remove.mutate()}
+        onClose={() => setConfirm(null)}
+        loading={remove.isPending}
+      />
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: colors.surface,
+  who: { flexDirection: 'row', alignItems: 'center', gap: space.md },
+  qrCard: { alignItems: 'center', gap: space.md },
+  qr: {
+    padding: space.md,
+    backgroundColor: colors.white,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: colors.line,
-    padding: space.lg,
-    gap: space.sm,
+    borderColor: colors.rowLine,
   },
-  qr: { padding: space.md, backgroundColor: colors.white, borderRadius: radius.md },
+  center: { textAlign: 'center' },
+  code: { letterSpacing: 6, fontVariant: ['tabular-nums'] },
 });

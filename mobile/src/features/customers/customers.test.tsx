@@ -45,7 +45,7 @@ describe('Add customer (T4.3)', () => {
     mockCreate.mockResolvedValue({ id: 'new-1' } as Customer);
     await renderScreen(<CustomerFormScreen />);
     await fillCustomer();
-    await fireEvent.press(screen.getAllByText('Add customer')[0]);
+    await fireEvent.press(screen.getByText('Save customer'));
 
     await waitFor(() => expect(mockCreate).toHaveBeenCalled());
     expect(mockCreate.mock.calls[0][0]).toEqual({
@@ -67,7 +67,7 @@ describe('Add customer (T4.3)', () => {
       .mockResolvedValueOnce({ id: 'new-2' } as Customer);
     await renderScreen(<CustomerFormScreen />);
     await fillCustomer();
-    await fireEvent.press(screen.getAllByText('Add customer')[0]);
+    await fireEvent.press(screen.getByText('Save customer'));
 
     expect(await screen.findByText('This number is already saved for Meera Joshi.')).toBeTruthy();
     expect(screen.getByText('Open Meera Joshi')).toBeTruthy();

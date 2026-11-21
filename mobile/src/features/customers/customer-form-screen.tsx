@@ -4,13 +4,13 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { ActivityIndicator, StyleSheet, Switch, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { z } from 'zod';
 
 import { ApiError, errorMessage } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
-import { ChoiceChips } from '@/components/ui/choice-chips';
+import { Icon } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { colors, radius, space } from '@/theme/tokens';
@@ -23,6 +23,7 @@ import {
   type Customer,
   type CustomerType,
 } from './api';
+import { SegmentToggle, SwitchCard } from './people-ui';
 
 const phone = z
   .string()
@@ -110,16 +111,16 @@ function CustomerForm({ customer }: { customer?: Customer }) {
   const submit = (anyway: boolean) =>
     form.handleSubmit((v) => save.mutate({ v, anyway }))();
 
-  const types: { value: CustomerType; label: string }[] = [
-    { value: 'INDIVIDUAL', label: t('customers.typeHome') },
-    { value: 'BUSINESS', label: t('customers.typeBusiness') },
+  const types: { value: CustomerType; label: string; icon: 'home-outline' | 'office-building-outline' }[] = [
+    { value: 'INDIVIDUAL', label: t('customers.typeHome'), icon: 'home-outline' },
+    { value: 'BUSINESS', label: t('customers.typeBusiness'), icon: 'office-building-outline' },
   ];
 
   return (
     <Screen
       footer={
         <Button
-          label={editing ? t('customers.save') : t('customers.add')}
+          label={editing ? t('customers.save') : t('uiPeople.saveCustomer')}
           onPress={() => submit(false)}
           loading={save.isPending}
         />
@@ -129,7 +130,7 @@ function CustomerForm({ customer }: { customer?: Customer }) {
         control={form.control}
         name="type"
         render={({ field }) => (
-          <ChoiceChips label={t('customers.type')} options={types} value={field.value} onChange={field.onChange} />
+          <SegmentToggle label={t('customers.type')} options={types} value={field.value} onChange={field.onChange} />
         )}
       />
       <Controller
@@ -138,6 +139,7 @@ function CustomerForm({ customer }: { customer?: Customer }) {
         render={({ field, fieldState }) => (
           <TextField
             label={t('customers.name')}
+            placeholder={t('uiPeople.namePlaceholder')}
             value={field.value}
             onChangeText={field.onChange}
             error={fieldState.error ? t('customers.nameError') : undefined}
@@ -163,8 +165,13 @@ function CustomerForm({ customer }: { customer?: Customer }) {
         )}
       />
       {duplicate ? (
-        <View style={styles.warn}>
-          <AppText weight="semibold">{t('customers.duplicate', { name: duplicate.name })}</AppText>
+        <View style={styles.warn} accessibilityLiveRegion="polite">
+          <View style={styles.warnHead}>
+            <Icon name="alert-outline" color={colors.warn} />
+            <AppText weight="semibold" color={colors.warn} style={{ flex: 1 }}>
+              {t('customers.duplicate', { name: duplicate.name })}
+            </AppText>
+          </View>
           <Button
             variant="secondary"
             label={t('customers.openExisting', { name: duplicate.name })}
@@ -184,6 +191,7 @@ function CustomerForm({ customer }: { customer?: Customer }) {
               <TextField
                 label={t('customers.addressLine')}
                 placeholder={t('customers.addressHint')}
+                multiline
                 value={field.value}
                 onChangeText={field.onChange}
                 error={fieldState.error ? t('customers.addressError') : undefined}
@@ -201,7 +209,12 @@ function CustomerForm({ customer }: { customer?: Customer }) {
             control={form.control}
             name="landmark"
             render={({ field }) => (
-              <TextField label={t('customers.landmarkOptional')} value={field.value} onChangeText={field.onChange} />
+              <TextField
+                label={t('customers.landmark')}
+                optionalLabel={t('uiPeople.optional')}
+                value={field.value}
+                onChangeText={field.onChange}
+              />
             )}
           />
           <Controller
@@ -224,23 +237,19 @@ function CustomerForm({ customer }: { customer?: Customer }) {
         control={form.control}
         name="gstBills"
         render={({ field }) => (
-          <View style={styles.switchCard}>
-            <View style={{ flex: 1 }}>
-              <AppText weight="semibold">{t('customers.gstBills')}</AppText>
-              <AppText variant="support" color={colors.slate}>
-                {t('onboarding.gstBillsHint')}
-              </AppText>
-            </View>
-            <Switch
-              accessibilityLabel={t('customers.gstBills')}
-              value={field.value}
-              onValueChange={field.onChange}
-              trackColor={{ true: colors.teal, false: colors.line2 }}
-              thumbColor={colors.white}
-            />
-          </View>
+          <SwitchCard
+            title={t('customers.gstBills')}
+            hint={t('uiPeople.gstHint')}
+            value={field.value}
+            onChange={field.onChange}
+          />
         )}
       />
+      {!editing ? (
+        <AppText variant="support" color={colors.muted} style={{ textAlign: 'center' }}>
+          {t('uiPeople.addAcsLater')}
+        </AppText>
+      ) : null}
       {save.error && !duplicate ? (
         <AppText color={colors.bad} accessibilityLiveRegion="polite">
           {errorMessage(t, save.error)}
@@ -257,14 +266,5 @@ const styles = StyleSheet.create({
     padding: space.md,
     gap: space.sm,
   },
-  switchCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space.md,
-    padding: space.lg,
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: colors.line,
-  },
+  warnHead: { flexDirection: 'row', alignItems: 'flex-start', gap: space.sm },
 });
