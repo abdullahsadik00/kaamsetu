@@ -359,6 +359,8 @@ model ServiceJob {
   completedAt       DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+  /// Business change number of the last change, set by a database trigger (sync cursor, T4.9, D-035).
+  syncSeq           BigInt    @default(0)
 
   organization Organization       @relation(fields: [organizationId], references: [id])
   equipment    JobEquipment[]
@@ -371,6 +373,7 @@ model ServiceJob {
   @@index([organizationId, status, scheduledDate])
   @@index([organizationId, assignedTeamId])
   @@index([organizationId, customerId])
+  @@index([organizationId, syncSeq])
 }
 
 model JobEquipment {
@@ -483,9 +486,19 @@ model SyncOperation {
   payloadHash    String
   result         String
   errorCode      String?
+  /// The body of a conflicting or rejected operation, kept for the owner to review (docs/09 §7).
+  payload        Json?
   receivedAt     DateTime @default(now())
 
   @@index([organizationId, receivedAt])
+}
+
+/// Per-business change counter behind the sync cursor (T4.9, D-035). Bumped
+/// by database triggers on every job change (and on customer, address, AC and
+/// team changes that show on a job); the row lock makes numbers commit in order.
+model SyncCounter {
+  organizationId String @id @db.Uuid
+  seq            BigInt @default(0)
 }
 
 enum ReportOutcome {

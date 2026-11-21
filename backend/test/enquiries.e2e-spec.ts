@@ -6,8 +6,8 @@ import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
 import { TenantFactory, type TestTenant } from './helpers/tenants.js';
 
-const PREFIX_A = '90000097';
-const PREFIX_B = '90000098';
+const PREFIX_A = '90000063';
+const PREFIX_B = '90000064';
 
 describe('Enquiries (e2e, T4.5)', () => {
   let app: INestApplication<App>;

@@ -91,7 +91,7 @@ describe('Field: my jobs and sync operations (e2e, T4.7)', () => {
 
   it('answers conflict for moves the job no longer allows, and keeps others apart', async () => {
     const done = await send(a.tokens.SENIOR_TECHNICIAN, op('job.start', jobId));
-    expect(done.body.data.results[0]).toMatchObject({ status: 'conflict', code: 'INVALID_STATUS_TRANSITION' });
+    expect(done.body.data.results[0]).toMatchObject({ status: 'conflict', code: 'JOB_ALREADY_COMPLETED' });
     const notMine = await send(a.tokens.SENIOR_TECHNICIAN, op('job.start', otherTeamJob));
     expect(notMine.body.data.results[0]).toMatchObject({ status: 'rejected', code: 'JOB_NOT_ACCESSIBLE' });
     const otherBusiness = await send(b.tokens.SENIOR_TECHNICIAN, op('job.start', otherTeamJob));
