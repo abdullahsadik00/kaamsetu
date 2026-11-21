@@ -11,6 +11,7 @@ import { Icon, type IconName } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
 import { useSession } from '@/features/auth/session';
 import { dayString, useDayLabel, useJobs, type JobRow } from '@/features/jobs/jobs';
+import { useEnquiries } from '@/features/enquiries/enquiries';
 import { useTeams } from '@/features/teams/teams';
 import { useLanguage } from '@/localization/i18n';
 import { colors, radius, space, tones, type Tone } from '@/theme/tokens';
@@ -35,6 +36,7 @@ export function OwnerHomeScreen() {
   const today = useQuery(useJobs(`date=${dayString(0)}`));
   const open = useQuery(useJobs('status=OPEN'));
   const teams = useQuery(useTeams());
+  const enquiries = useQuery(useEnquiries('OPEN'));
   const dayLabel = useDayLabel();
 
   const hour = new Date().getHours();
@@ -61,6 +63,25 @@ export function OwnerHomeScreen() {
           <AppText color={colors.slate}>{t('owner.getStartedBody')}</AppText>
           <Button icon="account-plus-outline" label={t('owner.addStaff')} onPress={() => router.push('/employees/new')} />
           <Button variant="text" label={t('owner.employees')} onPress={() => router.push('/employees')} />
+        </Card>
+      ) : null}
+
+      {enquiries.data?.length ? (
+        <Card
+          onPress={() => router.navigate({ pathname: '/jobs', params: { show: 'enquiries' } })}
+          accessibilityLabel={t('uiEnquiry.openCount', { count: enquiries.data.length })}
+        >
+          <View style={styles.between}>
+            <View style={styles.flex}>
+              <AppText weight="semibold">{t('uiEnquiry.openCount', { count: enquiries.data.length })}</AppText>
+              <AppText variant="small" color={colors.slate} numberOfLines={1}>
+                {t('uiEnquiry.newest', { name: enquiries.data[0].customerName })}
+              </AppText>
+            </View>
+            <AppText weight="semibold" color={colors.teal}>
+              {t('uiEnquiry.view')}
+            </AppText>
+          </View>
         </Card>
       ) : null}
 

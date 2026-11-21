@@ -1,3 +1,4 @@
+import { enquiryUi } from './ui/enquiries';
 import { fieldUi } from './ui/field';
 import { ownerUi } from './ui/owner';
 import { peopleUi } from './ui/people';
@@ -10,6 +11,7 @@ export const en = {
   uiOwner: ownerUi.en,
   uiPeople: peopleUi.en,
   uiField: fieldUi.en,
+  uiEnquiry: enquiryUi.en,
   common: {
     appName: 'KaamSetu',
     tagline: 'Work made easier. Accounts made easier. Business made easier.',
@@ -318,6 +320,7 @@ export const en = {
   },
   errors: {
     JOB_NOT_FOUND: 'This job was not found.',
+    ENQUIRY_NOT_FOUND: 'This enquiry was not found.',
     VERSION_CONFLICT: 'This job was changed in the meantime. Please check and try again.',
     INVALID_STATUS_TRANSITION: 'This is not possible for the job right now.',
     EQUIPMENT_NOT_AT_SITE: 'Choose ACs at this address.',

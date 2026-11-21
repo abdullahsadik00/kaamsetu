@@ -17,6 +17,15 @@ import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { api } from '@/features/auth/session';
 import { acSummary, displayPhone, useCustomer, useCustomers } from '@/features/customers/api';
+import {
+  ENQUIRIES_KEY,
+  EnquiryList,
+  SOURCES,
+  useEnquiries,
+  useEnquiry,
+  type Enquiry,
+  type Source,
+} from '@/features/enquiries/enquiries';
 import { useTeams, type Team } from '@/features/teams/teams';
 import { colors, radius, space } from '@/theme/tokens';
 
@@ -47,6 +56,7 @@ type Job = JobRow & {
   complaint: string | null;
   cancelReason: string | null;
   version: number;
+  enquiry: { id: string; number: number } | null;
   customer: { id: string; name: string; phone: string } | null;
   site: { addressLine1: string; locality: string | null; city: string | null; landmark: string | null } | null;
   equipment: { id: string; type: string; brand: string | null; capacityTons: number | null; locationLabel: string | null }[];
@@ -97,10 +107,19 @@ const isOpen = (s: Status) => s !== 'COMPLETED' && s !== 'CANCELLED';
 
 export function JobsScreen() {
   const { t } = useTranslation();
+  const params = useLocalSearchParams<{ show?: string }>();
+  const [segment, setSegment] = useState<'enquiries' | 'jobs'>(params.show === 'enquiries' ? 'enquiries' : 'jobs');
+  const [shown, setShown] = useState(params.show);
+  // Home's "open enquiries" card navigates here with ?show=enquiries.
+  if (params.show !== shown) {
+    setShown(params.show);
+    if (params.show === 'enquiries') setSegment('enquiries');
+  }
   const [view, setView] = useState<'today' | 'tomorrow' | 'open' | 'done'>('today');
   const filter =
     view === 'today' ? `date=${dayString(0)}` : view === 'tomorrow' ? `date=${dayString(1)}` : view === 'open' ? 'status=OPEN' : 'status=COMPLETED';
-  const jobs = useQuery(useJobs(filter));
+  const jobs = useQuery({ ...useJobs(filter), enabled: segment === 'jobs' });
+  const openEnquiries = useQuery(useEnquiries('OPEN'));
 
   return (
     <Screen>
@@ -108,6 +127,45 @@ export function JobsScreen() {
         <AppText variant="title">{t('owner.jobs')}</AppText>
         <Button icon="plus" label={t('uiOwner.newShort')} onPress={() => router.push('/jobs/new')} />
       </View>
+      <View style={styles.segments} accessibilityRole="tablist">
+        {(['enquiries', 'jobs'] as const).map((s) => {
+          const on = segment === s;
+          const label =
+            s === 'enquiries' && openEnquiries.data?.length
+              ? t('uiEnquiry.enquiriesCount', { count: openEnquiries.data.length })
+              : t(`uiEnquiry.${s}`);
+          return (
+            <Pressable
+              key={s}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: on }}
+              onPress={() => setSegment(s)}
+              style={[styles.segment, on && styles.segmentOn]}
+            >
+              <AppText weight={on ? 'semibold' : 'regular'} color={on ? colors.ink : colors.slate}>
+                {label}
+              </AppText>
+            </Pressable>
+          );
+        })}
+      </View>
+      {segment === 'enquiries' ? <EnquiryList /> : <JobList view={view} setView={setView} jobs={jobs} />}
+    </Screen>
+  );
+}
+
+function JobList({
+  view,
+  setView,
+  jobs,
+}: {
+  view: 'today' | 'tomorrow' | 'open' | 'done';
+  setView: (v: 'today' | 'tomorrow' | 'open' | 'done') => void;
+  jobs: ReturnType<typeof useQuery<JobRow[]>>;
+}) {
+  const { t } = useTranslation();
+  return (
+    <>
       <FilterChips
         label={t('jobs.show')}
         options={(['today', 'tomorrow', 'open', 'done'] as const).map((v) => ({ value: v, label: t(`jobs.views.${v}`) }))}
@@ -118,7 +176,7 @@ export function JobsScreen() {
       {jobs.isError ? <AppText color={colors.bad}>{errorMessage(t, jobs.error)}</AppText> : null}
       {jobs.data?.length === 0 ? <EmptyState title={t('jobs.empty')} body={t('uiOwner.emptyJobsBody')} /> : null}
       {jobs.data?.map((j) => <JobCard key={j.id} job={j} />)}
-    </Screen>
+    </>
   );
 }
 
@@ -157,10 +215,18 @@ export function JobCard({ job: j }: { job: JobRow }) {
 
 export function NewJobScreen() {
   const { t } = useTranslation();
-  const params = useLocalSearchParams<{ customerId?: string }>();
+  const params = useLocalSearchParams<{ customerId?: string; enquiryId?: string }>();
   const [customerId, setCustomerId] = useState<string | null>(params.customerId ?? null);
   const [q, setQ] = useState('');
-  const found = useQuery({ ...useCustomers(q.trim()), enabled: !customerId });
+  const found = useQuery({ ...useCustomers(q.trim()), enabled: !customerId && !params.enquiryId });
+  const enquiry = useQuery({ ...useEnquiry(params.enquiryId ?? ''), enabled: !!params.enquiryId });
+
+  if (params.enquiryId) {
+    // Convert (Stitch 07 → 08): everything comes from the enquiry.
+    if (enquiry.isPending) return <ActivityIndicator style={styles.flex} color={colors.teal} />;
+    if (enquiry.isError) return <Screen><AppText color={colors.bad}>{errorMessage(t, enquiry.error)}</AppText></Screen>;
+    return <JobForm customerId={enquiry.data.customerId} enquiry={enquiry.data} />;
+  }
 
   if (!customerId) {
     return (
@@ -197,36 +263,77 @@ export function NewJobScreen() {
 
 const TAGS = ['tagNotCooling', 'tagWaterLeak', 'tagNoise', 'tagBadSmell'] as const;
 
-function JobForm({ customerId, onChangeCustomer }: { customerId: string; onChangeCustomer: () => void }) {
+/**
+ * One form for a new enquiry or a new job (Stitch 08). With `enquiry` it is the
+ * convert step: the enquiry's details are filled in and only the job is made.
+ */
+function JobForm({
+  customerId,
+  onChangeCustomer,
+  enquiry,
+}: {
+  customerId: string;
+  onChangeCustomer?: () => void;
+  enquiry?: Enquiry;
+}) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const customer = useQuery(useCustomer(customerId));
   const teams = useQuery(useTeams());
-  const [siteId, setSiteId] = useState<string | null>(null);
-  const [acs, setAcs] = useState<string[]>([]);
-  const [type, setType] = useState<JobType>('SERVICE');
-  const [complaint, setComplaint] = useState('');
-  const [day, setDay] = useState<string>(dayString(0));
-  const [slot, setSlot] = useState<Slot>('MORNING');
+  const dayLabel = useDayLabel();
+  const [siteId, setSiteId] = useState<string | null>(enquiry?.siteId ?? null);
+  const [acs, setAcs] = useState<string[]>(enquiry?.equipment.map((e) => e.id) ?? []);
+  const [type, setType] = useState<JobType>((enquiry?.type as JobType | undefined) ?? 'SERVICE');
+  const [complaint, setComplaint] = useState(enquiry?.complaint ?? '');
+  const [day, setDay] = useState<string>(enquiry ? (enquiry.preferredDate ?? 'none') : dayString(0));
+  const [slot, setSlot] = useState<Slot>(enquiry?.preferredSlot ?? 'MORNING');
+  const [source, setSource] = useState<Source>('WHATSAPP');
   const [teamId, setTeamId] = useState<string | null>(null);
   const [amount, setAmount] = useState('');
+  const job = () => ({
+    ...(day !== 'none' ? { scheduledDate: day, timeSlot: slot } : {}),
+    ...(teamId ? { teamId } : {}),
+    ...(amount ? { amountToCollect: Math.round(Number(amount) * 100) } : {}),
+  });
+  const details = (site: string) => ({
+    customerId,
+    siteId: site,
+    equipmentIds: acs,
+    type,
+    ...(complaint.trim() ? { complaint: complaint.trim() } : {}),
+  });
+  const openJob = (created: Job) => {
+    void qc.invalidateQueries({ queryKey: JOBS_KEY });
+    void qc.invalidateQueries({ queryKey: ENQUIRIES_KEY });
+    router.replace({ pathname: '/jobs/[id]', params: { id: created.id } });
+  };
   const save = useMutation({
     mutationFn: (site: string) =>
-      api.post<Job>('/jobs', {
-        customerId,
-        siteId: site,
-        equipmentIds: acs,
-        type,
-        ...(complaint.trim() ? { complaint: complaint.trim() } : {}),
-        ...(day !== 'none' ? { scheduledDate: day, timeSlot: slot } : {}),
-        ...(teamId ? { teamId } : {}),
-        ...(amount ? { amountToCollect: Math.round(Number(amount) * 100) } : {}),
+      enquiry
+        ? api.post<Job>(`/enquiries/${enquiry.id}/convert`, {
+            equipmentIds: acs,
+            type,
+            complaint: complaint.trim() || null,
+            scheduledDate: day !== 'none' ? day : null,
+            ...job(),
+          })
+        : api.post<Job>('/jobs', { ...details(site), ...job() }),
+    onSuccess: openJob,
+  });
+  const saveEnquiry = useMutation({
+    mutationFn: (site: string) =>
+      api.post<Enquiry>('/enquiries', {
+        ...details(site),
+        source,
+        ...(day !== 'none' ? { preferredDate: day, preferredSlot: slot } : {}),
       }),
-    onSuccess: (job) => {
-      void qc.invalidateQueries({ queryKey: JOBS_KEY });
-      router.replace({ pathname: '/jobs/[id]', params: { id: job.id } });
+    onSuccess: (saved) => {
+      void qc.invalidateQueries({ queryKey: ENQUIRIES_KEY });
+      router.replace({ pathname: '/enquiries/[id]', params: { id: saved.id } });
     },
   });
+  const busy = save.isPending || saveEnquiry.isPending;
+  const error = save.error ?? saveEnquiry.error;
 
   if (customer.isPending) return <ActivityIndicator style={styles.flex} color={colors.teal} />;
   if (customer.isError) return <Screen><AppText color={colors.bad}>{errorMessage(t, customer.error)}</AppText></Screen>;
@@ -238,26 +345,45 @@ function JobForm({ customerId, onChangeCustomer }: { customerId: string; onChang
   return (
     <Screen
       footer={
-        <Button
-          icon="arrow-right"
-          size="large"
-          label={t('jobs.save')}
-          onPress={() => site && save.mutate(site.id)}
-          loading={save.isPending}
-        />
+        <View style={styles.footerRow}>
+          {enquiry ? null : (
+            <View style={styles.flex}>
+              <Button
+                variant="secondary"
+                size="large"
+                label={t('uiEnquiry.saveEnquiry')}
+                onPress={() => site && saveEnquiry.mutate(site.id)}
+                loading={saveEnquiry.isPending}
+                disabled={busy}
+              />
+            </View>
+          )}
+          <View style={styles.flex}>
+            <Button
+              size="large"
+              label={t('uiEnquiry.createJob')}
+              onPress={() => site && save.mutate(site.id)}
+              loading={save.isPending}
+              disabled={busy}
+            />
+          </View>
+        </View>
       }
     >
+      {enquiry ? <Stack.Screen options={{ title: t('uiEnquiry.convertTitle', { n: enquiry.number }) }} /> : null}
       <FormSection label={t('uiOwner.customer')}>
         <Card style={styles.customerCard}>
           <View style={styles.between}>
             <AppText variant="section" style={styles.flex}>
               {c.name}
             </AppText>
-            <Pressable accessibilityRole="button" onPress={onChangeCustomer} hitSlop={12}>
-              <AppText weight="semibold" color={colors.teal}>
-                {t('uiOwner.change')}
-              </AppText>
-            </Pressable>
+            {onChangeCustomer ? (
+              <Pressable accessibilityRole="button" onPress={onChangeCustomer} hitSlop={12}>
+                <AppText weight="semibold" color={colors.teal}>
+                  {t('uiOwner.change')}
+                </AppText>
+              </Pressable>
+            ) : null}
           </View>
           <AppText variant="support" color={colors.slate}>
             {displayPhone(c.phone)}
@@ -340,7 +466,7 @@ function JobForm({ customerId, onChangeCustomer }: { customerId: string; onChang
         </View>
       </View>
 
-      <FormSection label={t('uiOwner.when')}>
+      <FormSection label={t('uiOwner.when')} hint={enquiry ? undefined : t('uiEnquiry.preferredHint')}>
         <OptionChips
           grid
           label={t('jobs.day')}
@@ -348,6 +474,10 @@ function JobForm({ customerId, onChangeCustomer }: { customerId: string; onChang
             { value: dayString(0), label: t('jobs.today') },
             { value: dayString(1), label: t('jobs.tomorrow') },
             { value: dayString(2), label: t('jobs.dayAfter') },
+            // The enquiry's preferred day when it is none of the above.
+            ...(enquiry?.preferredDate && ![0, 1, 2].some((n) => dayString(n) === enquiry.preferredDate)
+              ? [{ value: enquiry.preferredDate, label: dayLabel(enquiry.preferredDate) }]
+              : []),
             { value: 'none', label: t('jobs.noDate') },
           ]}
           value={day}
@@ -378,7 +508,18 @@ function JobForm({ customerId, onChangeCustomer }: { customerId: string; onChang
         value={amount}
         onChangeText={(v) => setAmount(v.replace(/\D/g, ''))}
       />
-      {save.error ? <AppText color={colors.bad} accessibilityLiveRegion="polite">{errorMessage(t, save.error)}</AppText> : null}
+
+      {enquiry ? null : (
+        <FormSection label={t('uiEnquiry.cameFrom')}>
+          <OptionChips
+            label={t('uiEnquiry.cameFrom')}
+            options={SOURCES.map((v) => ({ value: v, label: t(`uiEnquiry.src_${v}`) }))}
+            value={source}
+            onChange={setSource}
+          />
+        </FormSection>
+      )}
+      {error ? <AppText color={colors.bad} accessibilityLiveRegion="polite">{errorMessage(t, error)}</AppText> : null}
     </Screen>
   );
 }
@@ -550,6 +691,14 @@ export function JobScreen() {
             />
           ) : null}
           {j.complaint ? <Field label={t('uiOwner.problem')} value={j.complaint} /> : null}
+          {j.enquiry ? (
+            <Pressable
+              accessibilityRole="link"
+              onPress={() => router.push({ pathname: '/enquiries/[id]', params: { id: j.enquiry!.id } })}
+            >
+              <Field label={t('uiEnquiry.fromEnquiry')} value={t('uiEnquiry.number', { n: j.enquiry.number })} valueColor={colors.teal} />
+            </Pressable>
+          ) : null}
           <Field
             label={t('uiOwner.team')}
             value={j.teamName ?? t('uiOwner.noTeamYet')}
@@ -743,4 +892,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   teamOptionOn: { borderColor: colors.teal, backgroundColor: colors.soft },
+  segments: { flexDirection: 'row', padding: space.xs, borderRadius: radius.md, backgroundColor: colors.soft },
+  segment: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: radius.sm },
+  segmentOn: { backgroundColor: colors.surface },
 });

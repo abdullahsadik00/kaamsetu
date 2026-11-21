@@ -1,4 +1,5 @@
 import type { Translations } from './en';
+import { enquiryUi } from './ui/enquiries';
 import { fieldUi } from './ui/field';
 import { ownerUi } from './ui/owner';
 import { peopleUi } from './ui/people';
@@ -12,6 +13,7 @@ export const mr: Translations = {
   uiOwner: ownerUi.mr,
   uiPeople: peopleUi.mr,
   uiField: fieldUi.mr,
+  uiEnquiry: enquiryUi.mr,
   common: {
     appName: 'कामसेतु',
     tagline: 'काम सोपे। हिशोब सोपा। व्यवसाय सोपा।',
@@ -320,6 +322,7 @@ export const mr: Translations = {
   },
   errors: {
     JOB_NOT_FOUND: 'हे काम सापडले नाही.',
+    ENQUIRY_NOT_FOUND: 'ही चौकशी सापडली नाही.',
     VERSION_CONFLICT: 'दरम्यान काम बदलले. तपासून पुन्हा प्रयत्न करा.',
     INVALID_STATUS_TRANSITION: 'आत्ता या कामासाठी हे करता येत नाही.',
     EQUIPMENT_NOT_AT_SITE: 'याच पत्त्यावरचे AC निवडा.',
