@@ -9,6 +9,17 @@ Meaningful product, documentation, architecture and implementation changes, newe
 - `docs/design/STITCH_PROMPTS.md`: a strict base prompt plus 83 numbered, ready-to-paste Stitch prompts (all owner, technician, helper, sign-in, setup and settings screens, sheets, dialogs and offline/empty/error/language variants). Sample data matches the prototype; open decisions appear as visible placeholders.
 - `docs/design/STITCH_PROTOTYPE_PROMPTS.md`: prompts that link the Stitch screens into one clickable prototype (base rules, 12 link prompts following flows F1–F17, a check prompt, fix prompts and a full link table for wiring by hand or in Figma). No new screens.
 
+## 2026-11-21 — Finish page (T4.8, early under D-032)
+
+### Added
+- Finish work opens the finish page: how it went (done / need to come again / couldn't do it), what was done on each AC, parts used, money taken from the customer (pre-filled with the amount to collect; cash or UPI) and a note. "Couldn't do it" needs a reason.
+- Saved on the phone with the job's completion and sent when online; a re-sent report is not saved twice.
+- The owner's job page shows the work report and the money "with the team" (D-008).
+- Database: `ServiceReport`, `CashCollection` (migration `20261121160000_service_reports`).
+
+### Not yet
+- Photos (need a storage bucket), owner confirming money handover.
+
 ## 2026-11-21 — Technician job workflow (T4.7, early under D-031)
 
 ### Added

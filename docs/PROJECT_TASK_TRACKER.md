@@ -136,7 +136,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Tests:** role scope (other team's job = 404); update feed ordering.
 - **Acceptance:** a technician with no training finds today's job and starts it.
 
-### T4.8 Service reports and photo uploads — Critical — Not Started — depends T4.7
+### T4.8 Service reports and photo uploads — Critical — In Progress (finish page built early under D-032: outcome, work per AC, parts, money taken (cash/UPI, with team until owner confirms), note required for "couldn't do it"; saved offline with `job.complete`; owner sees the report; backend 4961d01, app 39cb3e0; **photos waiting for a storage bucket (Cloudflare R2, D-026)**; phone test pending) — depends T4.7
 - **Objective:** every completed job has a record.
 - **Stories:** finish page: work per AC, parts, note, photos, outcome, money from customer (if Q-03); needs another visit creates a linked follow-up suggestion for the owner.
 - **DB:** ServiceReport, JobWorkItem, JobPartUsage, JobReading, Attachment, CashCollection. **API:** doc 06 §7, attachments upload URL.
