@@ -33,7 +33,7 @@ function compare(a: StoredJob, b: StoredJob): number {
 }
 
 function fromRow<J>(r: { data: string; gone: number }): J & { gone?: boolean } {
-  const job = JSON.parse(r.data) as J;
+  const job = JSON.parse(r.data) as J & { gone?: boolean };
   return r.gone === 1 ? { ...job, gone: true } : job;
 }
 
