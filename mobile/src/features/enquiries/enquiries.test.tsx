@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 
 import { api } from '@/features/auth/session';
 import { NewJobScreen } from '@/features/jobs/jobs';
@@ -158,5 +159,16 @@ describe('Enquiries (T4.5)', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Save enquiry' }));
     expect(post).toHaveBeenCalledTimes(1);
     expect(post).toHaveBeenCalledWith('/jobs', expect.objectContaining({ customerId: 'cust-1' }));
+  });
+
+  it('a converted enquiry shows a compact "Job made" chip on its own line at the top (BUG-12)', async () => {
+    mockParams = { id: 'enq-1' };
+    jest.spyOn(api, 'get').mockResolvedValue({ ...enquiry, status: 'CONVERTED', jobId: 'job-9', jobNumber: 9, job: { id: 'job-9', number: 9 } } as never);
+    await renderScreen(<EnquiryScreen />);
+    const chip = (await screen.findByText('Job made')).parent;
+    expect(StyleSheet.flatten(chip?.props.style)).toMatchObject({ alignSelf: 'flex-start', flexShrink: 0 });
+    // Not squeezed into a row beside the saved-at line any more.
+    expect(StyleSheet.flatten(chip?.parent?.props.style) ?? {}).not.toMatchObject({ flexDirection: 'row' });
+    expect(screen.getByRole('button', { name: 'Open job #9' })).toBeTruthy();
   });
 });

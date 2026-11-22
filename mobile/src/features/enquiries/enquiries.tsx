@@ -191,12 +191,11 @@ export function EnquiryScreen() {
           ) : undefined
         }
       >
-        <View style={styles.between}>
-          <AppText variant="support" color={colors.slate} style={styles.flex}>
-            {savedAt(e.createdAt)} · {t('uiEnquiry.via', { source: t(`uiEnquiry.src_${e.source}`) })}
-          </AppText>
-          <Badge label={t(BADGE[e.status].key)} tone={BADGE[e.status].tone} />
-        </View>
+        {/* Status chip on its own line at the top, as on the job page (BUG-12); it hugs its text. */}
+        <Badge label={t(BADGE[e.status].key)} tone={BADGE[e.status].tone} />
+        <AppText variant="support" color={colors.slate}>
+          {savedAt(e.createdAt)} · {t('uiEnquiry.via', { source: t(`uiEnquiry.src_${e.source}`) })}
+        </AppText>
 
         <Card>
           <AppText variant="section">{e.customerName}</AppText>
