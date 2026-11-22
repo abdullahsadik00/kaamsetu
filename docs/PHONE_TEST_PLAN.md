@@ -64,7 +64,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-22a | 2 Senior | "Need to come again" | T4.8 | Pending | | Owner part in TP-22b |
 | TP-36a | 2 Senior | Holds and a follow-up for the dashboard | T4.12 | Pending | | Owner part in TP-36b |
 | TP-33 | 2 Senior | Three days offline | T4.9 | Pending | | One owner step; photos later |
-| TP-07 | 3 Helper | Helper joins with the invite code | T3.11 | Pending | | |
+| TP-07 | 3 Helper | Helper joins with the invite code | T3.11 | Passed | 22 Nov 2026 | BUG-16: Service and Repair share an icon |
 | TP-23 | 3 Helper | Helper's Today's work | T4.7 (D-022) | Pending | | |
 | TP-40 | 3 Helper | Lent to another team for a day | T4.6 (D-038) | Pending | | Owner lends, helper checks |
 | TP-08 | 3 Helper | Wrong mobile number on Join | T3.13 | Pending | | Uses the spare account |
