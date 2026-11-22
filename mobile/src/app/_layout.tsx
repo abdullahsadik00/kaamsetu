@@ -95,6 +95,7 @@ function RootLayout() {
           <Stack.Screen name="bills/[id]" options={{ ...pushed, title: '' }} />
           <Stack.Screen name="quotations/new" options={{ ...pushed, title: t('uiBilling.newQuote') }} />
           <Stack.Screen name="quotations/[id]" options={{ ...pushed, title: '' }} />
+          <Stack.Screen name="updates" options={{ ...pushed, title: t('uiUpdates.title') }} />
         </Stack.Protected>
         <Stack.Protected guard={signedIn && role === 'SENIOR_TECHNICIAN'}>
           <Stack.Screen name="(field)" />

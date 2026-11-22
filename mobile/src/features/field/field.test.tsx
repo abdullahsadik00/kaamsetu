@@ -7,6 +7,8 @@ import { JobStore } from '@/features/sync/job-store';
 import { Outbox } from '@/features/sync/outbox';
 import { renderScreen, setupI18n } from '@/testing/render';
 
+import { dayString } from '@/features/jobs/jobs';
+
 import type { FieldJob } from './data';
 import { JobScreen, MyWorkScreen, TodayScreen, toPaise } from './field';
 
@@ -174,6 +176,55 @@ describe('My Work (T4.7, T4.9)', () => {
     const [op] = await mockOutbox.unsentFor('ServiceJob', 'job-1');
     expect(op.operation).toBe('job.hold');
     expect(op.payload).toEqual({ side: 'CUSTOMER', reason: 'Customer not at home' });
+  });
+});
+
+describe('Field updates (T4.7)', () => {
+  const open = async (row: string) => {
+    await synced([{ ...job, status: 'IN_PROGRESS' }]);
+    await renderScreen(<JobScreen id="job-1" />);
+    await fireEvent.press(await screen.findByText('Update status'));
+    await fireEvent.press(screen.getByText(row));
+  };
+  const saved = async () => {
+    await waitFor(() => expect(mockNotify).toHaveBeenCalled());
+    const [op] = await mockOutbox.unsentFor('ServiceJob', 'job-1');
+    return op;
+  };
+
+  it('Appointment fixed is saved as job.appointment with the day and slot', async () => {
+    await open('Appointment fixed');
+    await fireEvent.press(screen.getByText('Tomorrow'));
+    await fireEvent.press(screen.getByText('Afternoon'));
+    await fireEvent.press(screen.getByText('Save'));
+    const op = await saved();
+    expect(op.operation).toBe('job.appointment');
+    expect(op.payload).toEqual({ date: dayString(1), slot: 'AFTERNOON' });
+    expect(await screen.findByText('Your updates')).toBeTruthy();
+  });
+
+  it('Part needed is saved as job.part with quantity and whether work stopped', async () => {
+    await open('Part needed');
+    await fireEvent.press(screen.getByText('Capacitor'));
+    await fireEvent.press(screen.getByLabelText('How many? +'));
+    await fireEvent.press(screen.getByText('No, work stopped'));
+    const asks = screen.getAllByText('Ask owner to arrange a part');
+    await fireEvent.press(asks[asks.length - 1]);
+    const op = await saved();
+    expect(op.operation).toBe('job.part');
+    expect(op.payload).toEqual({ part: 'Capacitor', qty: 2, canContinue: false });
+    expect(await screen.findByText('Part needed: 2 Capacitor')).toBeTruthy();
+  });
+
+  it('Note for owner is saved as job.note and listed under Your updates', async () => {
+    await open('Note for owner');
+    await fireEvent.press(screen.getByText('Need ladder'));
+    await fireEvent.press(screen.getByText('Save'));
+    const op = await saved();
+    expect(op.operation).toBe('job.note');
+    expect(op.payload).toEqual({ text: 'Need ladder' });
+    expect(await screen.findByText('Note: Need ladder')).toBeTruthy();
+    expect(screen.getByText('In progress')).toBeTruthy(); // status unchanged
   });
 });
 
