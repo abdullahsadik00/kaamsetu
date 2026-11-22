@@ -6,7 +6,7 @@ Meaningful product, documentation, architecture and implementation changes, newe
 
 - Owner: **More › Rate list**: usual prices for services and parts with GST; add, change, **Not used any more** / **Use again**. New bill or quotation lines have **From your rate list** chips that fill name, rate and GST in one tap. The bill and quotation form lets you pick the date: Today, Yesterday or up to six days back.
 - Backend: `RateItem` table (migration `rate_items`), `GET/POST /rate-items`, `PATCH /rate-items/:id`, one active item per name; seed adds a starter list. e2e `rates.e2e-spec.ts`; app 124 tests passed.
-- Not yet: prices per source or brand (Q-15), billing offline. Phone test: TP-43.
+- Not yet: prices per source or brand (Q-15). Billing stays online-only (D-018, D-021). Phone test: TP-43.
 
 ## 2026-11-22 — Customer and AC history (T4.4)
 
