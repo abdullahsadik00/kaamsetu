@@ -45,7 +45,8 @@ export function JobScreen({ id }: { id: string }) {
 }
 
 function goMyWork() {
-  router.navigate('/my-work');
+  // Back down the My Work stack to the list (or to it, if the job page was opened on its own).
+  router.dismissTo('/my-work');
 }
 
 function JobBody({ job }: { job: FieldJob }) {

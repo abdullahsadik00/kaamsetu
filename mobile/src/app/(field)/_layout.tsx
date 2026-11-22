@@ -32,8 +32,6 @@ export default function FieldLayout() {
           }}
         />
       ))}
-      {/* Job page: opened from My Work, keeps the tab bar (screens 20/21), no tab of its own. */}
-      <Tabs.Screen name="job/[id]" options={{ href: null, headerShown: false, title: t('field.myWork') }} />
     </Tabs>
   );
 }

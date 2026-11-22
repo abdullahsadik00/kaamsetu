@@ -27,9 +27,9 @@ jest.mock('@/features/sync/sync-engine', () => ({
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories cannot use imports
 jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
 const mockPush = jest.fn();
-const mockNavigate = jest.fn();
+const mockDismissTo = jest.fn();
 jest.mock('expo-router', () => ({
-  router: { push: (...a: unknown[]) => mockPush(...a), navigate: (...a: unknown[]) => mockNavigate(...a), back: jest.fn() },
+  router: { push: (...a: unknown[]) => mockPush(...a), dismissTo: (...a: unknown[]) => mockDismissTo(...a), back: jest.fn() },
 }));
 jest.mock('expo-crypto', () => ({ randomUUID: () => '7f1d6f0e-0000-4000-8000-000000000001' }));
 
@@ -85,7 +85,7 @@ beforeEach(async () => {
   mockNotify.mockClear();
   mockSyncNow.mockReset().mockResolvedValue({ ok: true });
   mockPush.mockClear();
-  mockNavigate.mockClear();
+  mockDismissTo.mockClear();
 });
 afterEach(() => {
   mockDb.close();
@@ -98,7 +98,7 @@ describe('My Work (T4.7, T4.9)', () => {
     await synced([job]);
     await renderScreen(<MyWorkScreen />);
     await fireEvent.press(await screen.findByText('Meera'));
-    expect(mockPush).toHaveBeenCalledWith({ pathname: '/job/[id]', params: { id: 'job-1' } });
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/my-work/[id]', params: { id: 'job-1' } });
     expect(get).not.toHaveBeenCalled(); // works fully offline
   });
 
@@ -253,7 +253,7 @@ describe('Needs attention (T4.9, docs/09 §7)', () => {
     expect(screen.queryByText('Start work')).toBeNull();
     await fireEvent.press(screen.getByText('OK, got it'));
 
-    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/my-work'));
+    await waitFor(() => expect(mockDismissTo).toHaveBeenCalledWith('/my-work'));
     expect(await mockStore.get('job-1')).toBeNull();
     expect(await mockOutbox.unsentCount()).toBe(0);
   });

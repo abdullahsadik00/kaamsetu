@@ -22,7 +22,7 @@ export { toPaise, type FieldJob } from './data';
 export { JobScreen } from './job-screen';
 
 function openJob(id: string) {
-  router.push({ pathname: '/job/[id]', params: { id } });
+  router.push({ pathname: '/my-work/[id]', params: { id } });
 }
 
 // ---------- Senior technician: My Work (screens 19, 79) ----------
