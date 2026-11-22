@@ -2,6 +2,13 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-22 — Owner saves without internet (D-021)
+
+- App: without internet the owner's new customers, ACs, enquiries and jobs are saved on the phone and sent in order when online. A new customer or AC shows at once, so a job can be made for it offline. **Waiting to send** on Home, Jobs and Customers lists what has not reached the server; a refused one shows why with **OK, got it**. Job and enquiry numbers come when sent. Converting an enquiry, changing a team, bills and payments stay online-only.
+- Backend: `POST /sync/operations` takes `customer.create`, `equipment.create`, `enquiry.create`, `job.create` from the owner, with ids made on the phone and `dependsOn`. A customer saved offline is kept even if the number exists (merge is P1).
+- Fix: saves no longer pause while offline (bills spun forever after the previous change).
+- Tests: e2e `owner-offline.e2e-spec.ts`; app 130 passed. Phone test: TP-45.
+
 ## 2026-11-22 — Owner screens without internet (D-021)
 
 - App: what the owner has loaded (Home, jobs, customers and ACs, enquiries, bills) is kept in the phone's database for 3 days and shown after a restart without internet. Loads wait while offline instead of failing, and refresh when the internet is back. A business or role switch throws the kept copy away. Field jobs keep using their own store (T4.9).

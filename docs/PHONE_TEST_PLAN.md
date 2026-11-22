@@ -73,6 +73,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-42 | 4 Owner | Customer's past jobs and AC history | T4.4 | Pending | | Needs the new APK and backend |
 | TP-43 | 4 Owner | Rate list and bill date | T4.10 (D-039) | Pending | | Needs the new APK and backend |
 | TP-44 | 4 Owner | Owner screens without internet | T4.9 (D-021) | Pending | | Needs the new APK |
+| TP-45 | 4 Owner | Owner saves without internet | T4.9 (D-021) | Pending | | Needs the new APK and backend |
 | TP-39b | 4 Owner | Updates from teams, bell, job feed | T4.7 (D-037) | Pending | | |
 | TP-36b | 4 Owner | Home dashboard | T4.12 | Pending | | |
 | TP-34 | 4 Owner | Quotations and bills | T4.10 | Pending | | GST rates wait for Q-04 |
@@ -507,6 +508,22 @@ Log out and log in as the **owner** for the rest.
 - Step 3: every screen opened in step 1 shows what it showed before, with no error. A screen you never opened may show a spinner or an empty state; it must not crash. Pulling down does not show an error.
 - Step 4: the screens refresh by themselves within a few seconds.
 - Saving a bill or payment offline is not possible (online only, D-018).
+
+### TP-45 Owner saves without internet (D-021)
+1. With internet, open **Customers** and **Jobs** once. Then turn on airplane mode.
+2. **Customers** › **Add customer**: **Offline Test**, 9000004099, any address › **Save customer**.
+3. On Offline Test's page: **Add AC here**, Split, any brand › save.
+4. **New job** for Offline Test with that AC, Today, Team 1 › **Create job**. Then make an **enquiry** for Offline Test.
+5. Look at **Home**, **Jobs** and **Customers**.
+6. Turn airplane mode off and wait up to a minute (or pull down on Home).
+7. Switch to the senior and pull down on **My Work**.
+
+**Expected**
+- Steps 2–4: each saves at once, no error. Offline Test's page opens with the address, then shows the AC.
+- Step 5: **Waiting to send** shows the new customer, AC, job and enquiry with "Will reach the team when your phone is online."
+- Step 6: the card goes away; the job has a number and the enquiry an E- number; Offline Test is in Customers once.
+- Step 7: the new job is on the senior's My Work.
+- Bills and payments still say they need the internet (D-018).
 
 ### TP-25 Reset login and remove an employee (run last)
 1. **More › Employees** › **Test Helper** › **Reset login** and confirm.

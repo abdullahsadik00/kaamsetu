@@ -168,6 +168,8 @@ Potential endpoints:
 - `GET /sync/bootstrap`
 - `GET /sync/changes?cursor=`
 - `POST /sync/operations`
+
+**Owner operations, 22 Nov 2026 (D-021):** the owner may also send `customer.create` (entityType `Customer`; payload = `POST /customers` body plus `siteId` for the first address), `equipment.create` (`Equipment`; `POST /equipment` body), `enquiry.create` (`ServiceRequest`; `POST /enquiries` body) and `job.create` (`ServiceJob`; `POST /jobs` body). `entityId` (and `siteId`) are made on the phone and become the record ids; job and enquiry numbers come from the server. Same rules and error codes as the online endpoints; a customer saved offline is kept even when the mobile number is already saved (no warning possible offline; merge is P1). `dependsOn` names an earlier operation in the batch; if it was refused this one is `DEPENDENCY_FAILED`. Staff get `FORBIDDEN_ROLE`; a wrong `entityType` is `VALIDATION_FAILED`.
 - `POST /sync/attachments/complete`
 
 The protocol is specified in `09_OFFLINE_AND_SYNC_SPEC.md`.
