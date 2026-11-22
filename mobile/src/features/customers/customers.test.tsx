@@ -2,12 +2,16 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
 import { ApiError } from '@/api/errors';
+import { api } from '@/features/auth/session';
 import { renderScreen, setupI18n } from '@/testing/render';
 
 import { AcFormScreen } from './ac-form-screen';
 import { addEquipment, createCustomer, type Customer } from './api';
 import { CustomerFormScreen } from './customer-form-screen';
+import { CustomersScreen } from './customers-screen';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories cannot use imports
+jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
 jest.mock('expo-router', () => ({
   router: { push: jest.fn(), replace: jest.fn(), back: jest.fn() },
   useLocalSearchParams: jest.fn(() => ({ id: 'c1', siteId: 's1' })),
@@ -101,5 +105,24 @@ describe('Add AC (T4.4)', () => {
         locationLabel: 'Bedroom',
       }),
     );
+  });
+});
+
+describe('Archived customers (T4.3, TP-11)', () => {
+  afterEach(() => jest.restoreAllMocks());
+
+  it('Show archived customers lists them so one can be brought back', async () => {
+    const row = { id: 'c9', name: 'Shreeji Clinic', phone: '+919000004002', place: 'Shivajinagar', acCount: 0 };
+    const get = jest.spyOn(api, 'get').mockImplementation(((path: string) =>
+      Promise.resolve(path.includes('archived=true') ? [{ ...row, archivedAt: '2026-11-22T10:00:00.000Z' }] : [])) as never);
+    await renderScreen(<CustomersScreen />);
+    await fireEvent.press(await screen.findByText('Show archived customers'));
+    expect(await screen.findByText('Shreeji Clinic')).toBeTruthy();
+    expect(get).toHaveBeenCalledWith('/customers?archived=true');
+    expect(screen.getByText('Archived customers')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Shreeji Clinic'));
+    expect(router.push).toHaveBeenCalledWith({ pathname: '/customers/[id]', params: { id: 'c9' } });
+    await fireEvent.press(screen.getByText('Back to all customers'));
+    await waitFor(() => expect(screen.queryByText('Shreeji Clinic')).toBeNull());
   });
 });
