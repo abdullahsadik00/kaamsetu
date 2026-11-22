@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Animated, Dimensions, Easing, KeyboardAvoidingView, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, radius, space } from '@/theme/tokens';
@@ -16,17 +16,45 @@ type Props = {
   footer?: ReactNode;
 };
 
+const OPEN_MS = 260;
+const CLOSE_MS = 200;
+
 /**
  * Bottom sheet (DESIGN.md "Bottom Drawers"): 12 dp top corners over a dimmed
- * screen; tapping outside or Back closes it.
+ * screen; tapping outside or Back closes it. The dim fades and the sheet
+ * slides on its own (BUG-03): the Modal's own "slide" moved the dark
+ * overlay up with the sheet.
  */
 export function BottomSheet({ visible, onClose, title, subtitle, children, footer }: Props) {
   const insets = useSafeAreaInsets();
+  // Stays mounted until the closing animation has finished.
+  const [mounted, setMounted] = useState(visible);
+  if (visible && !mounted) setMounted(true);
+  const [height, setHeight] = useState(Dimensions.get('window').height);
+  const [progress] = useState(() => new Animated.Value(0));
+
+  useEffect(() => {
+    if (visible) {
+      Animated.timing(progress, { toValue: 1, duration: OPEN_MS, easing: Easing.out(Easing.cubic), useNativeDriver: true }).start();
+    } else {
+      Animated.timing(progress, { toValue: 0, duration: CLOSE_MS, easing: Easing.in(Easing.cubic), useNativeDriver: true }).start(
+        ({ finished }) => finished && setMounted(false),
+      );
+    }
+  }, [visible, progress]);
+
+  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [height, 0] });
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+    <Modal visible={mounted} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
       <KeyboardAvoidingView style={styles.flex} behavior="padding">
-        <Pressable style={styles.backdrop} onPress={onClose} accessibilityLabel={title} accessibilityRole="button" />
-        <View style={[styles.sheet, { paddingBottom: space.lg + insets.bottom }]} accessibilityViewIsModal>
+        <Animated.View style={[styles.backdrop, { opacity: progress }]}>
+          <Pressable style={styles.fill} onPress={onClose} accessibilityLabel={title} accessibilityRole="button" />
+        </Animated.View>
+        <Animated.View
+          style={[styles.sheet, { paddingBottom: space.lg + insets.bottom, transform: [{ translateY }] }]}
+          onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
+          accessibilityViewIsModal
+        >
           <View style={styles.handle} />
           <View style={styles.head}>
             <AppText variant="section">{title}</AppText>
@@ -40,7 +68,7 @@ export function BottomSheet({ visible, onClose, title, subtitle, children, foote
             {children}
           </ScrollView>
           {footer ? <View style={styles.footer}>{footer}</View> : null}
-        </View>
+        </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -49,6 +77,7 @@ export function BottomSheet({ visible, onClose, title, subtitle, children, foote
 const styles = StyleSheet.create({
   flex: { flex: 1, justifyContent: 'flex-end' },
   backdrop: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(20,33,61,0.45)' },
+  fill: { flex: 1 },
   sheet: {
     backgroundColor: colors.surface,
     borderTopLeftRadius: radius.lg,
