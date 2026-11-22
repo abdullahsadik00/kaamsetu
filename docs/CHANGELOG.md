@@ -2,6 +2,12 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-22 — Rate list and bill date (T4.10, D-039)
+
+- Owner: **More › Rate list**: usual prices for services and parts with GST; add, change, **Not used any more** / **Use again**. New bill or quotation lines have **From your rate list** chips that fill name, rate and GST in one tap. The bill and quotation form lets you pick the date: Today, Yesterday or up to six days back.
+- Backend: `RateItem` table (migration `rate_items`), `GET/POST /rate-items`, `PATCH /rate-items/:id`, one active item per name; seed adds a starter list. e2e `rates.e2e-spec.ts`; app 124 tests passed.
+- Not yet: prices per source or brand (Q-15), billing offline. Phone test: TP-43.
+
 ## 2026-11-22 — Customer and AC history (T4.4)
 
 - Owner: the customer page has **Past jobs** (newest day first: day, type, status, job number, team, outcome, parts and the senior's note; tap a row to open the job). Tapping an AC opens its page: details and **AC history**, only the jobs that included this AC, with the work done on it. Strings in en/hi/mr.

@@ -370,6 +370,16 @@ Do not require signature/OTP until the business validates the need.
 - createdAt
 - updatedAt
 
+### RateItem (D-039)
+- id
+- organizationId
+- name
+- unitPrice (paise)
+- gstRate (0, 5, 12, 18, 28)
+- active
+
+The business's usual prices. Picking one copies it into an InvoiceItem; changing or turning off a RateItem never changes saved bills. Q-15 may add a source or brand later.
+
 ### InvoiceItem
 - id
 - organizationId

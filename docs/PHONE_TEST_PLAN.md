@@ -71,6 +71,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-21 | 4 Owner | Owner sees the work report and money | T4.8 | Pending | | |
 | TP-22b | 4 Owner | New visit for the same work | T4.6 | Pending | | |
 | TP-42 | 4 Owner | Customer's past jobs and AC history | T4.4 | Pending | | Needs the new APK and backend |
+| TP-43 | 4 Owner | Rate list and bill date | T4.10 (D-039) | Pending | | Needs the new APK and backend |
 | TP-39b | 4 Owner | Updates from teams, bell, job feed | T4.7 (D-037) | Pending | | |
 | TP-36b | 4 Owner | Home dashboard | T4.12 | Pending | | |
 | TP-34 | 4 Owner | Quotations and bills | T4.10 | Pending | | GST rates wait for Q-04 |
@@ -480,6 +481,20 @@ Log out and log in as the **owner** for the rest.
 - Step 2: the AC page shows Bedroom, Split · Voltas · 1.5 ton, and **AC history** lists only the jobs that included this AC, with the work done on it (e.g. "Cleaned, Gas filled").
 - Step 3: the job page opens.
 - Step 4: an AC that was never on a job says "This AC has not been in a job yet."
+
+### TP-43 Rate list and bill date (T4.10, D-039)
+1. **More › Rate list** › **Add item**: **AC service**, ₹500, GST 0% › **Save item**. Add **Gas filling**, ₹2,500, GST 18%.
+2. **Add item** again with **ac SERVICE** and any price › **Save item**.
+3. Tap **Gas filling** › change the price to ₹2,700 › **Save item**. Then tap **AC service** › **Not used any more**.
+4. **Billing** › new bill for Rohan › **Add item**. Tap **Gas filling** under "From your rate list". Change Qty to 2 › **Save item**.
+5. On the same bill, under the bill date tap **Yesterday**, then **Save draft**.
+
+**Expected**
+- Step 1: both items show with their price; Gas filling shows "GST 18%".
+- Step 2: "This item is already in the rate list." Nothing is added.
+- Step 3: Gas filling shows ₹2,700. AC service moves under **Not used (1)**, and you can turn it back on with **Use again**.
+- Step 4: the line is filled with Gas filling and ₹2,700 (GST only if the bill is a GST bill). AC service is not offered.
+- Step 5: the draft shows yesterday's date. Changing Gas filling's price later does not change this bill.
 
 ### TP-25 Reset login and remove an employee (run last)
 1. **More › Employees** › **Test Helper** › **Reset login** and confirm.

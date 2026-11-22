@@ -133,6 +133,8 @@ Do not force every category to submit every possible field.
 
 ## 8. Billing
 
+**Rate list, 22 Nov 2026 (T4.10, D-039), owner only:** `GET /rate-items` (active, by name; `?all=true` adds the ones turned off), `POST /rate-items` (`name`, `unitPrice` paise, `gstRate` 0/5/12/18/28), `PATCH /rate-items/:id` (same fields and `active`). `409 RATE_NAME_EXISTS` (`details.rateId`) for a second active item with the same name; `404 RATE_NOT_FOUND`.
+
 - `GET /invoices`
 - `POST /invoices`
 - `GET /invoices/:id`
