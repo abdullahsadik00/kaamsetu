@@ -83,6 +83,6 @@ The script prints the target database host and changes nothing without `--yes`.
 - Each release: changelog entry, tag `vX.Y.Z`, staging check, real-device smoke test (core loop + offline), then production.
 - Minimum supported app version is enforced by the API (`426 Upgrade Required` with a friendly "Please update the app" screen) only when truly necessary.
 
-## 7. Runbook (to write in Phase 6)
+## 7. Runbook
 
-How to: deploy, roll back, restore a backup, revoke a lost device, rotate secrets, handle a suspected data breach (who to tell, by when), and answer "my work is not sending".
+Written 22 Nov 2026 for pilot staging: **`docs/RUNBOOK.md`**. Update it when production is chosen (T6.1). It covers how to: deploy, roll back, restore a backup, revoke a lost device, rotate secrets, handle a suspected data breach (who to tell, by when), and answer "my work is not sending".

@@ -2,6 +2,12 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-22 — Runbook
+
+- `docs/RUNBOOK.md`: deploy, roll back, restore a backup, lost phone, change a secret, suspected data breach, "my work is not sending", monthly tasks.
+- Pilot script: `npm run pilot -- sign-out --phone <mobile> [--yes]` signs someone out on every phone; the only way for an owner who lost their phone (the app does not let the owner reset themselves).
+- Fix: the pilot-scale speed test failed the strict type check.
+
 ## 2026-11-22 — Speed check at pilot scale (T5.4, API part)
 
 - Backend: `npm run test:perf` fills one business with two years of data and times 15 list endpoints. All p95 ≤ 39 ms locally (target 500 ms). Results in doc 12 §6. Phone timings and staging still to do.
