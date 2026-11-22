@@ -28,7 +28,7 @@ export type FinishPayload = {
 };
 
 /** Parts the technician picks most (screen 29); any other name can be typed. */
-const COMMON_PARTS = ['Gas R32', 'Gas R22', 'Capacitor', 'Drain pipe', 'Copper pipe', 'Remote', 'PCB', 'Stand'];
+export const COMMON_PARTS = ['Gas R32', 'Gas R22', 'Capacitor', 'Drain pipe', 'Copper pipe', 'Remote', 'PCB', 'Stand'];
 
 /**
  * Finish work as numbered steps (screen 28, T4.8, D-032): work on each AC,
@@ -171,7 +171,7 @@ export function FinishForm({ job, busy, onSave }: { job: FieldJob; busy: boolean
   );
 }
 
-function Stepper({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
+export function Stepper({ label, value, onChange }: { label: string; value: number; onChange: (v: number) => void }) {
   return (
     <View style={styles.stepper}>
       <Pressable accessibilityRole="button" accessibilityLabel={`${label} −`} onPress={() => onChange(value - 1)} style={styles.stepBtn}>

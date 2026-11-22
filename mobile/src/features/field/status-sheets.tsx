@@ -12,6 +12,7 @@ import { colors, space, tones } from '@/theme/tokens';
 
 import type { Status } from './data';
 import { ActionRow, RadioList } from './parts';
+import type { UpdateKind } from './update-sheets';
 
 export type HoldSide = 'CUSTOMER' | 'OURS';
 
@@ -24,6 +25,7 @@ export function UpdateStatusSheet({
   onStart,
   onFinish,
   onHold,
+  onUpdate,
 }: {
   visible: boolean;
   onClose: () => void;
@@ -32,6 +34,8 @@ export function UpdateStatusSheet({
   onStart: () => void;
   onFinish: () => void;
   onHold: (side: HoldSide) => void;
+  /** Appointment fixed / Part needed / Note for owner (T4.7). */
+  onUpdate: (kind: UpdateKind) => void;
 }) {
   const { t } = useTranslation();
   const canStart = status === 'ASSIGNED' || status === 'ON_HOLD';
@@ -62,6 +66,22 @@ export function UpdateStatusSheet({
             sub={t('uiField.cantContinueSub')}
             onPress={() => onHold('OURS')}
           />
+          <SectionLabel>{t('uiUpdates.other')}</SectionLabel>
+          <ActionRow
+            icon="calendar-check-outline"
+            tone={tones.teal}
+            title={t('uiUpdates.appointment')}
+            sub={t('uiUpdates.appointmentSub')}
+            onPress={() => onUpdate('appointment')}
+          />
+          <ActionRow
+            icon="package-variant-closed"
+            tone={tones.orange}
+            title={t('uiUpdates.part')}
+            sub={t('uiUpdates.partSub')}
+            onPress={() => onUpdate('part')}
+          />
+          <ActionRow icon="note-text-outline" tone={tones.info} title={t('uiUpdates.note')} sub={t('uiUpdates.noteSub')} onPress={() => onUpdate('note')} />
         </>
       ) : null}
       <View style={styles.note}>

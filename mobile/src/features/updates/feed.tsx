@@ -43,7 +43,7 @@ type DayLabel = (d: string | null) => string;
 
 /** The row's headline, e.g. "Part needed: 1 MCB 16A" or "Couldn't apply: job was cancelled". */
 export function feedTitle(t: TFunction, item: FeedItem, dayLabel: DayLabel): string {
-  const u = (key: string, o?: object) => t(`uiUpdates.${key}`, o as never);
+  const u = (key: string, o?: object): string => String(t(`uiUpdates.${key}`, o as never));
   switch (item.kind) {
     case 'APPOINTMENT_FIXED': {
       const a = item.appointment;

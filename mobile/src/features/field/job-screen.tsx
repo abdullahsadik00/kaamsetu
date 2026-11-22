@@ -12,12 +12,14 @@ import { Icon } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
 import { SyncLabel } from '@/components/ui/sync-label';
 import { useLanguage } from '@/localization/i18n';
+import type { Language } from '@/localization/languages';
 import { colors, radius, space } from '@/theme/tokens';
 
-import { rupees, shortDate, todayIso, useDismissAttention, useLocalState, useMyJobs, useSaveOp, type FieldJob } from './data';
+import { rupees, shortDate, todayIso, useDismissAttention, useLocalState, useMyJobs, useSaveOp, type FieldJob, type SavedUpdate } from './data';
 import { FinishForm, type FinishPayload } from './finish-form';
 import { jobSummary, slotLabel, StatusBadge } from './parts';
 import { HoldSheet, UpdateStatusSheet, type HoldSide } from './status-sheets';
+import { AppointmentSheet, NoteSheet, PartSheet, type UpdateKind } from './update-sheets';
 
 type Mode = 'details' | 'finish' | 'done';
 
@@ -53,10 +55,12 @@ function JobBody({ job }: { job: FieldJob }) {
   const [mode, setMode] = useState<Mode>('details');
   const [sheet, setSheet] = useState(false);
   const [hold, setHold] = useState<HoldSide | null>(null);
+  const [update, setUpdate] = useState<UpdateKind | null>(null);
   const [finished, setFinished] = useState<FinishPayload | null>(null);
   const save = useSaveOp(job, (op) => {
     setSheet(false);
     setHold(null);
+    setUpdate(null);
     if (op === 'job.complete') setMode('done');
   });
 
@@ -219,6 +223,18 @@ function JobBody({ job }: { job: FieldJob }) {
         </Card>
       ) : null}
 
+      {state.data?.updates.length ? (
+        <Card>
+          <SectionLabel>{t('uiUpdates.yourUpdates')}</SectionLabel>
+          {state.data.updates.map((u) => (
+            <View key={u.id} style={styles.updateRow}>
+              <AppText style={styles.flex}>{updateLine(t, u, language)}</AppText>
+              <SyncLabel state={u.sync} />
+            </View>
+          ))}
+        </Card>
+      ) : null}
+
       {save.error ? <AppText color={colors.bad}>{String(save.error)}</AppText> : null}
 
       <UpdateStatusSheet
@@ -235,6 +251,31 @@ function JobBody({ job }: { job: FieldJob }) {
           setSheet(false);
           setHold(side);
         }}
+        onUpdate={(kind) => {
+          setSheet(false);
+          setUpdate(kind);
+        }}
+      />
+      <AppointmentSheet
+        visible={update === 'appointment'}
+        onClose={() => setUpdate(null)}
+        name={name}
+        busy={save.isPending}
+        onSave={(payload) => save.mutate({ op: 'job.appointment', payload })}
+      />
+      <PartSheet
+        visible={update === 'part'}
+        onClose={() => setUpdate(null)}
+        name={name}
+        busy={save.isPending}
+        onSave={(payload) => save.mutate({ op: 'job.part', payload })}
+      />
+      <NoteSheet
+        visible={update === 'note'}
+        onClose={() => setUpdate(null)}
+        name={name}
+        busy={save.isPending}
+        onSave={(payload) => save.mutate({ op: 'job.note', payload })}
       />
       <HoldSheet
         side={hold}
@@ -245,6 +286,17 @@ function JobBody({ job }: { job: FieldJob }) {
       />
     </Screen>
   );
+}
+
+/** One "Your updates" line: "Appointment fixed: Tomorrow, Morning", "Part needed: 1 Capacitor", "Note: …". */
+function updateLine(t: TFunction, u: SavedUpdate, language: Language): string {
+  const p = (u.payload ?? {}) as { date?: string; slot?: string; part?: string; qty?: number; text?: string };
+  if (u.operation === 'job.appointment') {
+    const day = p.date === todayIso() ? t('uiField.today') : p.date ? shortDate(p.date, language) : '';
+    return t('uiUpdates.appointmentAt', { when: [day, p.slot ? t(`jobs.slots.${p.slot}`) : null].filter(Boolean).join(', ') });
+  }
+  if (u.operation === 'job.part') return t('uiUpdates.partAt', { qty: p.qty ?? 1, name: p.part ?? '' });
+  return t('uiUpdates.noteAt', { text: p.text ?? '' });
 }
 
 const REFUSED = ['JOB_CANCELLED', 'JOB_REASSIGNED', 'JOB_ALREADY_COMPLETED'];
@@ -346,4 +398,5 @@ const styles = StyleSheet.create({
   doneRow: { flexDirection: 'row', alignItems: 'center', gap: space.md },
   dot: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   hr: { height: 1, backgroundColor: colors.rowLine },
+  updateRow: { flexDirection: 'row', alignItems: 'center', gap: space.sm, paddingVertical: space.xs },
 });
