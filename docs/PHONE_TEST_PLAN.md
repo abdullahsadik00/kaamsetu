@@ -65,7 +65,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-36a | 2 Senior | Holds and a follow-up for the dashboard | T4.12 | Pending | | Owner part in TP-36b |
 | TP-33 | 2 Senior | Three days offline | T4.9 | Pending | | One owner step; photos later |
 | TP-07 | 3 Helper | Helper joins with the invite code | T3.11 | Passed | 22 Nov 2026 | BUG-16: Service and Repair share an icon |
-| TP-23 | 3 Helper | Helper's Today's work | T4.7 (D-022) | Pending | | |
+| TP-23 | 3 Helper | Helper's Today's work | T4.7 (D-022) | Failed | 22 Nov 2026 | BUG-17 no address, BUG-18 no Directions, BUG-19 no senior. Helpers have no job page by design (step fixed) |
 | TP-40 | 3 Helper | Lent to another team for a day | T4.6 (D-038) | Pending | | Owner lends, helper checks |
 | TP-08 | 3 Helper | Wrong mobile number on Join | T3.13 | Pending | | Uses the spare account |
 | TP-21 | 4 Owner | Owner sees the work report and money | T4.8 | Pending | | |
@@ -345,7 +345,7 @@ Uses jobs K–O.
 - The helper sees no Customers, Billing or Jobs tabs, and no bell.
 
 ### TP-23 Helper's Today's work
-1. Look at **Today's work** and open job D.
+1. Look at **Today's work** (helpers have no job page; everything is on the card).
 
 **Expected**
 - **Today's work** shows Team 1's jobs for today: customer name, phone, address, job type and Test Senior as the senior. Job J (Team 2) is not there.
