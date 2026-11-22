@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
@@ -12,6 +13,8 @@ import { useBusiness } from '@/features/employees/api';
 import { ProfileSection } from '@/features/profile/profile-section';
 import { colors, radius, space } from '@/theme/tokens';
 
+import { shareBusinessData } from './export-data';
+
 /**
  * Owner More (Stitch 59), limited to what exists: Teams, Employees, Business
  * details (D-027), then account, language and log out.
@@ -21,6 +24,20 @@ export function OwnerMoreScreen() {
   const business = useQuery(useBusiness());
   const ownerName = useSession((s) => s.profile?.user.name ?? null);
   const name = business.data?.name;
+  const [exporting, setExporting] = useState(false);
+  const [exportFailed, setExportFailed] = useState(false);
+  const exportData = async () => {
+    if (exporting) return;
+    setExporting(true);
+    setExportFailed(false);
+    try {
+      await shareBusinessData(t);
+    } catch {
+      setExportFailed(true);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <Screen>
@@ -52,8 +69,15 @@ export function OwnerMoreScreen() {
           divider
         />
         <ListRow icon="tag-outline" title={t('uiBilling.rateList')} subtitle={t('uiBilling.rateListHint')} onPress={() => router.push('/rates')} divider />
-        <ListRow icon="store-outline" title={t('business.title')} subtitle={t('uiOwner.businessHint')} onPress={() => router.push('/business')} />
+        <ListRow icon="store-outline" title={t('business.title')} subtitle={t('uiOwner.businessHint')} onPress={() => router.push('/business')} divider />
+        <ListRow
+          icon="download-outline"
+          title={t('uiOwner.exportData')}
+          subtitle={exporting ? t('uiOwner.exportBusy') : t('uiOwner.exportHint')}
+          onPress={() => void exportData()}
+        />
       </Card>
+      {exportFailed ? <AppText color={colors.bad}>{t('uiOwner.exportFailed')}</AppText> : null}
       <ProfileSection />
     </Screen>
   );
