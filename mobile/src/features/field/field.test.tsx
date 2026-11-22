@@ -1,3 +1,4 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { migrate } from '@/db/migrations';
@@ -270,6 +271,26 @@ describe("Helper's Today's work (Q-01)", () => {
     expect(screen.getByTestId('call-senior')).toBeTruthy();
     expect(screen.getByTestId('call-customer-job-1')).toBeTruthy();
     expect(screen.queryByText('Start work')).toBeNull();
+  });
+
+  it('a Service job and a Repair job show different job type icons (BUG-16)', async () => {
+    await synced(
+      [
+        { ...job, status: 'IN_PROGRESS' },
+        { ...job, id: 'job-2', jobNumber: 1002, type: 'REPAIR', locality: 'Baner', timeSlot: 'AFTERNOON' },
+      ],
+      'HELPER',
+    );
+    await renderScreen(<TodayScreen />);
+    expect(await screen.findByText('Baner')).toBeTruthy();
+    // Each Icon is a screen-reader-hidden Text whose child is the glyph from the icon font.
+    const shown = (name: keyof typeof MaterialCommunityIcons.glyphMap) => {
+      const g = MaterialCommunityIcons.glyphMap[name];
+      return screen.queryAllByText(typeof g === 'number' ? String.fromCodePoint(g) : g, { includeHiddenElements: true });
+    };
+    expect(shown('air-conditioner')).toHaveLength(1);
+    expect(shown('wrench-outline')).toHaveLength(1);
+    expect(shown('fan')).toHaveLength(0);
   });
 });
 

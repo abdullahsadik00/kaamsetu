@@ -13,6 +13,7 @@ import { Avatar } from '@/components/ui/list-row';
 import { OfflineBanner } from '@/components/ui/offline-banner';
 import { SyncLabel, type SyncState } from '@/components/ui/sync-label';
 import { useLanguage } from '@/localization/i18n';
+import { jobTypeIcon } from '@/features/jobs/job-type';
 import { colors, space, tones, type Tone } from '@/theme/tokens';
 
 import { doneToday, shortDate, todayIso, useLocalStates, useMyJobs, useRefresh, worstSync, type FieldJob, type LocalState } from './data';
@@ -219,7 +220,7 @@ export function TodayScreen() {
               {j.address ? <AppText color={colors.slate}>{[j.address, j.landmark].filter(Boolean).join(' · ')}</AppText> : null}
               <View style={styles.hr} />
               <View style={styles.iconLine}>
-                <Icon name="fan" size={20} color={colors.teal} />
+                <Icon name={jobTypeIcon(j.type)} size={20} color={colors.teal} />
                 <AppText style={styles.flex}>{jobSummary(t, j, false)}</AppText>
               </View>
               {!working && j.status !== 'ASSIGNED' ? <StatusBadge status={j.status} /> : null}

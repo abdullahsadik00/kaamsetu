@@ -31,11 +31,11 @@ import type { FeedItem } from '@/features/updates/api';
 import { JobFeed } from '@/features/updates/feed';
 import { colors, radius, space } from '@/theme/tokens';
 
+import { JOB_TYPES, type JobType } from './job-type';
 import { ConfirmDialog, FilterChips, FormSection, HeaderMore, OptionChips, SheetRow } from './parts';
 
 // ---------- API (docs/06 §6, D-030) ----------
 
-type JobType = 'SERVICE' | 'REPAIR' | 'INSTALLATION' | 'UNINSTALLATION' | 'GAS_FILLING' | 'OTHER';
 type Slot = 'MORNING' | 'AFTERNOON' | 'EVENING';
 export type Status = 'NEW' | 'ASSIGNED' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED' | 'CANCELLED';
 
@@ -80,7 +80,7 @@ export const useJobs = (filter: string) =>
 const useJob = (id: string) =>
   queryOptions({ queryKey: [...JOBS_KEY, id], queryFn: () => api.get<Job>(`/jobs/${id}`) });
 
-const TYPES: JobType[] = ['SERVICE', 'REPAIR', 'INSTALLATION', 'UNINSTALLATION', 'GAS_FILLING', 'OTHER'];
+const TYPES = JOB_TYPES;
 const SLOTS: Slot[] = ['MORNING', 'AFTERNOON'];
 
 /** Local calendar date as YYYY-MM-DD, `offset` days from today. */
