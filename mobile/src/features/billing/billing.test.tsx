@@ -9,6 +9,7 @@ import { billTotals, parseRupees, rupees } from './api';
 import { BillingScreen } from './billing-screen';
 import { InvoiceFormScreen } from './invoice-form';
 import { InvoiceScreen } from './invoice-screen';
+import { RatesScreen } from './rates-screen';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories cannot use imports
 jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
@@ -460,5 +461,54 @@ describe('Customer page (T4.11)', () => {
     expect(screen.getByText('Billed ₹6,100 · Received ₹3,000')).toBeTruthy();
     await fireEvent.press(screen.getByText('New bill'));
     expect(mockPush).toHaveBeenCalledWith({ pathname: '/bills/new', params: { customerId: 'cust-1' } });
+  });
+});
+
+describe('Rate list (T4.10, D-039)', () => {
+  const gas = { id: 'rate-1', name: 'Gas filling', unitPrice: 250000, gstRate: 18, active: true };
+  const capacitor = { id: 'rate-2', name: 'Capacitor', unitPrice: 45000, gstRate: 18, active: false };
+  const hotel = {
+    id: 'cust-3',
+    type: 'BUSINESS',
+    name: 'Hotel Annapurna',
+    phone: '+919822011111',
+    alternatePhone: null,
+    notes: null,
+    gstBills: true,
+    gstin: '27AACHA4410K1Z3',
+    archivedAt: null,
+    sites: [{ id: 'site-3', label: null, addressLine1: 'MG Road', locality: null, city: 'Pune', landmark: null, isDefault: true, equipment: [] }],
+  };
+
+  it('adds an item and turns one off', async () => {
+    routes({ '/rate-items': [gas, capacitor] });
+    const post = jest.spyOn(api, 'post').mockResolvedValue({} as never);
+    const patch = jest.spyOn(api, 'request').mockResolvedValue({} as never);
+    await renderScreen(<RatesScreen />);
+    expect(await screen.findByText('Gas filling')).toBeTruthy();
+    expect(screen.getByText('₹2,500 · GST 18%')).toBeTruthy();
+    expect(screen.getByText('Not used (1)')).toBeTruthy();
+
+    await fireEvent.press(screen.getAllByText('Add item')[0]);
+    await fireEvent.press(screen.getByText('Save item'));
+    expect(screen.getByText('Type a name and a price.')).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText('Service or part'), ' AC service ');
+    await fireEvent.changeText(screen.getByLabelText('Usual price'), '500');
+    await fireEvent.press(screen.getByText('Save item'));
+    await waitFor(() => expect(post).toHaveBeenCalledWith('/rate-items', { name: 'AC service', unitPrice: 50000, gstRate: 0 }));
+
+    await fireEvent.press(screen.getByText('Gas filling'));
+    await fireEvent.press(await screen.findByText('Not used any more'));
+    await waitFor(() => expect(patch).toHaveBeenCalledWith('PATCH', '/rate-items/rate-1', { body: { active: false } }));
+  });
+
+  it('a new bill line can be picked from the rate list', async () => {
+    mockParams = { customerId: 'cust-3' };
+    routes({ '/rate-items': [gas], '/customers/cust-3': hotel, '/organization': business });
+    await renderScreen(<InvoiceFormScreen kind="QUOTATION" />);
+    await fireEvent.press(await screen.findByText('Add item'));
+    await fireEvent.press(await screen.findByText('Gas filling'));
+    expect(screen.getByLabelText('What was done or fitted').props.value).toBe('Gas filling');
+    expect(screen.getByLabelText('Rate').props.value).toBe('2500');
   });
 });

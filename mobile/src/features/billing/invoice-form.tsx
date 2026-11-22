@@ -28,6 +28,7 @@ import {
   parseRupees,
   rupees,
   toInput,
+  useRates,
   updateInvoice,
   useInvoice,
   usePrefill,
@@ -257,6 +258,7 @@ function InvoiceForm({ kind, start, onConflict }: { kind: Kind; start: Start; on
   /** Index of the line being edited, 'new', or null when the sheet is closed. */
   const [editing, setEditing] = useState<number | 'new' | null>(null);
   const [draft, setDraft] = useState<Draft>({ description: '', qty: '1', rate: '', gstRate: 0 });
+  const rates = useQuery(useRates());
   const [draftError, setDraftError] = useState(false);
   const [discountOpen, setDiscountOpen] = useState(false);
   const [discountText, setDiscountText] = useState('');
@@ -491,6 +493,20 @@ function InvoiceForm({ kind, start, onConflict }: { kind: Kind; start: Start; on
           </>
         }
       >
+        {/* Rate list (T4.10, D-039): one tap fills the name, rate and GST; all can still be changed. */}
+        {editing === 'new' && rates.data?.length ? (
+          <FormSection label={t('uiBilling.fromRateList')}>
+            <OptionChips
+              label={t('uiBilling.fromRateList')}
+              options={rates.data.map((r) => ({ value: r.id, label: r.name }))}
+              value={rates.data.find((r) => r.name === draft.description.trim())?.id ?? null}
+              onChange={(id) => {
+                const r = rates.data?.find((x) => x.id === id);
+                if (r) setDraft((d) => ({ ...d, description: r.name, rate: toInput(r.unitPrice), gstRate: gstBill ? r.gstRate : 0 }));
+              }}
+            />
+          </FormSection>
+        ) : null}
         <TextField
           label={t('uiBilling.itemWhat')}
           value={draft.description}
