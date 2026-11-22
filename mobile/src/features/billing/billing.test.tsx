@@ -232,6 +232,12 @@ describe('New bill and quotation (T4.10)', () => {
     await fireEvent.press(screen.getByText('Save item'));
     expect(screen.getAllByText('₹650')).toHaveLength(2); // subtotal and bill total: ₹500 + ₹150
 
+    // Bill made the day after the work: pick Yesterday (T4.10).
+    await fireEvent.press(screen.getByText('Yesterday'));
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    const yesterday = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
     await fireEvent.press(screen.getByText('Save draft'));
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith('/bills', {
@@ -239,6 +245,7 @@ describe('New bill and quotation (T4.10)', () => {
         siteId: 'site-2',
         gstBill: false,
         discount: 0,
+        billDate: yesterday,
         items: [
           { description: 'Repair', qty: 1, unitPrice: 50000, gstRate: 0 },
           { description: 'Drain pipe', qty: 2, unitPrice: 7500, gstRate: 0 },
@@ -294,6 +301,7 @@ describe('New bill and quotation (T4.10)', () => {
     await fireEvent.press(screen.getByText('Save quotation'));
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith('/quotations', {
+        billDate: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
         customerId: 'cust-3',
         siteId: 'site-3',
         gstBill: true,
