@@ -5,6 +5,7 @@ import { AppError } from '../common/app-error.js';
 import type { JobStatus, Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg, scoped } from '../tenancy/tenant.js';
+import { UpdatesService } from '../updates/updates.js';
 import { isOpen, nextStatus, type JobAction } from './jobs.state.js';
 
 export const JOB_TYPES = ['SERVICE', 'REPAIR', 'INSTALLATION', 'UNINSTALLATION', 'GAS_FILLING', 'OTHER'] as const;
@@ -67,7 +68,10 @@ const listSelect = {
 /** Jobs, owner side (T4.6, D-030). Every query is scoped to the business. */
 @Injectable()
 export class JobsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly updates: UpdatesService,
+  ) {}
 
   async list(auth: AuthContext, q: ListJobs) {
     const where: Prisma.ServiceJobWhereInput = {
@@ -154,6 +158,8 @@ export class JobsService {
         assignedAt: a.assignedAt,
         unassignedAt: a.unassignedAt,
       })),
+      // What the team sent about this job, newest first, with refused field work (T4.7).
+      updates: await this.updates.forJob(auth, job.id),
     };
   }
 

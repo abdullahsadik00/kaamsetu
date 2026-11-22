@@ -27,6 +27,8 @@ import {
   type Source,
 } from '@/features/enquiries/enquiries';
 import { useTeams, type Team } from '@/features/teams/teams';
+import type { FeedItem } from '@/features/updates/api';
+import { JobFeed } from '@/features/updates/feed';
 import { colors, radius, space } from '@/theme/tokens';
 
 import { ConfirmDialog, FilterChips, FormSection, OptionChips, SheetRow } from './parts';
@@ -67,6 +69,8 @@ type Job = JobRow & {
     parts: { name: string; qty: number }[];
   } | null;
   collections: { id: string; amount: number; mode: 'CASH' | 'UPI'; status: 'WITH_TEAM' | 'CONFIRMED' }[];
+  /** What the team sent about this job, newest first, with refused field work (T4.7). */
+  updates?: FeedItem[];
 };
 
 const JOBS_KEY = ['jobs'] as const;
@@ -765,6 +769,8 @@ export function JobScreen() {
             ))}
           </Card>
         ) : null}
+
+        <JobFeed items={j.updates} />
 
         {followUp.isPending ? <ActivityIndicator color={colors.teal} /> : null}
         {error && panel === 'none' ? <AppText color={colors.bad} accessibilityLiveRegion="polite">{errorMessage(t, error)}</AppText> : null}

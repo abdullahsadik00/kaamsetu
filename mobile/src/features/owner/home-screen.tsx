@@ -13,10 +13,12 @@ import { Screen } from '@/components/ui/screen';
 import { api, useSession } from '@/features/auth/session';
 import { useDayLabel } from '@/features/jobs/jobs';
 import { useTeams } from '@/features/teams/teams';
+import type { FeedItem } from '@/features/updates/api';
+import { FeedRow, UpdatesBell } from '@/features/updates/feed';
 import { useLanguage } from '@/localization/i18n';
 import { colors, radius, space, tones, type Tone } from '@/theme/tokens';
 
-type ActionKind = 'HOLD_OURS' | 'HOLD_CUSTOMER' | 'FOLLOW_UP' | 'NOT_SCHEDULED';
+type ActionKind = 'PART_NEEDED' | 'HOLD_OURS' | 'HOLD_CUSTOMER' | 'FOLLOW_UP' | 'NOT_SCHEDULED';
 type JobStatus = 'NEW' | 'ASSIGNED' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED' | 'CANCELLED';
 
 /** `GET /dashboard` (T4.12). Money in paise. */
@@ -42,6 +44,8 @@ export type Dashboard = {
   todayByStatus: { total: number; NEW: number; ASSIGNED: number; IN_PROGRESS: number; ON_HOLD: number; COMPLETED: number };
   latest: { jobId: string; jobNumber: number; customerName: string; toStatus: JobStatus; note: string | null; by: string; at: string }[];
   money: { toCollect: number; cashWithTeams: number; cashCount: number; readyToBill: number };
+  /** "Updates from teams" (T4.7): the bell's count and the newest rows of `GET /updates`. */
+  updates: { unread: number; latest: FeedItem[] };
 };
 
 export const DASHBOARD_KEY = ['dashboard'] as const;
@@ -56,16 +60,11 @@ const GROUPS: { key: string; tone: Tone; statuses: (keyof Dashboard['todayByStat
 ];
 
 const KIND: Record<ActionKind, { title: string; icon: IconName; tone: Tone }> = {
-  HOLD_OURS: { title: 'kindHoldOurs', icon: 'alert-outline', tone: 'orange' },
-  HOLD_CUSTOMER: { title: 'kindHoldCustomer', icon: 'pause', tone: 'grey' },
-  FOLLOW_UP: { title: 'kindFollowUp', icon: 'repeat', tone: 'warn' },
-  NOT_SCHEDULED: { title: 'kindNotScheduled', icon: 'calendar-blank-outline', tone: 'info' },
-};
-
-const STATUS: Partial<Record<JobStatus, { icon: IconName; tone: Tone }>> = {
-  IN_PROGRESS: { icon: 'play-outline', tone: 'warn' },
-  ON_HOLD: { icon: 'pause', tone: 'orange' },
-  COMPLETED: { icon: 'check-circle-outline', tone: 'ok' },
+  PART_NEEDED: { title: 'uiUpdates.kindPart', icon: 'package-variant-closed', tone: 'orange' },
+  HOLD_OURS: { title: 'uiHome.kindHoldOurs', icon: 'alert-outline', tone: 'orange' },
+  HOLD_CUSTOMER: { title: 'uiHome.kindHoldCustomer', icon: 'pause', tone: 'grey' },
+  FOLLOW_UP: { title: 'uiHome.kindFollowUp', icon: 'repeat', tone: 'warn' },
+  NOT_SCHEDULED: { title: 'uiHome.kindNotScheduled', icon: 'calendar-blank-outline', tone: 'info' },
 };
 
 const rupees = (paise: number) => `₹${(paise / 100).toLocaleString('en-IN')}`;
@@ -98,12 +97,6 @@ export function OwnerHomeScreen() {
   const greeting = t(hour < 12 ? 'uiOwner.goodMorning' : hour < 17 ? 'uiOwner.goodAfternoon' : 'uiOwner.goodEvening');
   const firstName = name?.trim().split(/\s+/)[0];
   const date = new Date().toLocaleDateString(`${language}-IN`, { weekday: 'short', day: 'numeric', month: 'short' });
-  const time = (at: string) => {
-    const d = new Date(at);
-    const clock = d.toLocaleTimeString(`${language}-IN`, { hour: 'numeric', minute: '2-digit' });
-    const isToday = d.toDateString() === new Date().toDateString();
-    return isToday ? clock : `${d.toLocaleDateString(`${language}-IN`, { day: 'numeric', month: 'short' })}, ${clock}`;
-  };
   const refresh = () => {
     void dash.refetch();
     void teams.refetch();
@@ -121,11 +114,14 @@ export function OwnerHomeScreen() {
 
   return (
     <Screen refreshControl={<RefreshControl refreshing={dash.isRefetching} onRefresh={refresh} />}>
-      <View>
-        <AppText variant="support" color={colors.slate}>
-          {date}
-        </AppText>
-        <AppText variant="title">{firstName ? `${greeting}, ${firstName}` : greeting}</AppText>
+      <View style={styles.between}>
+        <View style={styles.flex}>
+          <AppText variant="support" color={colors.slate}>
+            {date}
+          </AppText>
+          <AppText variant="title">{firstName ? `${greeting}, ${firstName}` : greeting}</AppText>
+        </View>
+        <UpdatesBell unread={d?.updates?.unread ?? 0} />
       </View>
 
       {teams.data && teams.data.length === 0 ? (
@@ -221,7 +217,7 @@ export function OwnerHomeScreen() {
           ) : null}
           {d.needsAction.items.map((a) => {
             const k = KIND[a.kind];
-            const title = t(`uiHome.${k.title}`);
+            const title = t(k.title);
             return (
               <Row
                 key={`${a.kind}-${a.jobId}`}
@@ -274,32 +270,27 @@ export function OwnerHomeScreen() {
 
       {d ? (
         <Card>
-          <View>
-            <AppText variant="section">{t('uiHome.latest')}</AppText>
-            <AppText variant="small" color={colors.slate}>
-              {t('uiHome.latestSub')}
-            </AppText>
+          <View style={styles.between}>
+            <View style={styles.flex}>
+              <AppText variant="section">{t('uiHome.latest')}</AppText>
+              <AppText variant="small" color={colors.slate}>
+                {t('uiUpdates.latestSub')}
+              </AppText>
+            </View>
+            <Pressable accessibilityRole="link" onPress={() => router.push('/updates')} hitSlop={12}>
+              <AppText weight="semibold" color={colors.teal}>
+                {t('uiOwner.seeAll')}
+              </AppText>
+            </Pressable>
           </View>
-          {d.latest.length === 0 ? (
+          {(d.updates?.latest ?? []).length === 0 ? (
             <AppText variant="support" color={colors.slate}>
               {t('uiHome.latestEmpty')}
             </AppText>
           ) : null}
-          {d.latest.map((l, i) => {
-            const s = STATUS[l.toStatus] ?? { icon: 'sync' as IconName, tone: 'grey' as Tone };
-            const key = STATUS[l.toStatus] ? `uiHome.st_${l.toStatus}` : 'uiHome.st_OTHER';
-            const title = t(key);
-            return (
-              <Row
-                key={`${l.jobId}-${l.at}-${i}`}
-                icon={s.icon}
-                tone={s.tone}
-                title={l.note && l.toStatus === 'ON_HOLD' ? t('uiHome.withReason', { title, reason: l.note }) : title}
-                sub={[l.customerName, `#${l.jobNumber}`, l.by, time(l.at)].filter(Boolean).join(' · ')}
-                onPress={() => openJob(l.jobId)}
-              />
-            );
-          })}
+          {(d.updates?.latest ?? []).map((u) => (
+            <FeedRow key={u.id} item={u} />
+          ))}
         </Card>
       ) : null}
 

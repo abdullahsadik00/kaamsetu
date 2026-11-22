@@ -75,7 +75,8 @@ export function useRefresh() {
   return { refreshing, onRefresh };
 }
 
-export type Op = 'job.start' | 'job.hold' | 'job.complete';
+/** Status moves, then field updates that leave the status alone (T4.7). */
+export type Op = 'job.start' | 'job.hold' | 'job.complete' | 'job.appointment' | 'job.part' | 'job.note';
 
 export type LocalState = {
   status: Status;
@@ -85,7 +86,17 @@ export type LocalState = {
   code: string | null;
   pending: boolean;
   attention: boolean;
+  /** Appointment / part / note saved on this phone, newest first ("Your updates", T4.7). */
+  updates: SavedUpdate[];
 };
+
+export type SavedUpdate = { id: string; operation: string; payload: unknown; createdAt: string; sync: SyncState };
+
+const UPDATE_OPS = ['job.appointment', 'job.part', 'job.note'];
+
+function opSync(state: string): SyncState {
+  return state === 'NEEDS_ATTENTION' ? 'attention' : state === 'SENDING' ? 'sending' : state === 'SENT' ? 'sent' : 'saved';
+}
 
 /** Status as the phone knows it: the server's, moved on by operations not sent yet. */
 export async function localState(job: FieldJob): Promise<LocalState> {
@@ -110,6 +121,10 @@ export async function localState(job: FieldJob): Promise<LocalState> {
     code: refused?.lastErrorCode ?? null,
     pending: sync === 'saved' || sync === 'sending',
     attention: !!refused,
+    updates: ops
+      .filter((o) => UPDATE_OPS.includes(o.operation))
+      .map((o) => ({ id: o.id, operation: o.operation, payload: o.payload, createdAt: o.createdAt, sync: opSync(o.state) }))
+      .reverse(),
   };
 }
 

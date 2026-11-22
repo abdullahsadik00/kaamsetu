@@ -41,6 +41,15 @@ const full: Dashboard = {
         note: 'Tool or gas missing',
         at: now,
       },
+      {
+        kind: 'PART_NEEDED',
+        jobId: 'job-48',
+        jobNumber: 1048,
+        customerName: 'Hotel Annapurna',
+        teamName: 'Team 2',
+        note: '1 × Capacitor',
+        at: now,
+      },
       { kind: 'NOT_SCHEDULED', jobId: 'job-53', jobNumber: 1053, customerName: 'Shreeji Clinic', teamName: null, note: null, at: now },
     ],
   },
@@ -49,6 +58,22 @@ const full: Dashboard = {
     { jobId: 'job-43', jobNumber: 1043, customerName: 'Meera Joshi', toStatus: 'COMPLETED', note: null, by: 'Santosh', at: now },
   ],
   money: { toCollect: 1230400, cashWithTeams: 100000, cashCount: 1, readyToBill: 1 },
+  updates: {
+    unread: 3,
+    latest: [
+      { id: 'u-1', kind: 'STATUS', jobId: 'job-43', jobNumber: 1043, customerName: 'Meera Joshi', by: 'Santosh', at: now, status: 'COMPLETED' },
+      {
+        id: 'u-2',
+        kind: 'PART_NEEDED',
+        jobId: 'job-48',
+        jobNumber: 1048,
+        customerName: 'Hotel Annapurna',
+        by: 'Ravi',
+        at: now,
+        part: { name: 'Capacitor', qty: 1, canContinue: false },
+      },
+    ],
+  },
 };
 const empty: Dashboard = {
   today: '2026-11-22',
@@ -58,6 +83,7 @@ const empty: Dashboard = {
   todayByStatus: { total: 0, NEW: 0, ASSIGNED: 0, IN_PROGRESS: 0, ON_HOLD: 0, COMPLETED: 0 },
   latest: [],
   money: { toCollect: 0, cashWithTeams: 0, cashCount: 0, readyToBill: 0 },
+  updates: { unread: 0, latest: [] },
 };
 
 const serve = (dash: Dashboard | Error) =>
@@ -85,13 +111,17 @@ describe('Owner home dashboard (T4.12)', () => {
     expect(screen.getByText('Needs your action · 12')).toBeTruthy();
     expect(screen.getByText("Can't continue: Tool or gas missing")).toBeTruthy();
     expect(screen.getByText('Sunita Rao · Team 1 · #1046')).toBeTruthy();
+    expect(screen.getByText('Part needed: 1 × Capacitor')).toBeTruthy();
     expect(screen.getByText('Appointment not fixed yet')).toBeTruthy();
     expect(screen.getByText('Shreeji Clinic · No team yet · #1053')).toBeTruthy();
-    expect(screen.getByText('+10 more')).toBeTruthy();
+    expect(screen.getByText('+9 more')).toBeTruthy();
     expect(screen.getByText('Today · 6')).toBeTruthy();
     expect(screen.getByText('2 Not started')).toBeTruthy();
     expect(screen.getByText('2 On hold')).toBeTruthy();
     expect(screen.getByText('Work completed')).toBeTruthy();
+    expect(screen.getByText('Part needed: 1 Capacitor · work stopped')).toBeTruthy();
+    expect(screen.getByLabelText('Updates from teams, 3 new')).toBeTruthy();
+    expect(screen.getByTestId('updates-badge')).toBeTruthy();
     expect(screen.getByText('1 finished job ready to bill')).toBeTruthy();
     expect(screen.getByText('₹12,304')).toBeTruthy();
     expect(screen.getByText('₹1,000')).toBeTruthy();
@@ -111,8 +141,12 @@ describe('Owner home dashboard (T4.12)', () => {
     expect(mockPush).toHaveBeenLastCalledWith({ pathname: '/jobs/[id]', params: { id: 'job-46' } });
     await fireEvent.press(screen.getByText('Work completed'));
     expect(mockPush).toHaveBeenLastCalledWith({ pathname: '/jobs/[id]', params: { id: 'job-43' } });
-    await fireEvent.press(screen.getByText('See all'));
+    await fireEvent.press(screen.getAllByText('See all')[0]);
     expect(mockNavigate).toHaveBeenLastCalledWith({ pathname: '/jobs', params: { show: 'today' } });
+    await fireEvent.press(screen.getAllByText('See all')[1]);
+    expect(mockPush).toHaveBeenLastCalledWith('/updates');
+    await fireEvent.press(screen.getByLabelText('Updates from teams, 3 new'));
+    expect(mockPush).toHaveBeenLastCalledWith('/updates');
     await fireEvent.press(screen.getByText('Money to collect'));
     expect(mockNavigate).toHaveBeenLastCalledWith('/billing');
   });
@@ -122,6 +156,7 @@ describe('Owner home dashboard (T4.12)', () => {
     await renderScreen(<OwnerHomeScreen />);
     expect(await screen.findByText('Nothing needs you right now')).toBeTruthy();
     expect(screen.getByText('No updates from teams yet.')).toBeTruthy();
+    expect(screen.queryByTestId('updates-badge')).toBeNull();
     expect(screen.queryByText(/open enquir/)).toBeNull();
     expect(screen.queryByText(/need a team/)).toBeNull();
     expect(screen.queryByText(/ready to bill/)).toBeNull();

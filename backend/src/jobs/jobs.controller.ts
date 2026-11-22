@@ -24,6 +24,7 @@ import {
   UpdateJobSchema,
 } from './jobs.service.js';
 import type { CreateJob, ListJobs, UpdateJob } from './jobs.service.js';
+import { UpdatesModule } from '../updates/updates.js';
 
 const Id = new ZodValidationPipe(z.uuid());
 
@@ -91,5 +92,5 @@ export class JobsController {
   }
 }
 
-@Module({ controllers: [JobsController], providers: [JobsService], exports: [JobsService] })
+@Module({ imports: [UpdatesModule], controllers: [JobsController], providers: [JobsService], exports: [JobsService] })
 export class JobsModule {}

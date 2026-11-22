@@ -15,6 +15,7 @@ import { SiteController } from './site/site.controller.js';
 import { FieldModule } from './field/field.js';
 import { JobsModule } from './jobs/jobs.controller.js';
 import { TeamsModule } from './teams/teams.controller.js';
+import { UpdatesModule } from './updates/updates.js';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { TeamsModule } from './teams/teams.controller.js';
     FieldModule,
     BillingModule,
     DashboardModule,
+    UpdatesModule,
   ],
   controllers: [HealthController, SiteController],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],

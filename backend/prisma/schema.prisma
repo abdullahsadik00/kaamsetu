@@ -175,6 +175,8 @@ model OrganizationMember {
   status         RecordStatus @default(ACTIVE)
   joinedAt       DateTime     @default(now())
   deactivatedAt  DateTime?
+  /// Owner's "Updates from teams": updates received after this count as unread (T4.7).
+  updatesSeenAt  DateTime?
 
   organization Organization   @relation(fields: [organizationId], references: [id])
   user         User           @relation(fields: [userId], references: [id])
@@ -372,6 +374,7 @@ model ServiceJob {
   history      JobStatusHistory[]
   report       ServiceReport?
   collections  CashCollection[]
+  updates      JobUpdate[]
 
   @@unique([organizationId, jobNumber])
   @@index([organizationId, status, scheduledDate])
@@ -419,6 +422,33 @@ model JobStatusHistory {
   job ServiceJob @relation(fields: [jobId], references: [id])
 
   @@index([jobId, at])
+  @@index([organizationId, at])
+}
+
+enum JobUpdateType {
+  APPOINTMENT_FIXED
+  PART_NEEDED
+  NOTE
+}
+
+/// The field update feed (D-009, T4.7): technician updates that are not status
+/// changes. Append-only; the id is the phone's operation id (idempotency key).
+model JobUpdate {
+  id             String        @id @db.Uuid
+  organizationId String        @db.Uuid
+  jobId          String        @db.Uuid
+  type           JobUpdateType
+  /// APPOINTMENT_FIXED { date, slot } · PART_NEEDED { part, qty, canContinue, note? } · NOTE { text }.
+  payload        Json          @default("{}")
+  byMemberId     String        @db.Uuid
+  /// Phone time when it was saved (may be off); the feed orders by `receivedAt`.
+  createdAt      DateTime
+  receivedAt     DateTime      @default(now())
+
+  job ServiceJob @relation(fields: [jobId], references: [id])
+
+  @@index([organizationId, receivedAt])
+  @@index([jobId, receivedAt])
 }
 
 // ---------- Enquiries (docs/05 §5, T4.5, D-033) ----------
@@ -495,6 +525,7 @@ model SyncOperation {
   receivedAt     DateTime @default(now())
 
   @@index([organizationId, receivedAt])
+  @@index([organizationId, entityId])
 }
 
 /// Per-business change counter behind the sync cursor (T4.9, D-035). Bumped
