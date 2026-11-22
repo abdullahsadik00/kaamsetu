@@ -184,7 +184,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 | T5.6 | Usability test of built app with owner + technician | High | Not Started | T4.12 | No blocker issues |
 | T5.7 | Backup restore test | Critical | Completed 20 Nov 2026 for pilot staging (`restore-test.yml`: newest encrypted backup restored into PostgreSQL 17 in 5 s, migrations and row counts checked; runs monthly). Repeat for production hosting | T3.10 | Restore documented with timing |
 | T6.1 | Production environment + monitoring + runbook | Critical | Not Started (runbook for pilot staging written 22 Nov 2026: `docs/RUNBOOK.md`; production choice Q-09 and alerts to phone still open) | G5 | Alerts reach your phone |
-| T6.2 | Pilot agreement, data entry, training | Critical | Not Started | T6.1 | Teams trained; data loaded |
+| T6.2 | Pilot agreement, data entry, training | Critical | In Progress (22 Nov 2026: customer import `npm run pilot -- import-customers`, `docs/PILOT_GUIDE.md`, draft `docs/PILOT_AGREEMENT.md`; owner sign-off, real data and training sessions still to do) | T6.1 | Teams trained; data loaded |
 | T6.3 | Pilot with 1–2 teams, then all teams; weekly review | Critical | Not Started | T6.2 | Gate G6 |
 | T7.1 | Plans, 30-day trial, limits, billing provider | High | Not Started | G6 | Trial expiry handled without data loss |
 | T7.2 | Legal: terms, privacy, DPDP review, trademark/domain check | Critical | Not Started | — (can start earlier) | Published documents |

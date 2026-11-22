@@ -2,6 +2,13 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-22 — Pilot prep (T6.2)
+
+- Pilot script: `npm run pilot -- import-customers --business-phone <mobile> --file customers.csv [--yes]` loads the owner's existing customer list from a spreadsheet saved as CSV: name, mobile, address, area, and optionally GSTIN and how many ACs (brand, tons). Same checks as the app's customer form; lists every line to fix; saves nothing until the file is clean and `--yes` is given; skips numbers already saved, so re-running is safe. Audit row `CUSTOMERS_IMPORTED`. Template `docs/pilot/customers-template.csv`.
+- `docs/PILOT_GUIDE.md`: setup checklist, loading customers, phone settings (battery, background data), training for owner, senior technician and helper using the app's own labels, practice round, first two weeks, end of pilot.
+- `docs/PILOT_AGREEMENT.md`: draft in plain language (free pilot, the data stays the business's, export and deletion, what we promise). Blanks for Q-13 (after the pilot) and the support number; needs legal review before commercial use (T7.2).
+- Tests: 7 unit tests (`import.spec.ts`), 2 e2e tests (`import.e2e-spec.ts`).
+
 ## 2026-11-22 — Download business data in the app
 
 - App: **More › Download business data** saves everything the business entered as one file and opens the share sheet (Drive, email, WhatsApp). Needs the internet; says so when it cannot download. Hindi and Marathi included.
