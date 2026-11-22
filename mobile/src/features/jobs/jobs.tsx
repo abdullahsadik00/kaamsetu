@@ -353,29 +353,26 @@ function JobForm({
   return (
     <Screen
       footer={
-        <View style={styles.footerRow}>
+        // Stacked full width (job on top, enquiry below) so both labels fit one line in every language.
+        <>
+          <Button
+            size="large"
+            label={teamId ? t('uiEnquiry.createJob') : t('uiEnquiry.saveJob')}
+            onPress={() => site && save.mutate(site.id)}
+            loading={save.isPending}
+            disabled={busy}
+          />
           {enquiry ? null : (
-            <View style={styles.flex}>
-              <Button
-                variant="secondary"
-                size="large"
-                label={t('uiEnquiry.saveEnquiry')}
-                onPress={() => site && saveEnquiry.mutate(site.id)}
-                loading={saveEnquiry.isPending}
-                disabled={busy}
-              />
-            </View>
-          )}
-          <View style={styles.flex}>
             <Button
+              variant="secondary"
               size="large"
-              label={t('uiEnquiry.createJob')}
-              onPress={() => site && save.mutate(site.id)}
-              loading={save.isPending}
+              label={t('uiEnquiry.saveEnquiry')}
+              onPress={() => site && saveEnquiry.mutate(site.id)}
+              loading={saveEnquiry.isPending}
               disabled={busy}
             />
-          </View>
-        </View>
+          )}
+        </>
       }
     >
       {enquiry ? <Stack.Screen options={{ title: t('uiEnquiry.convertTitle', { n: enquiry.number }) }} /> : null}

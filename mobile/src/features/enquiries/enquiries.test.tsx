@@ -118,7 +118,7 @@ describe('Enquiries (T4.5)', () => {
     await renderScreen(<NewJobScreen />);
     expect(await screen.findByDisplayValue('Hall AC makes noise at night')).toBeTruthy();
     expect(screen.queryByText('Save enquiry')).toBeNull();
-    await fireEvent.press(screen.getByText('Create job & assign'));
+    await fireEvent.press(screen.getByText('Save job'));
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith(
         '/enquiries/enq-1/convert',
@@ -126,5 +126,19 @@ describe('Enquiries (T4.5)', () => {
       ),
     );
     expect(mockReplace).toHaveBeenCalledWith({ pathname: '/jobs/[id]', params: { id: 'job-9' } });
+  });
+
+  it('the job button says "Create job & assign" only once a team is picked (BUG-04)', async () => {
+    mockParams = { customerId: 'cust-1' };
+    jest.spyOn(api, 'get').mockImplementation(((path: string) =>
+      Promise.resolve(
+        path.startsWith('/customers') ? customer : path === '/teams' ? [{ id: 'team-1', name: 'Team Ravi', active: true }] : [],
+      )) as never);
+    await renderScreen(<NewJobScreen />);
+    expect(await screen.findByRole('button', { name: 'Save job' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save enquiry' })).toBeTruthy();
+    await fireEvent.press(await screen.findByText('Team Ravi'));
+    expect(screen.getByRole('button', { name: 'Create job & assign' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Save job' })).toBeNull();
   });
 });

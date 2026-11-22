@@ -63,7 +63,12 @@ export function Button({ label, onPress, variant = 'primary', icon, size = 'norm
       ) : (
         <View style={styles.row}>
           {icon ? <Icon name={icon} size={size === 'large' ? 22 : 20} color={textColor} /> : null}
-          <AppText weight="semibold" color={textColor} variant={size === 'large' ? 'body' : 'support'} style={size === 'large' ? styles.largeText : null}>
+          <AppText
+            weight="semibold"
+            color={textColor}
+            variant={size === 'large' ? 'body' : 'support'}
+            style={[styles.label, size === 'large' && styles.largeText]}
+          >
             {label}
           </AppText>
         </View>
@@ -82,7 +87,9 @@ const styles = StyleSheet.create({
   },
   large: { minHeight: touch.action },
   largeText: { fontSize: 17 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: space.sm },
+  // A label too long for one line wraps centred, beside the icon, not flush left.
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, maxWidth: '100%' },
+  label: { flexShrink: 1, textAlign: 'center' },
   primary: { backgroundColor: colors.teal },
   secondary: { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.teal },
   tonal: { backgroundColor: colors.tealTint },
