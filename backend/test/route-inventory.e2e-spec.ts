@@ -38,8 +38,8 @@ function routes(app: INestApplication): Route[] {
   return out.sort((a, b) => `${a.path} ${a.method}`.localeCompare(`${b.path} ${b.method}`));
 }
 
-/** Signed-in routes that need no business (login, profile, setting up or joining one). Anything else must name roles. */
-const NO_BUSINESS_NEEDED = /^\/api\/v1\/(auth|me|organizations$|invites\/accept|account|health)/;
+/** Signed-in routes that need no business (login, profile, setting up or joining one, help). Anything else must name roles. */
+const NO_BUSINESS_NEEDED = /^\/api\/v1\/(auth|me|organizations$|invites\/accept|account|health|support$)/;
 
 describe('Every route: roles and login (e2e, T5.2)', () => {
   let app: INestApplication<App>;

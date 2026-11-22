@@ -126,6 +126,16 @@ export const en = {
       '{{count}} saved changes have not reached the owner yet. If you log out now, they will be lost.',
     logoutConfirm: 'Log out',
   },
+  help: {
+    title: 'Help',
+    whatsapp: 'Message us on WhatsApp',
+    whatsappHint: 'Questions or problems with the app',
+    email: 'Email us',
+    privacy: 'Privacy policy',
+    terms: 'Terms of use',
+    version: 'Version {{version}}',
+    message: 'KaamSetu help (version {{version}}): ',
+  },
   join: {
     newBusiness: 'Set up a new business',
     newBusinessHint: 'For business owners starting with KaamSetu.',

@@ -128,6 +128,16 @@ export const mr: Translations = {
       'सेव्ह केलेले {{count}} बदल अजून मालकाकडे पोहोचले नाहीत. आत्ता लॉग आउट केल्यास ते हरवतील.',
     logoutConfirm: 'लॉग आउट',
   },
+  help: {
+    title: 'मदत',
+    whatsapp: 'WhatsApp वर मेसेज करा',
+    whatsappHint: 'ॲपबद्दल प्रश्न किंवा अडचण',
+    email: 'आम्हाला ईमेल करा',
+    privacy: 'प्रायव्हसी पॉलिसी',
+    terms: 'वापराच्या अटी',
+    version: 'व्हर्जन {{version}}',
+    message: 'KaamSetu मदत (व्हर्जन {{version}}): ',
+  },
   join: {
     newBusiness: 'नवीन व्यवसाय सेट करा',
     newBusinessHint: 'कामसेतु सुरू करणाऱ्या व्यवसाय मालकांसाठी.',

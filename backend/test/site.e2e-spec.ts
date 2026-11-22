@@ -4,22 +4,33 @@ import request from 'supertest';
 import { App } from 'supertest/types.js';
 import { AppModule } from '../src/app.module.js';
 import { configureApp } from '../src/app.setup.js';
+import { TenantFactory, type TestTenant } from './helpers/tenants.js';
+
+const PREFIX = '90000070';
 
 describe('Public pages for Google publishing (e2e)', () => {
   let app: INestApplication<App>;
+  let factory: TenantFactory;
+  let a: TestTenant;
   const http = () => request(app.getHttpServer());
 
   beforeAll(async () => {
     process.env.SUPPORT_EMAIL = 'support@example.test';
     process.env.GOOGLE_SITE_VERIFICATION = 'test-verify-<code>';
+    process.env.SUPPORT_WHATSAPP = '98220 70001';
     const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
     app = configureApp(moduleRef.createNestApplication()) as INestApplication<App>;
     await app.init();
+    factory = new TenantFactory(app);
+    await factory.removeLeftovers([PREFIX]);
+    a = await factory.create('Support A', PREFIX);
   });
 
   afterAll(async () => {
     delete process.env.SUPPORT_EMAIL;
     delete process.env.GOOGLE_SITE_VERIFICATION;
+    delete process.env.SUPPORT_WHATSAPP;
+    await factory.cleanUp();
     await app.close();
   });
 
@@ -43,6 +54,14 @@ describe('Public pages for Google publishing (e2e)', () => {
     );
     const privacy = await http().get('/privacy').expect(200);
     expect(privacy.text).not.toContain('google-site-verification');
+  });
+
+  it('gives every signed-in role the help contacts from the settings (T7.3)', async () => {
+    await http().get('/api/v1/support').expect(401);
+    for (const role of ['OWNER', 'SENIOR_TECHNICIAN', 'HELPER'] as const) {
+      const res = await http().get('/api/v1/support').set('Authorization', `Bearer ${a.tokens[role]}`).expect(200);
+      expect(res.body.data).toEqual({ whatsapp: '+919822070001', email: 'support@example.test' });
+    }
   });
 
   it('keeps the API under /api/v1', async () => {

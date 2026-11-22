@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { Alert, type AlertButton } from 'react-native';
 
-import { deleteAccount, useSession } from '@/features/auth/session';
+import { api, deleteAccount, useSession } from '@/features/auth/session';
 import { renderScreen, setupI18n } from '@/testing/render';
 
 import { ProfileSection } from './profile-section';
@@ -31,7 +31,11 @@ function confirmAlert(spy: jest.SpyInstance) {
 }
 
 beforeAll(setupI18n);
-beforeEach(() => mockDelete.mockReset());
+beforeEach(() => {
+  mockDelete.mockReset();
+  // Help asks the server for the support contacts.
+  jest.spyOn(api, 'get').mockImplementation(async () => ({ whatsapp: null, email: null }) as never);
+});
 
 describe('Delete my account', () => {
   it('asks first, then deletes', async () => {

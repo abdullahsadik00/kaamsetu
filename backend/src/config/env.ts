@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { normalizeIndianMobile } from '../auth/phone.js';
 
 /** Every environment variable the backend reads. Keep in sync with .env.example (docs/11 §7). */
 export const EnvSchema = z.object({
@@ -27,6 +28,11 @@ export const EnvSchema = z.object({
   SENTRY_DSN: z.url().optional(),
   /** Contact shown on the public pages for privacy requests and support. */
   SUPPORT_EMAIL: z.email().optional(),
+  /** WhatsApp number people message for help from the app (GET /support). 10-digit Indian mobile. */
+  SUPPORT_WHATSAPP: z
+    .string()
+    .refine((v) => normalizeIndianMobile(v) !== null, 'SUPPORT_WHATSAPP must be a 10-digit Indian mobile number')
+    .optional(),
   /** Google Search Console HTML-tag code, put on the homepage to verify the domain. */
   GOOGLE_SITE_VERIFICATION: z.string().max(200).optional(),
   /**

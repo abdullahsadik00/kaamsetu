@@ -12,12 +12,13 @@ import { LanguageList } from "@/components/ui/language-picker";
 import { Avatar, ListRow } from "@/components/ui/list-row";
 import { deleteAccount, logout, useSession } from "@/features/auth/session";
 import { unsentCount } from "@/features/sync/sync-engine";
+import { HelpCard } from "./help-card";
 import { useLanguage } from "@/localization/i18n";
 import { LANGUAGE_NAMES } from "@/localization/languages";
 import { colors, space } from "@/theme/tokens";
 
 /**
- * Who is logged in, language and log out (screens 32, 50, 71, 74). Shared by
+ * Who is logged in, language, help and log out (screens 32, 50, 71, 74). Shared by
  * every role.
  */
 export function ProfileSection() {
@@ -100,6 +101,8 @@ export function ProfileSection() {
           onPress={() => setLanguageOpen(true)}
         />
       </Card>
+
+      <HelpCard />
 
       <Button
         variant="destructive"
