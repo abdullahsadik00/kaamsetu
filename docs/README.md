@@ -57,6 +57,7 @@ This folder (`app/docs/`) is the documentation source of truth (D-017). The olde
 | `PROJECT_ROADMAP.md` | Milestones in dependency order |
 | `PROJECT_TASK_TRACKER.md` | Tasks with priority, status, dependencies and acceptance criteria |
 | `PHONE_TEST_PLAN.md` | Step-by-step phone tests (TP IDs) for built and upcoming features, with results |
+| `BUG_LOG.md` | Bugs found in phone testing (BUG IDs): symptom, cause, severity, fix commit on `fix/phone-test-bugs`, status |
 | `DECISION_LOG.md` | Decisions and pending questions |
 | `RISK_REGISTER.md` | Risks and mitigations |
 | `CHANGELOG.md` | Meaningful changes over time |

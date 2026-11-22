@@ -11,7 +11,7 @@ Every check to run on a real phone, grouped **by role**: first everything the **
    - `TP-13 fail: Save job did nothing` (a screenshot helps)
    - `TP-26 blocked: no second phone`
 4. **Expected** lists what you should see. If anything differs, it is a fail, even a small one.
-5. Claude updates the status table below. If a test fails, Claude fixes it, sends a new APK if needed, and asks you to run that test again.
+5. Claude updates the status table below. A failure gets a bug ID in `BUG_LOG.md` and its fix goes on the branch `fix/phone-test-bugs`. There is one new APK at the end of the pass, built from that branch; then the failed tests are run again.
 
 ## Setup
 
@@ -44,9 +44,9 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-03 | Owner | Change language | T3.6 | Passed | 21 Nov 2026 | Step 3 in chat |
 | TP-04 | Owner | Add employees | T4.1 | Passed | 21 Nov 2026 | Step 4 in chat |
 | TP-05 | 1 Owner | Log out and pick another Google account | T3.11 | Passed | 22 Nov 2026 | First try picked a non-owner account and showed Join your business, as expected |
-| TP-09 | 1 Owner | Make teams | T4.2 | Failed | 22 Nov 2026 | App closed after Save team and on opening the team: swap card read lists an older server doesn't send. Fixed in 45f4b7c; run again on build 94fc92db |
+| TP-09 | 1 Owner | Make teams | T4.2 | Failed | 22 Nov 2026 | App closed after Save team and on opening the team: swap card read lists an older server doesn't send. BUG-01, fixed in 45f4b7c; run again on the final build |
 | TP-10 | 1 Owner | Add a customer, duplicate warning, search | T4.3 | Passed | 22 Nov 2026 | |
-| TP-11 | 1 Owner | Second address, edit, archive | T4.3 | Failed | 22 Nov 2026 | Steps 1–2 fine; after archiving, the customer could not be found again. Added Show archived customers; recheck step 4 on the final build |
+| TP-11 | 1 Owner | Second address, edit, archive | T4.3 | Failed | 22 Nov 2026 | Steps 1–2 fine; after archiving, the customer could not be found again. BUG-02: added Show archived customers; recheck step 4 on the final build |
 | TP-12 | 1 Owner | Add and remove ACs | T4.4 | Pending | | |
 | TP-13 | 1 Owner | Owner creates a job | T4.6 | Pending | | |
 | TP-14 | 1 Owner | Give to a team, change team, change day | T4.6 | Pending | | |
