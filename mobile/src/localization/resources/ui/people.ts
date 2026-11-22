@@ -39,6 +39,12 @@ const en = {
   whatsapp: 'WhatsApp',
   gstin: 'GSTIN',
   optionalNow: 'optional now',
+  pastJobs: 'Past jobs',
+  noPastJobs: 'No jobs for this customer yet.',
+  acHistory: 'AC history',
+  acNoJobs: 'This AC has not been in a job yet.',
+  noDate: 'No date',
+  openAcHistory: 'Open history of',
 };
 
 type Keys = { [K in keyof typeof en]: string };
@@ -79,6 +85,12 @@ const hi: Keys = {
   whatsapp: 'WhatsApp',
   gstin: 'GSTIN',
   optionalNow: 'अभी ज़रूरी नहीं',
+  pastJobs: 'पिछले काम',
+  noPastJobs: 'इस ग्राहक का अभी कोई काम नहीं।',
+  acHistory: 'AC का इतिहास',
+  acNoJobs: 'यह AC अभी किसी काम में नहीं रहा।',
+  noDate: 'तारीख नहीं',
+  openAcHistory: 'इतिहास खोलें:',
 };
 
 const mr: Keys = {
@@ -117,6 +129,12 @@ const mr: Keys = {
   whatsapp: 'WhatsApp',
   gstin: 'GSTIN',
   optionalNow: 'आत्ता गरजेचे नाही',
+  pastJobs: 'मागील कामे',
+  noPastJobs: 'या ग्राहकाचे अजून कोणतेही काम नाही.',
+  acHistory: 'AC चा इतिहास',
+  acNoJobs: 'हा AC अजून कोणत्याही कामात नाही.',
+  noDate: 'तारीख नाही',
+  openAcHistory: 'इतिहास उघडा:',
 };
 
 export const peopleUi = { en, hi, mr };

@@ -433,6 +433,7 @@ describe('Customer page (T4.11)', () => {
     mockParams = { id: 'cust-1' };
     routes({
       '/customers/cust-1/outstanding': { customerId: 'cust-1', customerName: 'Anil Deshpande', billed: 610000, received: 300000, outstanding: 310000 },
+      '/customers/cust-1/history': [],
       '/customers/cust-1': {
         id: 'cust-1',
         type: 'INDIVIDUAL',

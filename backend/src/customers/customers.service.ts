@@ -203,6 +203,64 @@ export class CustomersService {
     return presentEquipment(e);
   }
 
+  /** The customer's jobs, newest first (T4.4): what was done at their place and when. */
+  async history(auth: AuthContext, customerId: string) {
+    await this.ownCustomer(auth, customerId);
+    return this.jobRows(auth, { customerId });
+  }
+
+  /**
+   * One AC with every job it was part of, newest first (T4.4), and the work
+   * the senior recorded on this AC in each finished job.
+   */
+  async equipmentHistory(auth: AuthContext, id: string) {
+    const e = await this.prisma.equipment.findFirst({
+      where: scoped(auth, { id }),
+      select: { ...equipmentSelect, customerId: true },
+    });
+    if (!e) throw AppError.notFound('EQUIPMENT_NOT_FOUND');
+    const jobs = await this.jobRows(auth, { equipment: { some: { equipmentId: id } } }, id);
+    return { equipment: presentEquipment(e), jobs };
+  }
+
+  private async jobRows(auth: AuthContext, where: Prisma.ServiceJobWhereInput, equipmentId?: string) {
+    const jobs = await this.prisma.serviceJob.findMany({
+      where: scoped(auth, where),
+      orderBy: [{ scheduledDate: { sort: 'desc', nulls: 'first' } }, { jobNumber: 'desc' }],
+      take: 100,
+      select: {
+        id: true,
+        jobNumber: true,
+        type: true,
+        status: true,
+        scheduledDate: true,
+        completedAt: true,
+        complaint: true,
+        assignedTeamId: true,
+        report: { select: { outcome: true, note: true, work: true, parts: true } },
+      },
+    });
+    const teams = await this.prisma.team.findMany({
+      where: scoped(auth, { id: { in: [...new Set(jobs.flatMap((j) => j.assignedTeamId ?? []))] } }),
+      select: { id: true, name: true },
+    });
+    const teamName = new Map(teams.map((t) => [t.id, t.name]));
+    return jobs.map(({ assignedTeamId, report, scheduledDate, completedAt, ...j }) => {
+      const work = (report?.work ?? []) as { equipmentId: string; work?: string[]; note?: string }[];
+      const mine = equipmentId ? work.find((w) => w.equipmentId === equipmentId) : undefined;
+      return {
+        ...j,
+        scheduledDate: scheduledDate?.toISOString().slice(0, 10) ?? null,
+        completedAt: completedAt?.toISOString() ?? null,
+        team: assignedTeamId ? (teamName.get(assignedTeamId) ?? null) : null,
+        outcome: report?.outcome ?? null,
+        reportNote: report?.note ?? null,
+        parts: (report?.parts ?? []) as { name: string; qty: number }[],
+        ...(equipmentId ? { work: mine?.work ?? [], workNote: mine?.note ?? null } : {}),
+      };
+    });
+  }
+
   private async ownCustomer(auth: AuthContext, id: string) {
     const c = await this.prisma.customer.findFirst({
       where: scoped(auth, { id }),

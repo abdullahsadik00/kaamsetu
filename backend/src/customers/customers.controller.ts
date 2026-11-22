@@ -75,6 +75,16 @@ export class CustomersController {
     return this.customers.update(auth, id, body);
   }
 
+  @Get('customers/:id/history')
+  history(@CurrentAuth() auth: AuthContext, @Param('id', Id) id: string) {
+    return this.customers.history(auth, id);
+  }
+
+  @Get('equipment/:id/history')
+  equipmentHistory(@CurrentAuth() auth: AuthContext, @Param('id', Id) id: string) {
+    return this.customers.equipmentHistory(auth, id);
+  }
+
   @Post('customers/:id/sites')
   @HttpCode(HttpStatus.CREATED)
   addSite(
