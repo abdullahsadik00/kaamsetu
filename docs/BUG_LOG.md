@@ -24,14 +24,15 @@ Every bug found in phone testing (`PHONE_TEST_PLAN.md`), one row each, for count
 | BUG-12 | 22 Nov 2026 | TP-30 | Owner | Converted enquiry page, Job chip | Minor | The **Job** chip is left-aligned and stretched with empty space after the text | Code | The chip shared a row with the long "saved at · via" line and got squeezed. It now sits on its own line at the top like the job page's status badge (cause inferred from the code) | 3f4f207 | fix/phone-test-bugs | Fixed |
 | BUG-13 | 22 Nov 2026 | TP-41 | Owner | Jobs tab, New button | Minor | The button reads **+ New**; the plus is not wanted, only **New** | Code | The tab-header New buttons were drawn with a plus icon. Removed on Jobs **New** and Billing **New bill / New quotation**; other plus buttons (Add customer, Add team, Add employee, New job, Add address, Add item, Record payment, Home New job tile) kept for Sadik to decide | a36c5de | fix/phone-test-bugs | Fixed |
 | BUG-14 | 22 Nov 2026 | TP-41 | Owner | New enquiry or job › Add customer | Major | After saving a new customer from the job form, the app opens the customer page instead of going back to **New enquiry or job** with that customer picked | Gap | The form opened Add customer without saying where it came from, and the customer form always went to the new customer's page. It now opens with returnTo=job and, on save (or on Open <name> from the duplicate warning), goes back to the form with that customer and its only address picked; from the Customers tab it still opens the customer page. Return path not yet seen on a phone | 61fde56 | fix/phone-test-bugs | Fixed |
+| BUG-15 | 22 Nov 2026 | TP-16 | Senior | My Work › job page (T4.7) | Blocker | Tapping a job card on **My Work** seems to refresh the same screen; the job page with **Call** and **Directions** never opens | Code | Not yet known (suspect: the job page is a hidden tab and gets no job id) | — | fix/phone-test-bugs | Open |
 
 ## Summary
 
 | | Count |
 |---|---|
-| Bugs found | 14 |
+| Bugs found | 15 |
 | Crash | 1 |
-| Blocker | 0 |
+| Blocker | 1 |
 | Major | 2 |
 | Minor | 11 |
 | Verified on a build | 0 |
