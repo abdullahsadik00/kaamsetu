@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
+import { isOffline, newId, saveOffline } from '@/features/sync/owner-offline';
 import { colors, radius, space } from '@/theme/tokens';
 
 import {
@@ -21,6 +22,7 @@ import {
   updateCustomer,
   useCustomer,
   type Customer,
+  type CustomerRow,
   type CustomerType,
 } from './api';
 import { SegmentToggle, SwitchCard } from './people-ui';
@@ -74,6 +76,40 @@ function CustomerForm({ customer }: { customer?: Customer }) {
     },
   });
 
+  /**
+   * No internet (D-021): saved on the phone with ids made here, and put into
+   * the loaded lists so the customer page and the job form can use it now.
+   */
+  const saveCustomerOffline = async (body: {
+    type: CustomerType;
+    name: string;
+    phone: string;
+    gstBills: boolean;
+    notes?: string;
+    site: { addressLine1: string; locality?: string; landmark?: string; city?: string };
+  }): Promise<Customer> => {
+    const id = newId();
+    const siteId = newId();
+    await saveOffline(qc, 'customer.create', id, { ...body, siteId });
+    const s = body.site;
+    const local: Customer = {
+      id,
+      type: body.type,
+      name: body.name,
+      phone: body.phone,
+      alternatePhone: null,
+      notes: body.notes ?? null,
+      gstBills: body.gstBills,
+      gstin: null,
+      archivedAt: null,
+      sites: [{ id: siteId, label: null, addressLine1: s.addressLine1, locality: s.locality ?? null, city: s.city ?? null, landmark: s.landmark ?? null, isDefault: true, equipment: [] }],
+    };
+    qc.setQueryData([...CUSTOMERS_KEY, id], local);
+    const row: CustomerRow = { id, type: body.type, name: body.name, phone: body.phone, archivedAt: null, place: s.locality || s.city || s.addressLine1, acCount: 0 };
+    qc.setQueriesData<CustomerRow[]>({ queryKey: [...CUSTOMERS_KEY, 'list'] }, (rows) => (rows ? [row, ...rows] : rows));
+    return local;
+  };
+
   const save = useMutation({
     mutationFn: async ({ v, anyway }: { v: FormOut; anyway: boolean }) => {
       const common = {
@@ -85,17 +121,14 @@ function CustomerForm({ customer }: { customer?: Customer }) {
       if (customer) {
         return updateCustomer(customer.id, { ...common, notes: v.notes || null });
       }
-      return createCustomer({
-        ...common,
-        ...(v.notes ? { notes: v.notes } : {}),
-        allowDuplicatePhone: anyway,
-        site: {
-          addressLine1: v.address,
-          ...(v.locality ? { locality: v.locality } : {}),
-          ...(v.landmark ? { landmark: v.landmark } : {}),
-          ...(v.city ? { city: v.city } : {}),
-        },
-      });
+      const site = {
+        addressLine1: v.address,
+        ...(v.locality ? { locality: v.locality } : {}),
+        ...(v.landmark ? { landmark: v.landmark } : {}),
+        ...(v.city ? { city: v.city } : {}),
+      };
+      if (isOffline()) return saveCustomerOffline({ ...common, ...(v.notes ? { notes: v.notes } : {}), site });
+      return createCustomer({ ...common, ...(v.notes ? { notes: v.notes } : {}), allowDuplicatePhone: anyway, site });
     },
     onSuccess: (saved) => {
       void qc.invalidateQueries({ queryKey: CUSTOMERS_KEY });

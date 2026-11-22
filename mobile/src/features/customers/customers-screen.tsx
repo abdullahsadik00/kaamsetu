@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ListRow } from '@/components/ui/list-row';
 import { Screen } from '@/components/ui/screen';
+import { PendingSaves } from '@/features/sync/pending-saves';
 import { colors, space } from '@/theme/tokens';
 
 import { displayPhone, useCustomers } from './api';
@@ -32,6 +33,7 @@ export function CustomersScreen() {
         value={q}
         onChangeText={setQ}
       />
+      <PendingSaves only={['customer.create', 'equipment.create']} />
       {list.isPending ? <ActivityIndicator color={colors.teal} /> : null}
       {list.isError ? (
         <View style={{ gap: space.sm }}>

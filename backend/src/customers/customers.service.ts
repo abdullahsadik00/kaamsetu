@@ -112,8 +112,9 @@ export class CustomersService {
    * number already used by another customer of this business is refused
    * with CUSTOMER_PHONE_EXISTS (and that customer's id) unless the owner
    * chose "Add anyway". Other businesses' customers never count.
+   * `ids`: the phone's ids for a customer saved offline (D-021).
    */
-  async create(auth: AuthContext, input: CreateCustomer) {
+  async create(auth: AuthContext, input: CreateCustomer, ids?: { id: string; siteId: string }) {
     const organizationId = requireOrg(auth);
     if (!input.allowDuplicatePhone) {
       const existing = await this.prisma.customer.findFirst({
@@ -131,6 +132,7 @@ export class CustomersService {
     }
     const created = await this.prisma.customer.create({
       data: {
+        id: ids?.id,
         organizationId,
         type: input.type,
         name: input.name,
@@ -140,7 +142,7 @@ export class CustomersService {
         gstBills: input.gstBills,
         gstin: input.gstin ?? null,
         sites: {
-          create: { organizationId, isDefault: true, ...this.siteData(input.site) },
+          create: { id: ids?.siteId, organizationId, isDefault: true, ...this.siteData(input.site) },
         },
       },
       select: { id: true },
@@ -171,7 +173,7 @@ export class CustomersService {
   }
 
   /** The AC's address must belong to the same customer of the same business (T4.4). */
-  async addEquipment(auth: AuthContext, input: CreateEquipment) {
+  async addEquipment(auth: AuthContext, input: CreateEquipment, id?: string) {
     const organizationId = requireOrg(auth);
     const site = await this.prisma.site.findFirst({
       where: scoped(auth, { id: input.siteId, customerId: input.customerId }),
@@ -180,7 +182,7 @@ export class CustomersService {
     if (!site) throw AppError.notFound('SITE_NOT_FOUND');
     const { customerId, siteId, ...fields } = input;
     const e = await this.prisma.equipment.create({
-      data: { organizationId, customerId, siteId, ...fields },
+      data: { id, organizationId, customerId, siteId, ...fields },
       select: equipmentSelect,
     });
     return presentEquipment(e);

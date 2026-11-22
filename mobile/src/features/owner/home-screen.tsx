@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
+import { PendingSaves } from '@/features/sync/pending-saves';
 import { api, useSession } from '@/features/auth/session';
 import { useDayLabel } from '@/features/jobs/jobs';
 import { useTeams } from '@/features/teams/teams';
@@ -114,6 +115,7 @@ export function OwnerHomeScreen() {
 
   return (
     <Screen refreshControl={<RefreshControl refreshing={dash.isRefetching} onRefresh={refresh} />}>
+      <PendingSaves />
       <View style={styles.between}>
         <View style={styles.flex}>
           <AppText variant="support" color={colors.slate}>

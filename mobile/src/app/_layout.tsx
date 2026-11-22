@@ -22,7 +22,8 @@ const queryClient = new QueryClient({
   defaultOptions: {
     // gcTime as long as screens are kept offline (D-021), or kept data is dropped early.
     queries: { retry: 1, staleTime: 30_000, gcTime: KEEP_MS },
-    mutations: { retry: 0 },
+    // Saves never wait for the internet: they save on the phone (D-021) or say they need it (D-018).
+    mutations: { retry: 0, networkMode: 'always' },
   },
 });
 

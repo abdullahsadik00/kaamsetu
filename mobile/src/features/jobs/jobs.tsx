@@ -26,6 +26,8 @@ import {
   type Enquiry,
   type Source,
 } from '@/features/enquiries/enquiries';
+import { isOffline, newId, saveOffline } from '@/features/sync/owner-offline';
+import { PendingSaves } from '@/features/sync/pending-saves';
 import { useTeams, type Team } from '@/features/teams/teams';
 import type { FeedItem } from '@/features/updates/api';
 import { JobFeed } from '@/features/updates/feed';
@@ -135,6 +137,7 @@ export function JobsScreen() {
         <AppText variant="title">{t('owner.jobs')}</AppText>
         <Button icon="plus" label={t('uiOwner.newShort')} onPress={() => router.push('/jobs/new')} />
       </View>
+      <PendingSaves only={['job.create', 'enquiry.create']} />
       <View style={styles.segments} accessibilityRole="tablist">
         {(['enquiries', 'jobs'] as const).map((s) => {
           const on = segment === s;
@@ -315,9 +318,16 @@ function JobForm({
     void qc.invalidateQueries({ queryKey: ENQUIRIES_KEY });
     router.replace({ pathname: '/jobs/[id]', params: { id: created.id } });
   };
+  /** Records this save refers to that may still be waiting on the phone (D-021). */
+  const refs = () => [{ type: 'Customer', id: customerId }, ...acs.map((a) => ({ type: 'Equipment', id: a }))];
   const save = useMutation({
-    mutationFn: (site: string) =>
-      enquiry
+    mutationFn: async (site: string): Promise<Job | null> => {
+      // No internet (D-021): a new job waits on the phone; its number comes when it is sent.
+      if (!enquiry && isOffline()) {
+        await saveOffline(qc, 'job.create', newId(), { ...details(site), ...job() }, refs());
+        return null;
+      }
+      return enquiry
         ? api.post<Job>(`/enquiries/${enquiry.id}/convert`, {
             equipmentIds: acs,
             type,
@@ -325,19 +335,27 @@ function JobForm({
             scheduledDate: day !== 'none' ? day : null,
             ...job(),
           })
-        : api.post<Job>('/jobs', { ...details(site), ...job() }),
-    onSuccess: openJob,
+        : api.post<Job>('/jobs', { ...details(site), ...job() });
+    },
+    onSuccess: (created) => (created ? openJob(created) : router.back()),
   });
   const saveEnquiry = useMutation({
-    mutationFn: (site: string) =>
-      api.post<Enquiry>('/enquiries', {
+    mutationFn: async (site: string): Promise<Enquiry | null> => {
+      const body = {
         ...details(site),
         source,
         ...(day !== 'none' ? { preferredDate: day, preferredSlot: slot } : {}),
-      }),
+      };
+      if (isOffline()) {
+        await saveOffline(qc, 'enquiry.create', newId(), body, refs());
+        return null;
+      }
+      return api.post<Enquiry>('/enquiries', body);
+    },
     onSuccess: (saved) => {
       void qc.invalidateQueries({ queryKey: ENQUIRIES_KEY });
-      router.replace({ pathname: '/enquiries/[id]', params: { id: saved.id } });
+      if (saved) router.replace({ pathname: '/enquiries/[id]', params: { id: saved.id } });
+      else router.back();
     },
   });
   const busy = save.isPending || saveEnquiry.isPending;
