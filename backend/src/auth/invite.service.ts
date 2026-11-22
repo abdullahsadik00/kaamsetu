@@ -1,6 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AppError } from '../common/app-error.js';
+import { audit } from '../common/audit.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg, scoped } from '../tenancy/tenant.js';
 import {
@@ -92,6 +93,7 @@ export class InviteService {
         where: { userId: member.userId, revokedAt: null },
         data: { revokedAt: new Date() },
       }),
+      audit(this.prisma, auth, 'LOGIN_RESET', 'OrganizationMember', member.id, { role: member.role }),
     ]);
     return { reset: true };
   }

@@ -2,6 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { z } from 'zod';
 import type { AuthContext } from '../auth/token.service.js';
 import { AppError } from '../common/app-error.js';
+import { audit } from '../common/audit.js';
 import type { Invoice, InvoiceKind, InvoiceStatus, JobType, Prisma } from '../generated/prisma/client.js';
 import { day, fromDate, toDate } from '../jobs/jobs.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -382,6 +383,7 @@ export class BillingService {
           version: { increment: 1 },
         },
       });
+      await audit(tx, auth, 'BILL_ISSUED', 'Invoice', id, { number: inv.number, total: inv.total });
       if (inv.jobId) {
         const confirmed = await tx.cashCollection.findMany({
           where: scoped(auth, { jobId: inv.jobId, status: 'CONFIRMED' as const, paymentId: null }),
@@ -410,11 +412,14 @@ export class BillingService {
   /** Cancels with a reason; the record stays (payments stay with the customer). */
   async cancel(auth: AuthContext, kind: InvoiceKind, id: string, reason: string) {
     const inv = await this.find(auth, kind, id);
-    const result = await this.prisma.invoice.updateMany({
-      where: scoped(auth, { id, kind, status: { in: ['DRAFT', 'ISSUED'] as InvoiceStatus[] } }),
-      data: { status: 'CANCELLED', cancelReason: reason, cancelledAt: new Date(), billForJobId: null, version: { increment: 1 } },
+    await this.prisma.$transaction(async (tx) => {
+      const result = await tx.invoice.updateMany({
+        where: scoped(auth, { id, kind, status: { in: ['DRAFT', 'ISSUED'] as InvoiceStatus[] } }),
+        data: { status: 'CANCELLED', cancelReason: reason, cancelledAt: new Date(), billForJobId: null, version: { increment: 1 } },
+      });
+      if (result.count === 0) throw this.invalid(inv.status);
+      if (kind === 'BILL') await audit(tx, auth, 'BILL_CANCELLED', 'Invoice', id, { number: inv.number, total: inv.total, reason });
     });
-    if (result.count === 0) throw this.invalid(inv.status);
     return this.get(auth, kind, id);
   }
 
@@ -483,6 +488,7 @@ export class BillingService {
           },
         });
         await tx.invoice.update({ where: { id: bill.id }, data: { paid: { increment: input.amount } } });
+        await audit(tx, auth, 'PAYMENT_RECORDED', 'Payment', p.id, { invoiceId: bill.id, amount: input.amount, mode: input.mode });
         return p.id;
       });
       const p = await this.prisma.payment.findUniqueOrThrow({ where: { id } });
@@ -509,6 +515,7 @@ export class BillingService {
         throw new AppError(HttpStatus.CONFLICT, 'INVALID_STATUS_TRANSITION', 'This payment was already removed.');
       }
       await tx.invoice.update({ where: { id: p.invoiceId }, data: { paid: { decrement: p.amount } } });
+      await audit(tx, auth, 'PAYMENT_VOIDED', 'Payment', id, { invoiceId: p.invoiceId, amount: p.amount, reason });
     });
     const p = await this.prisma.payment.findUniqueOrThrow({ where: { id } });
     return this.paymentView(p);
@@ -576,6 +583,7 @@ export class BillingService {
         confirmedByMemberId: auth.memberId as string,
         confirmedAt: new Date(),
       });
+      await audit(tx, auth, 'CASH_CONFIRMED', 'CashCollection', id, { amount: c.amount, jobId: c.jobId, addToBill });
       if (!addToBill) return;
       const bill = await tx.invoice.findFirst({
         where: scoped(auth, { billForJobId: c.jobId, status: 'ISSUED' as const }),
@@ -588,7 +596,10 @@ export class BillingService {
 
   /** Owner did not get it: REJECTED with the reason; it never becomes a payment. */
   async rejectCash(auth: AuthContext, id: string, reason: string) {
-    await this.prisma.$transaction((tx) => this.claimCash(tx, auth, id, { status: 'REJECTED', rejectReason: reason }));
+    await this.prisma.$transaction(async (tx) => {
+      const c = await this.claimCash(tx, auth, id, { status: 'REJECTED', rejectReason: reason });
+      await audit(tx, auth, 'CASH_REJECTED', 'CashCollection', id, { amount: c.amount, jobId: c.jobId, reason });
+    });
     return (await this.cashView(auth, id))!;
   }
 

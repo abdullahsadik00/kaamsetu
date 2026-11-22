@@ -1,6 +1,7 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import type { AuthContext } from '../auth/token.service.js';
 import { AppError } from '../common/app-error.js';
+import { audit } from '../common/audit.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg } from '../tenancy/tenant.js';
 import type {
@@ -133,6 +134,7 @@ export class OrganizationService {
         where: { userId: member.userId, revokedAt: null },
         data: { revokedAt: now },
       }),
+      audit(this.prisma, auth, 'EMPLOYEE_REMOVED', 'OrganizationMember', member.id, { role: member.role }),
     ]);
     return { removed: true };
   }
@@ -174,7 +176,8 @@ export class OrganizationService {
           include: { memberships: true },
         });
       }
-      return tx.organizationMember.upsert({
+      const before = user.memberships.find((m) => m.organizationId === organizationId);
+      const member = await tx.organizationMember.upsert({
         where: { organizationId_userId: { organizationId, userId: user.id } },
         create: { organizationId, userId: user.id, role: input.role },
         update: { role: input.role, status: 'ACTIVE', deactivatedAt: null },
@@ -186,6 +189,11 @@ export class OrganizationService {
           user: { select: { name: true, phone: true, googleSubject: true } },
         },
       });
+      await audit(tx, auth, 'EMPLOYEE_ADDED', 'OrganizationMember', member.id, {
+        role: input.role,
+        ...(before ? { previousRole: before.role } : {}),
+      });
+      return member;
     });
   }
 }

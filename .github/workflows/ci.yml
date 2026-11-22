@@ -50,6 +50,9 @@ jobs:
           cache-dependency-path: backend/package-lock.json
       - name: Install (also generates the Prisma client)
         run: npm ci
+      # docs/10 §5: fails on critical; accepted highs are listed in SECURITY_REVIEW.md.
+      - name: Dependency audit
+        run: npm audit --omit=dev --audit-level=critical
       - name: Apply database migrations
         run: npx prisma migrate deploy
       - name: Build (type-checks the code)
@@ -76,6 +79,8 @@ jobs:
           cache: npm
           cache-dependency-path: mobile/package-lock.json
       - run: npm ci
+      - name: Dependency audit
+        run: npm audit --omit=dev --audit-level=critical
       - name: Lint
         run: npm run lint
       - name: Type-check

@@ -55,6 +55,7 @@ model Organization {
   nextRequestNumber Int                  @default(201)
   invoices          Invoice[]
   rateItems         RateItem[]
+  auditLogs         AuditLog[]
   /// Next bill number (KS-0001, KS-0002, …) and quotation number (Q-001, …), T4.10.
   nextBillNumber    Int                  @default(1)
   nextQuoteNumber   Int                  @default(1)
@@ -762,4 +763,22 @@ model Payment {
   @@unique([organizationId, idempotencyKey])
   @@index([organizationId, customerId])
   @@index([invoiceId])
+}
+
+/// Who did what to money and people (docs/05, docs/10 §5). Rows are only added, never changed.
+/// metadata holds safe facts (amounts, roles, reasons), never tokens or OTPs.
+model AuditLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  organizationId String   @db.Uuid
+  actorUserId    String   @db.Uuid
+  action         String
+  entityType     String
+  entityId       String   @db.Uuid
+  metadata       Json?
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, entityType, entityId])
 }

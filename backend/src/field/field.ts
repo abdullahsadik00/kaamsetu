@@ -43,6 +43,8 @@ export const OperationsBatchSchema = z.strictObject({
 });
 type OperationsBatch = z.infer<typeof OperationsBatchSchema>;
 
+// Payloads drop unknown keys instead of refusing them: a phone on an older
+// app version must not get a finished job stuck (docs/SECURITY_REVIEW.md).
 const HoldPayload = z.object({
   side: z.enum(['CUSTOMER', 'OURS']).optional(),
   reason: z.string().max(200).optional(),

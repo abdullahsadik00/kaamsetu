@@ -2,6 +2,14 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-22 — Security review (T5.5)
+
+- Backend: security headers on every answer (no framing, no sniffing, strict CSP, HSTS over HTTPS); CORS stays closed.
+- Backend: **AuditLog** of who did what to money and people: bills issued and cancelled, payments recorded and voided, cash confirmed and rejected, employees added (with role), login reset, employee removed. Saved in the same transaction as the change. Migration `20261122140000_audit_log`.
+- CI: dependency audit for backend and mobile (fails on critical).
+- `docs/SECURITY_REVIEW.md`: the doc 10 §5 checklist with evidence and accepted risks.
+- Tests: e2e 163 passed (new `audit.e2e-spec.ts`), unit 80 passed.
+
 ## 2026-11-22 — Every route checked for login and roles (T5.2)
 
 - Backend test `route-inventory.e2e-spec.ts`: a reviewed snapshot of all routes and who may call them; every non-public route refuses a missing token (401) and every role not allowed (403). Review of by-id queries: all are scoped to the caller's business first. No problems found.
