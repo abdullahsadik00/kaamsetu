@@ -53,6 +53,15 @@ describe('One-day helper swap (T4.6, D-038)', () => {
     await waitFor(() => expect(get).toHaveBeenCalledWith(`/teams/team-2?day=${dayString(1)}`));
   });
 
+  it('hides itself instead of crashing when the server sends no swap lists', async () => {
+    const old = { id: 'team-2', name: 'Team 2', members: [{ memberId: 'm-ravi' }] } as unknown as TeamDay;
+    const get = serve(old);
+    await renderScreen(<DaySwapCard teamId="team-2" teamName="Team 2" />);
+    await waitFor(() => expect(get).toHaveBeenCalled());
+    await waitFor(() => expect(screen.queryByText('Swaps for the day')).toBeNull());
+    expect(screen.queryByText('Lend a helper for a day')).toBeNull();
+  });
+
   it('lends a helper who is not in the team for the chosen day', async () => {
     serve(day());
     const post = jest.spyOn(api, 'post').mockResolvedValue(day({ borrowed: [santosh] }) as never);

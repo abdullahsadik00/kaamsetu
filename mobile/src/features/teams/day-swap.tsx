@@ -92,14 +92,18 @@ export function DaySwapCard({ teamId, teamName }: { teamId: string; teamName: st
   });
 
   const d = info.data;
-  const none = d && d.borrowed.length === 0 && d.lentOut.length === 0;
+  // A server without day swaps answers without these lists: hide the card rather than fail.
+  if (d && (!Array.isArray(d.borrowed) || !Array.isArray(d.lentOut))) return null;
+  const borrowed = d?.borrowed ?? [];
+  const lentOut = d?.lentOut ?? [];
+  const none = d && borrowed.length === 0 && lentOut.length === 0;
   return (
     <Card style={{ gap: space.sm }}>
       <SectionLabel>{t('uiSwap.dayCrew')}</SectionLabel>
       <ChoiceChips label={t('uiSwap.day')} options={days} value={day} onChange={setDay} />
       {info.isError ? <AppText color={colors.bad}>{errorMessage(t, info.error)}</AppText> : null}
       {none ? <AppText color={colors.slate}>{t('uiSwap.allHome')}</AppText> : null}
-      {d?.borrowed.map((l) => (
+      {borrowed.map((l) => (
         <ListRow
           key={l.lendingId}
           avatar={l.name}
@@ -108,7 +112,7 @@ export function DaySwapCard({ teamId, teamName }: { teamId: string; teamName: st
           onPress={() => setUndoing(l)}
         />
       ))}
-      {d?.lentOut.map((l) => (
+      {lentOut.map((l) => (
         <ListRow key={l.lendingId} avatar={l.name} title={l.name} subtitle={t('uiSwap.lentTo', { team: l.toTeamName })} onPress={() => setUndoing(l)} />
       ))}
       <Button variant="secondary" icon="account-switch-outline" label={t('uiSwap.lend')} onPress={() => setSheet(true)} />
@@ -119,7 +123,7 @@ export function DaySwapCard({ teamId, teamName }: { teamId: string; teamName: st
         onClose={() => setSheet(false)}
         teamId={teamId}
         teamName={teamName}
-        members={new Set(d?.members.map((m) => m.memberId) ?? [])}
+        members={new Set((d?.members ?? []).map((m) => m.memberId))}
         day={day}
         onDone={(newDay) => {
           setSheet(false);
