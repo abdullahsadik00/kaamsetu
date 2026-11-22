@@ -19,6 +19,8 @@ describe('Field: my jobs and sync operations (e2e, T4.7)', () => {
   const as = (t: string) => ({ Authorization: `Bearer ${t}` });
   let jobId: string;
   let otherTeamJob: string;
+  let myTeam: string;
+  let c: { id: string; sites: { id: string }[] };
   const op = (operation: string, entityId: string, payload: object = {}, id = randomUUID()) => ({
     id,
     operation,
@@ -39,8 +41,8 @@ describe('Field: my jobs and sync operations (e2e, T4.7)', () => {
     a = await factory.create('Field A', PREFIX_A);
     b = await factory.create('Field B', PREFIX_B);
     const owner = as(a.tokens.OWNER);
-    const c = (await http().post('/api/v1/customers').set(owner).send({ name: 'Meera', phone: '9822011111', site: { addressLine1: 'Flat 1', locality: 'Kothrud' } }).expect(201)).body.data;
-    const myTeam = (await http().post('/api/v1/teams').set(owner).send({ name: 'Team 1', seniorMemberId: a.memberIds.SENIOR_TECHNICIAN, helperMemberIds: [a.memberIds.HELPER] }).expect(201)).body.data.id;
+    c = (await http().post('/api/v1/customers').set(owner).send({ name: 'Meera', phone: '9822011111', site: { addressLine1: 'Flat 1', locality: 'Kothrud' } }).expect(201)).body.data;
+    myTeam = (await http().post('/api/v1/teams').set(owner).send({ name: 'Team 1', seniorMemberId: a.memberIds.SENIOR_TECHNICIAN, helperMemberIds: [a.memberIds.HELPER] }).expect(201)).body.data.id;
     const otherTeam = (await http().post('/api/v1/teams').set(owner).send({ name: 'Team 2' }).expect(201)).body.data.id;
     jobId = (await http().post('/api/v1/jobs').set(owner).send({ customerId: c.id, siteId: c.sites[0].id, teamId: myTeam, complaint: 'Not cooling', amountToCollect: 80000 }).expect(201)).body.data.id;
     otherTeamJob = (await http().post('/api/v1/jobs').set(owner).send({ customerId: c.id, siteId: c.sites[0].id, teamId: otherTeam }).expect(201)).body.data.id;
@@ -139,5 +141,21 @@ describe('Field: my jobs and sync operations (e2e, T4.7)', () => {
     const first = op('job.start', otherTeamJob);
     const res = await send(a.tokens.SENIOR_TECHNICIAN, first, { ...op('job.complete', otherTeamJob), dependsOn: first.id });
     expect(res.body.data.results[1]).toMatchObject({ status: 'rejected', code: 'DEPENDENCY_FAILED' });
+  });
+
+  // Last: it removes this business's senior.
+  it('a team whose lead is removed shows its other senior to the helper (BUG-19)', async () => {
+    const owner = as(a.tokens.OWNER);
+    const second = (await http().post('/api/v1/employees').set(owner).send({ name: 'Second Senior', phone: `${PREFIX_A}11`, role: 'SENIOR_TECHNICIAN' }).expect(201)).body.data.id;
+    await http().post(`/api/v1/teams/${myTeam}/members`).set(owner).send({ memberId: second }).expect(201);
+    const job = (await http().post('/api/v1/jobs').set(owner).send({ customerId: c.id, siteId: c.sites[0].id, teamId: myTeam }).expect(201)).body.data.id;
+    const lead = async () =>
+      (await http().get('/api/v1/my/jobs').set(as(a.tokens.HELPER)).expect(200)).body.data.find((j: { id: string }) => j.id === job).senior?.name;
+    expect(await lead()).not.toBe('Second Senior');
+
+    await http().post(`/api/v1/employees/${a.memberIds.SENIOR_TECHNICIAN}/deactivate`).set(owner).expect(200);
+    expect(await lead()).toBe('Second Senior');
+    const team = (await http().get(`/api/v1/teams/${myTeam}`).set(owner).expect(200)).body.data;
+    expect(team.members.find((m: { memberId?: string; id?: string; isPrimary: boolean; name?: string }) => m.isPrimary)).toMatchObject({ name: 'Second Senior' });
   });
 });

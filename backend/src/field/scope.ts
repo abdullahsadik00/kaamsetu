@@ -111,14 +111,17 @@ export async function presentJobs(prisma: PrismaService, auth: AuthContext, jobs
     where: scoped(auth, { id: { in: jobs.flatMap((j) => j.equipment.map((e) => e.equipmentId)) } }),
     select: { id: true, type: true, brand: true, capacityTons: true, locationLabel: true },
   });
+  // The team's lead: its primary senior, else its longest-serving senior (BUG-19).
   const seniors = await prisma.teamMember.findMany({
-    where: { teamId: { in: teamIds }, leftAt: null, isPrimary: true },
+    where: { teamId: { in: teamIds }, leftAt: null, position: 'SENIOR_TECHNICIAN' },
+    orderBy: [{ isPrimary: 'desc' }, { joinedAt: 'asc' }],
     select: { teamId: true, member: { select: { user: { select: { name: true, phone: true } } } } },
   });
   const c = new Map(customers.map((x) => [x.id, x]));
   const s = new Map(sites.map((x) => [x.id, x]));
   const a = new Map(acs.map((x) => [x.id, { ...x, capacityTons: x.capacityTons === null ? null : Number(x.capacityTons) }]));
-  const lead = new Map(seniors.map((x) => [x.teamId, x.member.user]));
+  const lead = new Map<string, { name: string; phone: string | null }>();
+  for (const x of seniors) if (!lead.has(x.teamId)) lead.set(x.teamId, x.member.user);
   return jobs.map((j) => {
     const site = s.get(j.siteId);
     const base = {
