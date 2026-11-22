@@ -5,6 +5,7 @@ import { AppError } from '../common/app-error.js';
 import type { JobStatus, Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg, scoped } from '../tenancy/tenant.js';
+import { dayCrew } from '../teams/day-helpers.js';
 import { UpdatesService } from '../updates/updates.js';
 import { isOpen, nextStatus, type JobAction } from './jobs.state.js';
 
@@ -160,6 +161,11 @@ export class JobsService {
       })),
       // What the team sent about this job, newest first, with refused field work (T4.7).
       updates: await this.updates.forJob(auth, job.id),
+      // Who works on it that day, with one-day helper swaps (T4.6, D-038).
+      crew:
+        job.assignedTeamId && job.scheduledDate
+          ? await dayCrew(this.prisma, auth, job.assignedTeamId, fromDate(job.scheduledDate) as string)
+          : null,
     };
   }
 

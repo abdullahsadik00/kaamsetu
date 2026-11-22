@@ -1,0 +1,92 @@
+/**
+ * Strings for the one-day helper swap (T4.6, D-038). Each language must have
+ * exactly the keys of `en` (checked below). Wired into en/hi/mr.ts as
+ * `uiSwap`; use them as t('uiSwap.someKey').
+ */
+const en = {
+  lend: 'Lend a helper for a day',
+  lendExplain: 'The helper works with the other team only on that day. Their own team stays the same.',
+  helper: 'Helper',
+  worksWith: 'Works with',
+  day: 'Day',
+  otherDay: 'Another day',
+  save: 'Lend for the day',
+  noHelpers: 'No helpers to lend. Add a helper first.',
+  dayCrew: 'Swaps for the day',
+  allHome: 'Everyone works with their own team.',
+  lentFrom: 'lent from {{team}}',
+  lentFromNone: 'lent for the day',
+  lentTo: 'with {{team}} for the day',
+  undo: 'Undo',
+  undoTitle: 'Undo this swap?',
+  undoBody: '{{name}} works with their own team again that day.',
+  crew: 'Working that day',
+  err_ALREADY_LENT: 'This helper already works with another team that day. Undo that first.',
+  err_ALREADY_IN_TEAM: 'This helper is already in that team.',
+  err_DAY_IN_PAST: 'Choose today or a later day.',
+  err_DAY_TOO_FAR: 'Choose a day within the next 30 days.',
+  err_NOT_A_HELPER: 'Only helpers can be lent for a day.',
+  err_TEAM_NOT_ACTIVE: 'This team is not in use.',
+  err_EMPLOYEE_NOT_ACTIVE: 'This person has been removed from the business.',
+  err_LENDING_NOT_FOUND: 'This swap was already undone.',
+};
+
+type Keys = { [K in keyof typeof en]: string };
+
+const hi: Keys = {
+  lend: 'एक दिन के लिए हेल्पर दें',
+  lendExplain: 'हेल्पर सिर्फ़ उसी दिन दूसरी टीम के साथ काम करेगा। उसकी अपनी टीम वही रहेगी।',
+  helper: 'हेल्पर',
+  worksWith: 'किसके साथ काम करेगा',
+  day: 'दिन',
+  otherDay: 'दूसरा दिन',
+  save: 'इस दिन के लिए दें',
+  noHelpers: 'देने के लिए कोई हेल्पर नहीं। पहले हेल्पर जोड़ें।',
+  dayCrew: 'इस दिन की अदला-बदली',
+  allHome: 'सब अपनी टीम के साथ काम कर रहे हैं।',
+  lentFrom: '{{team}} से आया',
+  lentFromNone: 'इस दिन के लिए आया',
+  lentTo: 'इस दिन {{team}} के साथ',
+  undo: 'वापस लें',
+  undoTitle: 'यह अदला-बदली वापस लें?',
+  undoBody: '{{name}} उस दिन फिर से अपनी टीम के साथ काम करेगा।',
+  crew: 'उस दिन काम करने वाले',
+  err_ALREADY_LENT: 'यह हेल्पर उस दिन पहले से दूसरी टीम के साथ है। पहले उसे वापस लें।',
+  err_ALREADY_IN_TEAM: 'यह हेल्पर पहले से उस टीम में है।',
+  err_DAY_IN_PAST: 'आज या आगे का दिन चुनें।',
+  err_DAY_TOO_FAR: 'अगले 30 दिनों में से दिन चुनें।',
+  err_NOT_A_HELPER: 'सिर्फ़ हेल्पर को एक दिन के लिए दिया जा सकता है।',
+  err_TEAM_NOT_ACTIVE: 'यह टीम अभी काम में नहीं है।',
+  err_EMPLOYEE_NOT_ACTIVE: 'यह व्यक्ति बिज़नेस से हटाया जा चुका है।',
+  err_LENDING_NOT_FOUND: 'यह अदला-बदली पहले ही वापस ली जा चुकी है।',
+};
+
+const mr: Keys = {
+  lend: 'एका दिवसासाठी हेल्पर द्या',
+  lendExplain: 'हेल्पर फक्त त्या दिवशी दुसऱ्या टीमसोबत काम करेल. त्याची स्वतःची टीम तीच राहील.',
+  helper: 'हेल्पर',
+  worksWith: 'कोणासोबत काम करेल',
+  day: 'दिवस',
+  otherDay: 'दुसरा दिवस',
+  save: 'या दिवसासाठी द्या',
+  noHelpers: 'देण्यासाठी हेल्पर नाही. आधी हेल्पर जोडा.',
+  dayCrew: 'या दिवसाची अदलाबदल',
+  allHome: 'सगळे आपापल्या टीमसोबत काम करत आहेत.',
+  lentFrom: '{{team}} मधून आलेला',
+  lentFromNone: 'या दिवसासाठी आलेला',
+  lentTo: 'या दिवशी {{team}} सोबत',
+  undo: 'परत घ्या',
+  undoTitle: 'ही अदलाबदल परत घ्यायची?',
+  undoBody: '{{name}} त्या दिवशी पुन्हा आपल्या टीमसोबत काम करेल.',
+  crew: 'त्या दिवशी काम करणारे',
+  err_ALREADY_LENT: 'हा हेल्पर त्या दिवशी आधीच दुसऱ्या टीमसोबत आहे. आधी ते परत घ्या.',
+  err_ALREADY_IN_TEAM: 'हा हेल्पर आधीच त्या टीममध्ये आहे.',
+  err_DAY_IN_PAST: 'आज किंवा पुढचा दिवस निवडा.',
+  err_DAY_TOO_FAR: 'पुढच्या 30 दिवसांतील दिवस निवडा.',
+  err_NOT_A_HELPER: 'फक्त हेल्परला एका दिवसासाठी देता येते.',
+  err_TEAM_NOT_ACTIVE: 'ही टीम सध्या वापरात नाही.',
+  err_EMPLOYEE_NOT_ACTIVE: 'ही व्यक्ती बिझनेसमधून काढली आहे.',
+  err_LENDING_NOT_FOUND: 'ही अदलाबदल आधीच परत घेतली आहे.',
+};
+
+export const swapUi = { en, hi, mr };

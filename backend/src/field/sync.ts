@@ -6,7 +6,7 @@ import type { AuthContext } from '../auth/token.service.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg, scoped } from '../tenancy/tenant.js';
-import { dayIn, everTeamIds, FIELD_OPEN, myTeamIds, onFieldPhone, presentJobs } from './scope.js';
+import { dayIn, everTeamIds, FIELD_OPEN, fieldScope, onFieldPhone, presentJobs, scopeTeamIds } from './scope.js';
 
 /** Changed jobs per pull; the phone asks again while `more` is true. */
 export const CHANGES_PAGE = 200;
@@ -45,7 +45,8 @@ export class SyncService {
   async bootstrap(auth: AuthContext) {
     const organizationId = requireOrg(auth);
     const cursor = await this.counter(organizationId);
-    const [teamIds, tz] = await Promise.all([myTeamIds(this.prisma, auth), this.timeZone(organizationId)]);
+    const [scope, tz] = await Promise.all([fieldScope(this.prisma, auth), this.timeZone(organizationId)]);
+    const teamIds = scopeTeamIds(scope);
     const today = dayIn(tz, new Date());
     const rows = await this.prisma.serviceJob.findMany({
       where: scoped(auth, {
@@ -59,14 +60,15 @@ export class SyncService {
       take: 200,
       include: { equipment: { select: { equipmentId: true } } },
     });
-    const jobs = rows.filter((j) => onFieldPhone(j, teamIds, today, tz));
+    const jobs = rows.filter((j) => onFieldPhone(j, scope, today, tz));
     return { cursor: cursor.toString(), jobs: await presentJobs(this.prisma, auth, jobs, teamIds) };
   }
 
   /**
    * Jobs changed since `cursor`: the ones I still hold come back in full;
    * the ones I held but no longer may (cancelled, given to another team, I
-   * left the team, finished on an earlier day) come back as ids in `removed`.
+   * left the team, lent to another team that day or the lending undone,
+   * finished on an earlier day) come back as ids in `removed`.
    * `reset` means the cursor is not from this business: bootstrap again.
    */
   async changes(auth: AuthContext, since: string) {
@@ -75,7 +77,8 @@ export class SyncService {
     const top = await this.counter(organizationId);
     if (from > top) return { cursor: top.toString(), jobs: [], removed: [], more: false, reset: true };
 
-    const [teamIds, tz] = await Promise.all([myTeamIds(this.prisma, auth), this.timeZone(organizationId)]);
+    const [scope, tz] = await Promise.all([fieldScope(this.prisma, auth), this.timeZone(organizationId)]);
+    const teamIds = scopeTeamIds(scope);
     const today = dayIn(tz, new Date());
     const rows = await this.prisma.serviceJob.findMany({
       where: scoped(auth, { syncSeq: { gt: from } }),
@@ -83,8 +86,8 @@ export class SyncService {
       take: CHANGES_PAGE,
       include: { equipment: { select: { equipmentId: true } } },
     });
-    const kept = rows.filter((j) => onFieldPhone(j, teamIds, today, tz));
-    const gone = rows.filter((j) => !onFieldPhone(j, teamIds, today, tz)).map((j) => j.id);
+    const kept = rows.filter((j) => onFieldPhone(j, scope, today, tz));
+    const gone = rows.filter((j) => !onFieldPhone(j, scope, today, tz)).map((j) => j.id);
     // Only jobs that were ever with one of my teams: never hand out ids of other teams' work.
     const ever = await everTeamIds(this.prisma, auth);
     const mine = gone.length

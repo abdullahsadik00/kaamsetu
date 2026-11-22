@@ -1,6 +1,6 @@
 import type { PrismaService } from '../prisma/prisma.service.js';
 import { FieldService, OPERATION_RETENTION_DAYS } from './field.js';
-import { dayIn, onFieldPhone } from './scope.js';
+import { dayIn, onFieldPhone, withMyTeam } from './scope.js';
 
 describe('sync operation retention (docs/09 §6)', () => {
   it('removes processed operations older than 30 days and keeps the rest', async () => {
@@ -33,6 +33,18 @@ describe('what a field phone keeps (docs/09 §2)', () => {
     expect(onFieldPhone(job('ASSIGNED', null), ['t1'], today, tz)).toBe(false);
     expect(onFieldPhone(job('CANCELLED'), ['t1'], today, tz)).toBe(false);
     expect(onFieldPhone(job('NEW'), ['t1'], today, tz)).toBe(false);
+  });
+
+  it('a helper lent for a day keeps the other team’s jobs of that day instead of their own (D-038)', () => {
+    const scope = { home: ['t1'], lent: new Map([['2026-11-21', 't2']]) };
+    const on = (team: string, day: string | null) =>
+      onFieldPhone({ ...job('ASSIGNED', team), scheduledDate: day ? new Date(`${day}T00:00:00.000Z`) : null }, scope, today, tz);
+    expect(on('t2', '2026-11-21')).toBe(true);
+    expect(on('t1', '2026-11-21')).toBe(false);
+    expect(on('t1', '2026-11-22')).toBe(true);
+    expect(on('t2', '2026-11-22')).toBe(false);
+    expect(on('t1', null)).toBe(true);
+    expect(withMyTeam({ assignedTeamId: 't3', scheduledDate: new Date('2026-11-21T00:00:00.000Z') }, scope)).toBe(false);
   });
 
   it('keeps finished jobs only on the day they were finished (business time zone)', () => {

@@ -20,6 +20,8 @@ import { ConfirmSheet, SwitchCard } from '@/features/customers/people-ui';
 import { useEmployees, type Employee } from '@/features/employees/api';
 import { colors, space } from '@/theme/tokens';
 
+import { DaySwapCard } from './day-swap';
+
 // ---------- API (docs/06 §4, D-029) ----------
 
 export type TeamMember = {
@@ -243,6 +245,7 @@ export function TeamScreen() {
         value={tm.active}
         onChange={(active) => edit.mutate({ active })}
       />
+      {tm.active ? <DaySwapCard teamId={id} teamName={tm.name} /> : null}
       <Button
         variant="secondary"
         icon="account-multiple-plus-outline"

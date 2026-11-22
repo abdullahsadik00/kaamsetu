@@ -182,6 +182,7 @@ model OrganizationMember {
   user         User           @relation(fields: [userId], references: [id])
   invites      MemberInvite[]
   teamSlots    TeamMember[]
+  dayTeams     TeamDayHelper[]
 
   @@unique([organizationId, userId])
   @@index([organizationId, status])
@@ -292,6 +293,7 @@ model Team {
 
   organization Organization @relation(fields: [organizationId], references: [id])
   members      TeamMember[]
+  dayHelpers   TeamDayHelper[]
 
   @@index([organizationId, active])
 }
@@ -312,6 +314,30 @@ model TeamMember {
 
   @@index([teamId, leftAt])
   @@index([organizationMemberId, leftAt])
+}
+
+/// One-day helper swap (T4.6, D-038): a helper works with another team on one
+/// day without changing the permanent team. That day the helper is not with
+/// their own team. Undoing sets removedAt (kept so phones can be told to drop
+/// the borrowed team's jobs). At most one live row per helper and day.
+model TeamDayHelper {
+  id                   String    @id @default(uuid()) @db.Uuid
+  organizationId       String    @db.Uuid
+  teamId               String    @db.Uuid
+  organizationMemberId String    @db.Uuid
+  /// Calendar day in the business time zone.
+  day                  DateTime  @db.Date
+  createdByMemberId    String    @db.Uuid
+  createdAt            DateTime  @default(now())
+  removedAt            DateTime?
+  removedByMemberId    String?   @db.Uuid
+
+  team   Team               @relation(fields: [teamId], references: [id])
+  member OrganizationMember @relation(fields: [organizationMemberId], references: [id])
+
+  @@index([organizationId, day])
+  @@index([organizationMemberId, day])
+  @@index([teamId, day])
 }
 
 // ---------- Jobs (docs/05 §5, T4.6, D-030) ----------

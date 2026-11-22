@@ -10,7 +10,7 @@ import { SLOTS } from '../jobs/jobs.service.js';
 import { isOpen, nextStatus, type JobAction } from '../jobs/jobs.state.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg, scoped } from '../tenancy/tenant.js';
-import { everTeamIds, myTeamIds, presentJobs } from './scope.js';
+import { everTeamIds, fieldScope, myTeamIds, presentJobs, scopeTeamIds, withMyTeam } from './scope.js';
 import { SyncController, SyncService } from './sync.js';
 
 // ---------- Contracts (docs/09 §5–6) ----------
@@ -112,9 +112,13 @@ export class FieldService {
   constructor(private readonly prisma: PrismaService) {}
 
 
-  /** Open jobs of my teams (plus today's finished ones), slimmer for helpers (Q-01). */
+  /**
+   * Open jobs of the team I am with on each job's day (a helper lent for a
+   * day sees that team's jobs that day, D-038), slimmer for helpers (Q-01).
+   */
   async myJobs(auth: AuthContext, date?: string) {
-    const teamIds = await myTeamIds(this.prisma, auth);
+    const scope = await fieldScope(this.prisma, auth);
+    const teamIds = scopeTeamIds(scope);
     const day = date ? new Date(`${date}T00:00:00.000Z`) : undefined;
     const jobs = await this.prisma.serviceJob.findMany({
       where: scoped(auth, {
@@ -124,10 +128,11 @@ export class FieldService {
           : { status: { in: ['ASSIGNED', 'IN_PROGRESS', 'ON_HOLD'] as JobStatus[] } }),
       }),
       orderBy: [{ scheduledDate: 'asc' }, { timeSlot: 'asc' }, { jobNumber: 'asc' }],
-      take: 50,
+      take: 100,
       include: { equipment: { select: { equipmentId: true } } },
     });
-    return presentJobs(this.prisma, auth, jobs, teamIds);
+    const mine = jobs.filter((j) => withMyTeam(j, scope)).slice(0, 50);
+    return presentJobs(this.prisma, auth, mine, teamIds);
   }
 
 

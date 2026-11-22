@@ -1,5 +1,6 @@
 import type { Translations } from './en';
 import { billingUi } from './ui/billing';
+import { swapUi } from './ui/swap';
 import { enquiryUi } from './ui/enquiries';
 import { fieldUi } from './ui/field';
 import { homeUi } from './ui/home';
@@ -20,6 +21,7 @@ export const hi: Translations = {
   uiHome: homeUi.hi,
   uiBilling: billingUi.hi,
   uiUpdates: updatesUi.hi,
+  uiSwap: swapUi.hi,
   common: {
     appName: 'कामसेतु',
     tagline: 'काम आसान। हिसाब आसान। कारोबार आसान।',
