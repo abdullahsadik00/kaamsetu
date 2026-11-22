@@ -60,6 +60,17 @@ describe('API conventions (e2e)', () => {
     expect(res.headers['x-request-id']).toBeTruthy();
   });
 
+  it('sends security headers and no X-Powered-By (docs/10 §5)', async () => {
+    for (const path of ['/health', '/privacy', '/api/v1/auth/me']) {
+      const res = await request(app.getHttpServer()).get(path);
+      expect(res.headers['x-content-type-options']).toBe('nosniff');
+      expect(res.headers['x-frame-options']).toBe('DENY');
+      expect(res.headers['content-security-policy']).toContain("default-src 'none'");
+      expect(res.headers['x-powered-by']).toBeUndefined();
+      expect(res.headers['access-control-allow-origin']).toBeUndefined();
+    }
+  });
+
   it('wraps responses under /api/v1 in { data, meta }', async () => {
     const res = await request(app.getHttpServer())
       .get('/api/v1/test-echo')

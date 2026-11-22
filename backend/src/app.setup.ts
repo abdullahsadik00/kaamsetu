@@ -3,6 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { HttpExceptionFilter } from './common/http-exception.filter.js';
 import { requestContext } from './common/request-context.middleware.js';
 import { ResponseEnvelopeInterceptor } from './common/response-envelope.interceptor.js';
+import { securityHeaders } from './common/security-headers.js';
 
 export const API_PREFIX = 'api/v1';
 
@@ -12,6 +13,7 @@ export const API_PREFIX = 'api/v1';
  */
 export function configureApp(app: INestApplication): INestApplication {
   app.use(requestContext);
+  app.use(securityHeaders);
   // /health stays outside the version prefix for load balancers and uptime
   // checks; so do the public homepage, privacy policy and terms.
   app.setGlobalPrefix(API_PREFIX, {
