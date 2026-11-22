@@ -534,6 +534,8 @@ AMC visit should use the normal ServiceJob and field completion workflow.
 - metadata (redacted/safe)
 - createdAt
 
+Built 22 Nov 2026 (T5.5). `action` values: EMPLOYEE_ADDED, EMPLOYEE_REMOVED, LOGIN_RESET, BILL_ISSUED, BILL_CANCELLED, PAYMENT_RECORDED, PAYMENT_VOIDED, CASH_CONFIRMED, CASH_REJECTED. Rows are only added. No screen shows them yet.
+
 ## 11. Database rules
 
 - Every business-owned record must be tenant-scoped.
