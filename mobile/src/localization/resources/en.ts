@@ -4,6 +4,7 @@ import { fieldUi } from './ui/field';
 import { homeUi } from './ui/home';
 import { ownerUi } from './ui/owner';
 import { peopleUi } from './ui/people';
+import { updatesUi } from './ui/updates';
 /**
  * English strings. This object defines the key structure; `hi` and `mr`
  * must provide every key (checked by the `Translations` type).
@@ -16,6 +17,7 @@ export const en = {
   uiEnquiry: enquiryUi.en,
   uiHome: homeUi.en,
   uiBilling: billingUi.en,
+  uiUpdates: updatesUi.en,
   common: {
     appName: 'KaamSetu',
     tagline: 'Work made easier. Accounts made easier. Business made easier.',

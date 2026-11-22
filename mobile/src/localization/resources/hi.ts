@@ -5,6 +5,7 @@ import { fieldUi } from './ui/field';
 import { homeUi } from './ui/home';
 import { ownerUi } from './ui/owner';
 import { peopleUi } from './ui/people';
+import { updatesUi } from './ui/updates';
 
 /**
  * Hindi. Technician/helper labels are the prototype's own; login, owner and
@@ -18,6 +19,7 @@ export const hi: Translations = {
   uiEnquiry: enquiryUi.hi,
   uiHome: homeUi.hi,
   uiBilling: billingUi.hi,
+  uiUpdates: updatesUi.hi,
   common: {
     appName: 'कामसेतु',
     tagline: 'काम आसान। हिसाब आसान। कारोबार आसान।',
