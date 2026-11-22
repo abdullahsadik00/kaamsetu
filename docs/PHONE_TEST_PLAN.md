@@ -46,7 +46,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-05 | 1 Owner | Log out and pick another Google account | T3.11 | Passed | 22 Nov 2026 | First try picked a non-owner account and showed Join your business, as expected |
 | TP-09 | 1 Owner | Make teams | T4.2 | Failed | 22 Nov 2026 | App closed after Save team and on opening the team: swap card read lists an older server doesn't send. Fixed in 45f4b7c; run again on build 94fc92db |
 | TP-10 | 1 Owner | Add a customer, duplicate warning, search | T4.3 | Passed | 22 Nov 2026 | |
-| TP-11 | 1 Owner | Second address, edit, archive | T4.3 | Pending | | |
+| TP-11 | 1 Owner | Second address, edit, archive | T4.3 | Failed | 22 Nov 2026 | Steps 1–2 fine; after archiving, the customer could not be found again. Added Show archived customers; recheck step 4 on the final build |
 | TP-12 | 1 Owner | Add and remove ACs | T4.4 | Pending | | |
 | TP-13 | 1 Owner | Owner creates a job | T4.6 | Pending | | |
 | TP-14 | 1 Owner | Give to a team, change team, change day | T4.6 | Pending | | |
@@ -124,12 +124,14 @@ Pick the owner account again.
 ### TP-11 Second address, edit, archive
 1. On Rohan's page: **Add another address**, type **Office**, any address, then **Save address**.
 2. **Edit customer**: change the name to **Rohan K**, then **Save changes**. Change it back afterwards.
-3. Open **Shreeji Clinic** › **Archive customer**, then **Bring back customer**.
+3. Open **Shreeji Clinic** › **Archive customer**. Go back to **Customers**.
+4. At the bottom of the list tap **Show archived customers**, open **Shreeji Clinic** › **Bring back customer**, then **Back to all customers**.
 
 **Expected**
 - Rohan shows two addresses; the first is still **main**.
 - The name change shows on the page and in the customer list.
-- While archived, Shreeji Clinic is marked **Archived**. After you bring it back, it's normal again.
+- After step 3, Shreeji Clinic is no longer in the normal list.
+- In step 4, **Archived customers** lists Shreeji Clinic marked **Archived**. After you bring it back, it is in the normal list again.
 
 ### TP-12 Add and remove ACs
 1. On Rohan's main address: **Add AC here**. Choose **Split**, **Voltas**, **1.5** ton, room **Bedroom**, then **Save AC**.
