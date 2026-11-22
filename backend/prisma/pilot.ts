@@ -12,12 +12,14 @@
  *   npm run pilot -- purge-closed [--yes]   (closed > 30 days ago; run monthly)
  *   npm run pilot -- sign-out --phone 98xxxxxxxx [--yes]   (lost or stolen phone, docs/RUNBOOK.md)
  *   npm run pilot -- export --business-phone 98xxxxxxxx [--out file.json]   (data request)
+ *   npm run pilot -- import-customers --business-phone 98xxxxxxxx --file customers.csv [--yes]
+ *       (the owner's existing customers, docs/PILOT_GUIDE.md §2)
  *
  * Needs DATABASE_URL and, for invites, the server's OTP_HASH_SECRET.
  * Staff are invited by the owner in the app (More › Employees).
  */
 import 'dotenv/config';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { PrismaPg } from '@prisma/adapter-pg';
 import {
@@ -25,6 +27,7 @@ import {
   type MemberRole,
 } from '../src/generated/prisma/client.js';
 import { normalizeIndianMobile } from '../src/auth/phone.js';
+import { importCustomers, readCustomerRows } from '../src/customers/import.js';
 import { exportBusiness, exportCounts } from '../src/organization/export.js';
 import { issueInvite } from './invite-tools.js';
 
@@ -39,6 +42,7 @@ const { positionals, values } = parseArgs({
     'business-phone': { type: 'string' },
     role: { type: 'string' },
     out: { type: 'string' },
+    file: { type: 'string' },
     yes: { type: 'boolean', default: false },
   },
 });
@@ -165,6 +169,32 @@ async function ownerInvite() {
   printInvite(owner.user.phone ?? '', await issueInvite(prisma, org.id, owner.id));
 }
 
+/**
+ * Loads the owner's customer list (spreadsheet saved as CSV). Without --yes
+ * it only checks the file and lists the rows to fix; with --yes it saves the
+ * good rows, skipping phones already saved, so re-running is safe.
+ */
+async function importCustomersFromFile() {
+  const org = await businessByPhone();
+  const file = need('file');
+  const { rows, errors } = readCustomerRows(readFileSync(file, 'utf8'));
+  console.log(`${file}: ${rows.length} row(s) ready, ${errors.length} to fix`);
+  for (const e of errors) console.log(`  line ${e.line}: ${e.message}`);
+  if (errors.length) throw new UsageError('Fix the lines above in the spreadsheet, save as CSV again and re-run.');
+  if (!rows.length) throw new UsageError('No customers in the file.');
+  const acs = rows.reduce((n, r) => n + r.acs.count, 0);
+  confirmWrite(`add up to ${rows.length} customer(s) and ${acs} AC(s) to "${org.name}"`);
+  const owner = await prisma.organizationMember.findFirst({
+    where: { organizationId: org.id, role: 'OWNER', status: 'ACTIVE' },
+  });
+  if (!owner) throw new UsageError(`"${org.name}" has no active owner`);
+  const result = await importCustomers(prisma, org.id, owner.userId, rows);
+  console.log(`✓ Added ${result.added} customer(s) and ${result.acs} AC(s) to "${org.name}".`);
+  for (const s of result.skipped) {
+    console.log(`  skipped line ${s.line}: ${s.phone} is already saved as ${s.savedAs}`);
+  }
+}
+
 async function list() {
   const org = await businessByPhone();
   console.log(`Target database: ${target()}\n${org.name} (${org.phone}, ${org.city ?? '-'})`);
@@ -284,6 +314,7 @@ const COMMANDS: Record<string, () => Promise<void>> = {
   'purge-closed': purgeClosed,
   'sign-out': signOut,
   export: exportData,
+  'import-customers': importCustomersFromFile,
 };
 
 async function main() {
