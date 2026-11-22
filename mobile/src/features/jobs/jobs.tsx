@@ -8,7 +8,7 @@ import { ApiError, errorMessage } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
 import { Badge, STATUS_TONE } from '@/components/ui/badge';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
-import { Button } from '@/components/ui/button';
+import { Button, ButtonRow } from '@/components/ui/button';
 import { Card, Field, SectionLabel } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Icon } from '@/components/ui/icon';
@@ -668,26 +668,19 @@ export function JobScreen() {
           <AppText variant="support" color={colors.slate}>
             {[j.customer ? displayPhone(j.customer.phone) : null, address].filter(Boolean).join(' · ')}
           </AppText>
-          <View style={styles.actions}>
-            {j.customer ? (
-              <>
-                <View style={styles.flex}>
-                  <Button variant="secondary" icon="phone-outline" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${j.customer?.phone}`)} />
-                </View>
-                <View style={styles.flex}>
-                  <Button variant="secondary" icon="whatsapp" label={t('uiOwner.whatsapp')} onPress={() => Linking.openURL(`https://wa.me/${phoneDigits}`)} />
-                </View>
-              </>
-            ) : null}
-            <View style={styles.flex}>
-              <Button
-                variant="secondary"
-                icon="account-outline"
-                label={t('uiOwner.customer')}
-                onPress={() => router.push({ pathname: '/customers/[id]', params: { id: j.customerId } })}
-              />
-            </View>
-          </View>
+          {/* Two per row (BUG-10): three across left each label ~33 dp at 360 dp and they wrapped. */}
+          {j.customer ? (
+            <ButtonRow>
+              <Button variant="secondary" icon="phone-outline" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${j.customer?.phone}`)} />
+              <Button variant="secondary" icon="whatsapp" label={t('uiOwner.whatsapp')} onPress={() => Linking.openURL(`https://wa.me/${phoneDigits}`)} />
+            </ButtonRow>
+          ) : null}
+          <Button
+            variant="secondary"
+            icon="account-outline"
+            label={t('uiOwner.customer')}
+            onPress={() => router.push({ pathname: '/customers/[id]', params: { id: j.customerId } })}
+          />
         </Card>
 
         <Card>
@@ -891,7 +884,6 @@ const styles = StyleSheet.create({
   iconLine: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   tag: { minHeight: 36, justifyContent: 'center', paddingHorizontal: space.md, borderRadius: radius.full, backgroundColor: colors.soft },
-  actions: { flexDirection: 'row', gap: space.sm, marginTop: space.xs },
   sheetList: { borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, overflow: 'hidden' },
   teamOption: {
     flexDirection: 'row',

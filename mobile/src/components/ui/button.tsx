@@ -116,7 +116,8 @@ const styles = StyleSheet.create({
   base: {
     height: touch.min,
     borderRadius: radius.md,
-    paddingHorizontal: space.lg,
+    // 12 dp, not 16: a half-width button keeps room for "WhatsApp" / "कॉल करें" on one line.
+    paddingHorizontal: space.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
