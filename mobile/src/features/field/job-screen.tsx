@@ -17,7 +17,7 @@ import { colors, radius, space } from '@/theme/tokens';
 
 import { rupees, shortDate, todayIso, useDismissAttention, useLocalState, useMyJobs, useSaveOp, type FieldJob, type SavedUpdate } from './data';
 import { FinishForm, type FinishPayload } from './finish-form';
-import { jobSummary, slotLabel, StatusBadge } from './parts';
+import { jobSummary, mapsUrl, slotLabel, StatusBadge } from './parts';
 import { HoldSheet, UpdateStatusSheet, type HoldSide } from './status-sheets';
 import { AppointmentSheet, NoteSheet, PartSheet, type UpdateKind } from './update-sheets';
 
@@ -160,7 +160,7 @@ function JobBody({ job }: { job: FieldJob }) {
                 variant="secondary"
                 icon="navigation-variant-outline"
                 label={t('field.dir')}
-                onPress={() => Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.address ?? '')}`)}
+                onPress={() => Linking.openURL(mapsUrl(job.address ?? ''))}
               />
           ) : null}
         </ButtonRow>

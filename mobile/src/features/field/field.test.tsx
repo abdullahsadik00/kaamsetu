@@ -1,5 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { Linking, StyleSheet } from 'react-native';
 
 import { migrate } from '@/db/migrations';
 import { openNodeDatabase, type NodeSqlDatabase } from '@/db/node-sqlite.testing';
@@ -271,6 +272,27 @@ describe("Helper's Today's work (Q-01)", () => {
     expect(screen.getByTestId('call-senior')).toBeTruthy();
     expect(screen.getByTestId('call-customer-job-1')).toBeTruthy();
     expect(screen.queryByText('Start work')).toBeNull();
+  });
+
+  it('with an address the card has Call and Directions side by side, and Directions opens Maps (BUG-17, BUG-18)', async () => {
+    const { complaint: _c, amountToCollect: _m, equipment: _e, ...helperCard } = job;
+    await synced([helperCard], 'HELPER');
+    const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+    await renderScreen(<TodayScreen />);
+    expect(await screen.findByText('Flat 1, Kothrud')).toBeTruthy();
+    const call = screen.getByTestId('call-customer-job-1');
+    const directions = screen.getByTestId('directions-job-1');
+    for (const b of [call, directions]) expect(StyleSheet.flatten(b.parent?.props.style)).toMatchObject({ flex: 1 });
+    await fireEvent.press(directions);
+    expect(open).toHaveBeenCalledWith('https://www.google.com/maps/search/?api=1&query=Flat%201%2C%20Kothrud');
+  });
+
+  it('without an address there is no Directions', async () => {
+    const { address: _a, complaint: _c, amountToCollect: _m, equipment: _e, landmark: _l, ...slim } = job;
+    await synced([slim], 'HELPER');
+    await renderScreen(<TodayScreen />);
+    expect(await screen.findByTestId('call-customer-job-1')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Directions' })).toBeNull();
   });
 
   it('a Service job and a Repair job show different job type icons (BUG-16)', async () => {

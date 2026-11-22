@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/ui/app-text';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, ButtonRow } from '@/components/ui/button';
 import { Card, SectionLabel } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Icon, type IconName } from '@/components/ui/icon';
@@ -17,7 +17,7 @@ import { jobTypeIcon } from '@/features/jobs/job-type';
 import { colors, space, tones, type Tone } from '@/theme/tokens';
 
 import { doneToday, shortDate, todayIso, useLocalStates, useMyJobs, useRefresh, worstSync, type FieldJob, type LocalState } from './data';
-import { jobSummary, slotLabel, StatusBadge } from './parts';
+import { jobSummary, mapsUrl, slotLabel, StatusBadge } from './parts';
 
 export { toPaise, type FieldJob } from './data';
 export { JobScreen } from './job-screen';
@@ -209,15 +209,25 @@ export function TodayScreen() {
                 ) : null}
               </View>
               <AppText variant="title">{j.locality ?? `#${j.jobNumber}`}</AppText>
-              {j.customer ? (
-                <View style={styles.between}>
-                  <AppText weight="semibold" style={styles.flex}>
-                    {j.customer.name}
-                  </AppText>
-                  <Button variant="secondary" icon="phone-outline" label={t('field.call')} onPress={() => call(j.customer?.phone ?? '')} testID={`call-customer-${j.id}`} />
-                </View>
-              ) : null}
+              {j.customer ? <AppText weight="semibold">{j.customer.name}</AppText> : null}
               {j.address ? <AppText color={colors.slate}>{[j.address, j.landmark].filter(Boolean).join(' · ')}</AppText> : null}
+              {/* Call | Directions 50/50, as on the senior job page (BUG-18). */}
+              {j.customer || j.address ? (
+                <ButtonRow>
+                  {j.customer ? (
+                    <Button variant="secondary" icon="phone-outline" label={t('field.call')} onPress={() => call(j.customer?.phone ?? '')} testID={`call-customer-${j.id}`} />
+                  ) : null}
+                  {j.address ? (
+                    <Button
+                      variant="secondary"
+                      icon="navigation-variant-outline"
+                      label={t('field.dir')}
+                      onPress={() => Linking.openURL(mapsUrl(j.address ?? ''))}
+                      testID={`directions-${j.id}`}
+                    />
+                  ) : null}
+                </ButtonRow>
+              ) : null}
               <View style={styles.hr} />
               <View style={styles.iconLine}>
                 <Icon name={jobTypeIcon(j.type)} size={20} color={colors.teal} />
