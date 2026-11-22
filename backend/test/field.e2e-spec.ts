@@ -60,7 +60,7 @@ describe('Field: my jobs and sync operations (e2e, T4.7)', () => {
   it('the helper gets a slimmer view (Q-01, D-022) and cannot change jobs', async () => {
     const res = await http().get('/api/v1/my/jobs').set(as(a.tokens.HELPER)).expect(200);
     // The address too, so the helper can find the house (BUG-17); no money, problem or ACs.
-    expect(res.body.data[0]).toMatchObject({ locality: 'Kothrud', address: 'Flat 1, Kothrud', landmark: null, customer: { name: 'Meera' } });
+    expect(res.body.data[0]).toMatchObject({ locality: 'Kothrud', address: 'Flat 1, Kothrud', landmark: null, customer: { name: 'Meera' }, senior: { name: expect.any(String) } });
     expect(res.body.data[0]).not.toHaveProperty('amountToCollect');
     expect(res.body.data[0]).not.toHaveProperty('complaint');
     expect(res.body.data[0]).not.toHaveProperty('equipment');
