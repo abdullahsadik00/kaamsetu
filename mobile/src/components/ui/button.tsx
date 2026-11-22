@@ -1,3 +1,4 @@
+import { Children, type ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { colors, radius, space, touch } from '@/theme/tokens';
@@ -96,7 +97,22 @@ export function Button({
   );
 }
 
+/** Buttons side by side, each an equal share of the width (two = 50/50), with the usual gap (BUG-09). */
+export function ButtonRow({ children }: { children: ReactNode }) {
+  return (
+    <View style={styles.buttonRow}>
+      {Children.toArray(children).map((child, i) => (
+        <View key={i} style={styles.cell}>
+          {child}
+        </View>
+      ))}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  buttonRow: { flexDirection: 'row', gap: space.sm },
+  cell: { flex: 1 },
   base: {
     height: touch.min,
     borderRadius: radius.md,

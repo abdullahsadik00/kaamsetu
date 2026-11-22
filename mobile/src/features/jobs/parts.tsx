@@ -170,7 +170,7 @@ export function ConfirmDialog({
           {children}
           <View style={styles.dialogActions}>
             <Pressable accessibilityRole="button" onPress={onKeep} style={styles.dialogBtn}>
-              <AppText weight="semibold" color={colors.slate}>
+              <AppText weight="semibold" color={colors.slate} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
                 {keepLabel}
               </AppText>
             </Pressable>
@@ -181,7 +181,7 @@ export function ConfirmDialog({
               onPress={onConfirm}
               style={({ pressed }) => [styles.dialogBtn, styles.dangerBtn, pressed && { opacity: 0.85 }, off && styles.dangerOff]}
             >
-              <AppText weight="semibold" color={colors.white}>
+              <AppText weight="semibold" color={colors.white} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
                 {confirmLabel}
               </AppText>
             </Pressable>
@@ -236,8 +236,9 @@ const styles = StyleSheet.create({
   },
   dim: { flex: 1, backgroundColor: 'rgba(20,33,61,0.45)', justifyContent: 'center', padding: space.lg },
   dialog: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: space.xl, gap: space.md },
-  dialogActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: space.sm, marginTop: space.sm },
-  dialogBtn: { minHeight: 48, paddingHorizontal: space.lg, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+  // Keep and confirm split the row 50/50 (BUG-09), not just as wide as their words.
+  dialogActions: { flexDirection: 'row', gap: space.sm, marginTop: space.sm },
+  dialogBtn: { flex: 1, height: touch.min, paddingHorizontal: space.md, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
   dangerBtn: { backgroundColor: colors.bad },
   dangerOff: { opacity: 0.5 },
 });

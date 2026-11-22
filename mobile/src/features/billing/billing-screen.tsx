@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
-import { Button } from '@/components/ui/button';
+import { Button, ButtonRow } from '@/components/ui/button';
 import { Card, SectionLabel } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Screen } from '@/components/ui/screen';
@@ -179,9 +179,8 @@ function CashWithTeams({ rows }: { rows: CashRow[] }) {
           <AppText variant="small" color={colors.slate}>
             {t('uiBilling.cashJob', { customer: c.customerName, n: c.jobNumber ?? '—' })}
           </AppText>
-          <View style={styles.actions}>
-            <View style={styles.flex}>
-              <Button
+          <ButtonRow>
+            <Button
                 variant="secondary"
                 icon="check"
                 label={t('uiBilling.gotIt')}
@@ -189,9 +188,7 @@ function CashWithTeams({ rows }: { rows: CashRow[] }) {
                 loading={confirm.isPending && confirm.variables === c.id}
                 disabled={confirm.isPending}
               />
-            </View>
-            <View style={styles.flex}>
-              <Button
+            <Button
                 variant="secondary"
                 icon="close"
                 label={t('uiBilling.notReceived')}
@@ -200,8 +197,7 @@ function CashWithTeams({ rows }: { rows: CashRow[] }) {
                   setRejecting(c);
                 }}
               />
-            </View>
-          </View>
+          </ButtonRow>
         </View>
       ))}
       {confirm.error ? <AppText color={colors.bad}>{billingError(t, confirm.error)}</AppText> : null}
@@ -229,7 +225,6 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.md },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingTop: space.sm, borderTopWidth: 1, borderTopColor: colors.warmLine },
   cashRow: { gap: 2, paddingTop: space.sm, borderTopWidth: 1, borderTopColor: colors.rowLine },
-  actions: { flexDirection: 'row', gap: space.sm, marginTop: space.xs },
   segments: { flexDirection: 'row', padding: space.xs, borderRadius: radius.md, backgroundColor: colors.soft },
   segment: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: radius.sm },
   segmentOn: { backgroundColor: colors.surface },

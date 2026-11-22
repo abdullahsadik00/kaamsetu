@@ -4,7 +4,7 @@ import { StyleSheet } from 'react-native';
 import { setupI18n } from '@/testing/render';
 import { colors, touch } from '@/theme/tokens';
 
-import { Button } from './button';
+import { Button, ButtonRow } from './button';
 
 beforeAll(setupI18n);
 
@@ -30,5 +30,21 @@ describe('Button (BUG-06, BUG-07)', () => {
     expect(button.props.accessibilityState).toMatchObject({ disabled: true, busy: true });
     await fireEvent.press(button);
     expect(onPress).not.toHaveBeenCalled();
+  });
+});
+
+describe('ButtonRow (BUG-09)', () => {
+  it('gives each button an equal share of the row', async () => {
+    await render(
+      <ButtonRow>
+        <Button variant="secondary" label="Cancel" onPress={jest.fn()} />
+        <Button variant="destructive" label="Remove" onPress={jest.fn()} />
+        {null}
+      </ButtonRow>,
+    );
+    for (const name of ['Cancel', 'Remove']) {
+      const cell = screen.getByRole('button', { name }).parent;
+      expect(StyleSheet.flatten(cell?.props.style)).toMatchObject({ flex: 1 });
+    }
   });
 });

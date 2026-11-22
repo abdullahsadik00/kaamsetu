@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Linking, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
-import { Button } from '@/components/ui/button';
+import { Button, ButtonRow } from '@/components/ui/button';
 import { Card, SectionLabel } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Icon } from '@/components/ui/icon';
@@ -150,23 +150,19 @@ function JobBody({ job }: { job: FieldJob }) {
       ) : null}
 
       {job.customer || job.address ? (
-        <View style={styles.row}>
+        <ButtonRow>
           {job.customer ? (
-            <View style={styles.flex}>
-              <Button variant="secondary" icon="phone-outline" label={t('field.call')} onPress={() => Linking.openURL(`tel:${job.customer?.phone}`)} />
-            </View>
+            <Button variant="secondary" icon="phone-outline" label={t('field.call')} onPress={() => Linking.openURL(`tel:${job.customer?.phone}`)} />
           ) : null}
           {job.address ? (
-            <View style={styles.flex}>
-              <Button
+            <Button
                 variant="secondary"
                 icon="navigation-variant-outline"
                 label={t('field.dir')}
                 onPress={() => Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.address ?? '')}`)}
               />
-            </View>
           ) : null}
-        </View>
+        </ButtonRow>
       ) : null}
 
       {job.address ? (
@@ -376,7 +372,6 @@ function Confirmation({ job, payload }: { job: FieldJob; payload: FinishPayload 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   center: { textAlign: 'center' },
-  row: { flexDirection: 'row', gap: space.sm },
   head: { gap: space.xs },
   backBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
   back: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 48, flexShrink: 1 },

@@ -7,7 +7,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { errorMessage } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, ButtonRow } from '@/components/ui/button';
 import { Card, SectionLabel } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
@@ -199,24 +199,20 @@ function OutstandingCard({ customerId }: { customerId: string }) {
           ) : null}
         </>
       ) : null}
-      <View style={styles.badges}>
-        <View style={{ flex: 1 }}>
-          <Button
+      <ButtonRow>
+        <Button
             variant="secondary"
             icon="receipt-text-outline"
             label={t('uiBilling.newBill')}
             onPress={() => router.push({ pathname: '/bills/new', params: { customerId } })}
           />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Button
+        <Button
             variant="secondary"
             icon="file-document-outline"
             label={t('uiBilling.newQuote')}
             onPress={() => router.push({ pathname: '/quotations/new', params: { customerId } })}
           />
-        </View>
-      </View>
+      </ButtonRow>
     </Card>
   );
 }

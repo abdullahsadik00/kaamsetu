@@ -7,7 +7,7 @@ import { ActivityIndicator, Linking, StyleSheet, View } from 'react-native';
 import { errorMessage } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, ButtonRow } from '@/components/ui/button';
 import { Card, Field } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Screen } from '@/components/ui/screen';
@@ -204,14 +204,10 @@ export function EnquiryScreen() {
             {[e.customer ? displayPhone(e.customer.phone) : null, address].filter(Boolean).join(' · ')}
           </AppText>
           {e.customer ? (
-            <View style={styles.actions}>
-              <View style={styles.flex}>
-                <Button variant="secondary" icon="phone-outline" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${e.customer?.phone}`)} />
-              </View>
-              <View style={styles.flex}>
-                <Button variant="secondary" icon="whatsapp" label={t('uiOwner.whatsapp')} onPress={() => Linking.openURL(`https://wa.me/${phoneDigits}`)} />
-              </View>
-            </View>
+            <ButtonRow>
+              <Button variant="secondary" icon="phone-outline" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${e.customer?.phone}`)} />
+              <Button variant="secondary" icon="whatsapp" label={t('uiOwner.whatsapp')} onPress={() => Linking.openURL(`https://wa.me/${phoneDigits}`)} />
+            </ButtonRow>
           ) : null}
         </Card>
 
@@ -267,7 +263,6 @@ export function EnquiryScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   between: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.sm },
-  actions: { flexDirection: 'row', gap: space.sm, marginTop: space.xs },
   footer: { gap: space.xs },
   center: { textAlign: 'center' },
 });

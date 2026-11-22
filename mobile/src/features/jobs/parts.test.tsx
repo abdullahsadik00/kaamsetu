@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 
 import { setupI18n } from '@/testing/render';
 
-import { FilterChips, HeaderMore } from './parts';
+import { ConfirmDialog, FilterChips, HeaderMore } from './parts';
 
 beforeAll(setupI18n);
 
@@ -38,5 +38,24 @@ describe('HeaderMore (BUG-08)', () => {
     expect(screen.queryByText('More')).toBeNull();
     await fireEvent.press(screen.getByRole('button', { name: 'More' }));
     expect(onPress).toHaveBeenCalled();
+  });
+});
+
+describe('ConfirmDialog (BUG-09)', () => {
+  it('splits Keep and Cancel 50/50 across the row', async () => {
+    await render(
+      <ConfirmDialog
+        visible
+        title="Cancel job #12?"
+        body="The team is told."
+        keepLabel="Keep job"
+        confirmLabel="Cancel job"
+        onKeep={jest.fn()}
+        onConfirm={jest.fn()}
+      />,
+    );
+    for (const name of ['Keep job', 'Cancel job']) {
+      expect(StyleSheet.flatten(screen.getByRole('button', { name }).props.style)).toMatchObject({ flex: 1 });
+    }
   });
 });
