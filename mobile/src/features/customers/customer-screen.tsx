@@ -23,9 +23,10 @@ import {
   useCustomer,
   type Equipment,
 } from './api';
+import { CustomerHistoryCard } from './history';
 import { ConfirmSheet, ContactButtons } from './people-ui';
 
-/** Customer page (screen 44): call/WhatsApp, addresses with their ACs, add AC or address, edit, archive. */
+/** Customer page (screen 44): call/WhatsApp, addresses with their ACs (tap one for its history), past jobs, add AC or address, edit, archive. */
 export function CustomerScreen() {
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -105,12 +106,18 @@ export function CustomerScreen() {
                 <View style={styles.acIcon}>
                   <Icon name={e.type === 'CASSETTE' ? 'snowflake' : 'fan'} color={colors.teal} />
                 </View>
-                <View style={{ flex: 1 }}>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t('uiPeople.openAcHistory')} ${e.locationLabel || t('customers.ac')}`}
+                  onPress={() => router.push({ pathname: '/customers/[id]/equipment/[acId]', params: { id, acId: e.id } })}
+                  style={{ flex: 1 }}
+                  testID={`ac-${e.id}`}
+                >
                   <AppText weight="semibold">{e.locationLabel || t('customers.ac')}</AppText>
                   <AppText variant="small" color={colors.slate}>
                     {acSummary(e, t(`customers.acTypes.${e.type}`))}
                   </AppText>
-                </View>
+                </Pressable>
                 <Pressable
                   accessibilityRole="button"
                   accessibilityLabel={`${t('customers.removeAc')} ${e.locationLabel || t('customers.ac')}`}
@@ -135,6 +142,8 @@ export function CustomerScreen() {
           </Pressable>
         </Card>
       ))}
+
+      <CustomerHistoryCard customerId={id} />
 
       <Button
         variant="dashed"

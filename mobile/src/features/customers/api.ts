@@ -127,3 +127,32 @@ export function acSummary(e: Equipment, typeLabel: string): string {
     .filter(Boolean)
     .join(' · ');
 }
+
+/** A job in a customer's or an AC's history (T4.4); `work`/`workNote` only on an AC's history. */
+export type HistoryJob = {
+  id: string;
+  jobNumber: number;
+  type: string;
+  status: string;
+  scheduledDate: string | null;
+  completedAt: string | null;
+  complaint: string | null;
+  team: string | null;
+  outcome: 'COMPLETED' | 'NEEDS_FOLLOW_UP' | 'NOT_COMPLETED' | null;
+  reportNote: string | null;
+  parts: { name: string; qty: number }[];
+  work?: string[];
+  workNote?: string | null;
+};
+
+export const useCustomerHistory = (id: string) =>
+  queryOptions({
+    queryKey: [...CUSTOMERS_KEY, id, 'history'],
+    queryFn: () => api.get<HistoryJob[]>(`/customers/${id}/history`),
+  });
+
+export const useAcHistory = (id: string) =>
+  queryOptions({
+    queryKey: [...CUSTOMERS_KEY, 'equipment', id, 'history'],
+    queryFn: () => api.get<{ equipment: Equipment & { customerId: string }; jobs: HistoryJob[] }>(`/equipment/${id}/history`),
+  });
