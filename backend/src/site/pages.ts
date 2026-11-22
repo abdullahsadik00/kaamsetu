@@ -7,7 +7,7 @@
  * commit as any change to what data is collected or where it goes.
  */
 
-export const POLICY_DATE = '20 November 2026';
+export const POLICY_DATE = '22 November 2026';
 
 export type SiteSettings = {
   /** Where people write for privacy requests and support (SUPPORT_EMAIL). */
@@ -113,9 +113,11 @@ why, where it is kept, and the choices you have. KaamSetu is run by Vyapaar Labs
 <ul>
   <li><strong>Your account.</strong> For the data about you as a KaamSetu user (owner,
   senior technician or helper), we decide how it is used and are responsible for it.</li>
-  <li><strong>A business's work data.</strong> Customers, addresses, ACs, jobs, photos, bills
+  <li><strong>A business's work data.</strong> Customers, addresses, ACs, enquiries, jobs, bills
   and payments that a business enters belong to that business. The business decides what
-  it records about its customers; we store and process it only to run the app for them.</li>
+  it records about its customers; we store and process it only to run the app for them,
+  on the business's instructions. A customer of the business who wants their details shown,
+  corrected or removed should ask the business; we help the business do it.</li>
 </ul>
 
 <h2>What we collect</h2>
@@ -130,13 +132,24 @@ why, where it is kept, and the choices you have. KaamSetu is run by Vyapaar Labs
   add, and whether each has joined.</li>
   <li><strong>Devices and sessions:</strong> your phone's model name and platform, and login
   sessions, so we can keep you signed in and sign out a lost phone.</li>
-  <li><strong>Work data</strong> entered by a business, as those features arrive (customers, jobs,
-  photos, bills, payments).</li>
+  <li><strong>Work data</strong> entered by a business: its customers' names, mobile numbers and
+  addresses, their ACs (brand, size, where installed), enquiries, jobs and the day and team
+  they are given to, updates from the team (on hold, appointment fixed, part needed, notes),
+  work reports (what was done, parts used, money taken on site), cash handed over, its rate
+  list, quotations, bills and payments.</li>
+  <li><strong>Activity record:</strong> who in the business issued or cancelled a bill, recorded or
+  removed a payment, confirmed cash, added or removed staff, reset a login, or downloaded or
+  loaded the business's data, and when. It helps the owner see who changed money records.</li>
   <li><strong>Technical logs:</strong> request time, route, result and a request ID. Logs do not
   contain one-time codes, sign-in tokens, addresses or full phone numbers.</li>
 </ul>
 <p>We do <strong>not</strong> collect Aadhaar or other identity documents, contacts, location
-history, or advertising identifiers, and the app has no ads.</p>
+history, or advertising identifiers, and the app has no ads. Photos are not collected yet;
+this policy will say so before they are.</p>
+<p><strong>On the phone:</strong> to work without internet, the app keeps the person's jobs and
+the work they save in the app's private storage on that phone until it is sent. Logging out
+removes it (the app warns first if anything has not been sent yet); uninstalling the app also
+removes it.</p>
 
 <h2>Why we use it</h2>
 <ul>
@@ -144,6 +157,8 @@ history, or advertising identifiers, and the app has no ads.</p>
   <li>To show each person only the work and business they belong to.</li>
   <li>To keep work saved on the phone when there is no internet and send it later.</li>
   <li>To support you, fix problems and keep backups.</li>
+  <li>When an owner asks us to load their existing customer list during setup, we use the file
+  only to load it and delete our copy afterwards.</li>
 </ul>
 <p>We do not sell personal data, use it for advertising, or share it with other businesses
 on KaamSetu. Each business's data is kept separate from every other business.</p>
@@ -165,11 +180,17 @@ on KaamSetu. Each business's data is kept separate from every other business.</p
 </ul>
 <p>All traffic between the app and the server is encrypted (HTTPS). On the phone, sign-in
 tokens are kept in the Android Keystore.</p>
+<p>Bills and quotations are sent to customers by the business, using WhatsApp or another app
+the owner chooses on their phone; that app's own privacy terms apply to the message.</p>
+<p><strong>If something goes wrong:</strong> if personal data is exposed, we tell the affected
+businesses and people and the Data Protection Board of India as the law requires, and say what
+happened and what we are doing about it.</p>
 
 <h2>How long we keep it</h2>
 <p>We keep your data while you or your business use KaamSetu. If you leave a business, the
 owner can remove you; your sign-in stops at once, and the business keeps its own work
-records.</p>
+records. The activity record is kept as long as the business's data. Technical logs are kept
+for a short time by our server provider.</p>
 <p><strong>Deleting your account:</strong> in the app, open Profile (owners: More) and tap
 "Delete my account", or follow the steps on <a href="/delete-account">this page</a>.
 Your name, mobile number, email and Google link are erased at once and you are signed out
@@ -181,6 +202,8 @@ permanently removed after 30 days. Encrypted backups expire within a further 14 
 problem with how it is handled, by writing to ${contact(s)}. Staff can also ask their
 business owner, who can correct or remove their record in the app. We answer within
 30 days. If you are not satisfied, you may complain to the Data Protection Board of India.</p>
+<p><strong>A copy of the business's data:</strong> the owner can download everything the
+business has entered at any time, in the app under More › Download business data.</p>
 
 <h2>Children</h2>
 <p>KaamSetu is meant for people working in a business and is not for anyone under 18.</p>
@@ -240,6 +263,8 @@ By using KaamSetu you agree to them.</p>
 <p>KaamSetu is in early access. A new business gets a 30-day free trial. We will tell you
 before any paid plan starts; nothing is charged without your agreement. Features may
 change while we learn from early users.</p>
+<p>A business taking part in the pilot may also have a written pilot agreement with us. Where
+it says something different from these terms, the pilot agreement applies to that business.</p>
 
 <h2>Accounts</h2>
 <ul>
@@ -252,8 +277,10 @@ change while we learn from early users.</p>
 <h2>The business's data</h2>
 <p>A business owns the work data it enters (customers, jobs, bills). The business is
 responsible for having a valid reason to record its customers' details and for the
-accuracy of its bills, tax and GST information. KaamSetu helps keep records; it does not
-give legal, tax or accounting advice.</p>
+accuracy of its bills, tax and GST information: check each bill before sending it.
+KaamSetu helps keep records; it does not give legal, tax or accounting advice.</p>
+<p>The owner can download all of the business's data at any time (More › Download business
+data), including before stopping.</p>
 
 <h2>Fair use</h2>
 <p>Do not use KaamSetu for anything unlawful, to send spam, to access another business's
@@ -264,6 +291,8 @@ data, or to disrupt the service.</p>
 backups, but during early access the service is provided "as is" without guarantees of
 uninterrupted availability. Work saved on a phone without internet is sent when the
 phone is back online.</p>
+<p>As far as the law allows, we are not responsible for business lost because the service was
+unavailable or made a mistake; we will fix the problem and help recover the data.</p>
 
 <h2>Ending use</h2>
 <p>You can stop using KaamSetu at any time and ask us to delete your data

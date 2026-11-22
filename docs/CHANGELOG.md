@@ -2,6 +2,12 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-22 — Privacy policy and terms brought up to date (T7.2)
+
+- `/privacy`: lists the work data the app now keeps (customers, ACs, enquiries, jobs, team updates, work reports, cash, rate list, quotations, bills, payments) instead of "as features arrive"; the activity record (audit log); what stays on the phone and that logging out removes it; that photos are not collected yet; the customer-list import; bills sent through WhatsApp; telling people and the Data Protection Board if data is exposed; the owner's data download; customers of a business ask the business.
+- `/terms`: a pilot agreement applies where it differs; check each bill before sending; data download before stopping; limit of responsibility during early access.
+- Still a draft for legal review before charging anyone.
+
 ## 2026-11-22 — Pilot prep (T6.2)
 
 - Pilot script: `npm run pilot -- import-customers --business-phone <mobile> --file customers.csv [--yes]` loads the owner's existing customer list from a spreadsheet saved as CSV: name, mobile, address, area, and optionally GSTIN and how many ACs (brand, tons). Same checks as the app's customer form; lists every line to fix; saves nothing until the file is clean and `--yes` is given; skips numbers already saved, so re-running is safe. Audit row `CUSTOMERS_IMPORTED`. Template `docs/pilot/customers-template.csv`.
