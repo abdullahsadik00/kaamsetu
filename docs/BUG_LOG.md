@@ -20,14 +20,16 @@ Every bug found in phone testing (`PHONE_TEST_PLAN.md`), one row each, for count
 | BUG-08 | 22 Nov 2026 | TP-15 | Owner | Owner job page, More | Minor | **More (⋮)** shows both an icon and the word More for one action | Code | Not yet known | — | fix/phone-test-bugs | Open |
 | BUG-09 | 22 Nov 2026 | TP-15 | Owner | Confirm dialogs and sheets (Cancel job first seen) | Minor | **Keep job** and **Cancel job** are only as wide as their text, leaving white space; two buttons should split the row 50/50 | Code | Not yet known | — | fix/phone-test-bugs | Open |
 | BUG-10 | 22 Nov 2026 | TP-15 | Owner | Cancelled job page, contact buttons | Minor | After cancelling, **WhatsApp** and **Customer** wrap onto two lines | Code | Not yet known | — | fix/phone-test-bugs | Open |
+| BUG-11 | 22 Nov 2026 | TP-30 | Owner | Enquiries › Closed list, status chip | Minor | The **Job made** chip wraps onto two lines | Code | Not yet known | — | fix/phone-test-bugs | Open |
+| BUG-12 | 22 Nov 2026 | TP-30 | Owner | Converted enquiry page, Job chip | Minor | The **Job** chip is left-aligned and stretched with empty space after the text | Code | Not yet known | — | fix/phone-test-bugs | Open |
 
 ## Summary
 
 | | Count |
 |---|---|
-| Bugs found | 10 |
+| Bugs found | 12 |
 | Crash | 1 |
 | Blocker | 0 |
 | Major | 1 |
-| Minor | 8 |
+| Minor | 10 |
 | Verified on a build | 0 |
