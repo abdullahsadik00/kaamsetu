@@ -70,7 +70,7 @@ export function ConfirmSheet({
       footer={
         <View style={styles.row}>
           <View style={styles.flex}>
-            <Button variant="soft" label={t('common.cancel')} onPress={onClose} />
+            <Button variant="secondary" label={t('common.cancel')} onPress={onClose} />
           </View>
           <View style={styles.flex}>
             <Button variant="destructive" label={confirmLabel} onPress={onConfirm} loading={loading} />
@@ -83,18 +83,18 @@ export function ConfirmSheet({
   );
 }
 
-/** Call + WhatsApp tonal buttons for an E.164 phone; `extra` sits at the end of the row. */
+/** Call + WhatsApp secondary buttons for an E.164 phone; `extra` sits at the end of the row. */
 export function ContactButtons({ phone, extra }: { phone: string; extra?: ReactNode }) {
   const { t } = useTranslation();
   const digits = phone.replace(/\D/g, '');
   return (
     <View style={styles.row}>
       <View style={styles.flex}>
-        <Button variant="tonal" icon="phone-outline" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${phone}`)} />
+        <Button variant="secondary" icon="phone-outline" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${phone}`)} />
       </View>
       <View style={styles.flex}>
         <Button
-          variant="tonal"
+          variant="secondary"
           icon="whatsapp"
           label={t('uiPeople.whatsapp')}
           onPress={() => Linking.openURL(`https://wa.me/${digits}`)}

@@ -143,14 +143,14 @@ export function InvoiceScreen({ kind }: { kind: Kind }) {
       <View style={styles.footerRow}>
         <View style={styles.flex}>
           <Button
-            variant="soft"
+            variant="secondary"
             icon="pencil-outline"
             label={t('uiBilling.editQuote')}
             onPress={() => router.push({ pathname: '/quotations/new', params: { id: b.id } })}
           />
         </View>
         <View style={styles.flex}>
-          <Button variant="tonal" icon="whatsapp" label={t('uiBilling.sendQuote')} onPress={() => share(b)} loading={sharing} />
+          <Button variant="secondary" icon="whatsapp" label={t('uiBilling.sendQuote')} onPress={() => share(b)} loading={sharing} />
         </View>
       </View>
     </>
@@ -193,12 +193,12 @@ export function InvoiceScreen({ kind }: { kind: Kind }) {
           {isBill && b.status === 'ISSUED' ? (
             <View style={styles.actions}>
               <View style={styles.flex}>
-                <Button variant="tonal" icon="whatsapp" label={t('uiBilling.sendBill')} onPress={() => share(b)} loading={sharing} />
+                <Button variant="secondary" icon="whatsapp" label={t('uiBilling.sendBill')} onPress={() => share(b)} loading={sharing} />
               </View>
               {left && b.customer ? (
                 <View style={styles.flex}>
                   <Button
-                    variant="soft"
+                    variant="secondary"
                     icon="bell-ring-outline"
                     label={t('uiBilling.sendReminder')}
                     onPress={() =>

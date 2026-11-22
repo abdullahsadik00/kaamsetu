@@ -139,7 +139,7 @@ function ReadyToBillCard({ rows }: { rows: ReadyToBill[] }) {
             </AppText>
           </View>
           <Button
-            variant="tonal"
+            variant="secondary"
             label={t('uiBilling.makeBill')}
             onPress={() => router.push({ pathname: '/bills/new', params: { jobId: j.jobId } })}
           />
@@ -182,7 +182,7 @@ function CashWithTeams({ rows }: { rows: CashRow[] }) {
           <View style={styles.actions}>
             <View style={styles.flex}>
               <Button
-                variant="tonal"
+                variant="secondary"
                 icon="check"
                 label={t('uiBilling.gotIt')}
                 onPress={() => confirm.mutate(c.id)}
@@ -192,7 +192,8 @@ function CashWithTeams({ rows }: { rows: CashRow[] }) {
             </View>
             <View style={styles.flex}>
               <Button
-                variant="soft"
+                variant="secondary"
+                icon="close"
                 label={t('uiBilling.notReceived')}
                 onPress={() => {
                   reject.reset();

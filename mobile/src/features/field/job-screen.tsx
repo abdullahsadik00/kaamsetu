@@ -119,7 +119,7 @@ function JobBody({ job }: { job: FieldJob }) {
               />
             ) : null}
             {s === 'IN_PROGRESS' ? <Button label={t('field.finish')} icon="check" size="large" onPress={() => setMode('finish')} /> : null}
-            <Button variant="soft" icon="sync" label={t('uiField.updateStatus')} onPress={() => setSheet(true)} />
+            <Button variant="secondary" icon="sync" label={t('uiField.updateStatus')} onPress={() => setSheet(true)} />
           </>
         )
       }
@@ -145,7 +145,7 @@ function JobBody({ job }: { job: FieldJob }) {
             {t('sync.attention')} · {t('field.callOwner')}
           </AppText>
           <AppText>{refusedMessage(t, state.data.code)}</AppText>
-          <Button variant="soft" label={t('sync.gotIt')} onPress={() => dismiss.mutate()} loading={dismiss.isPending} />
+          <Button variant="secondary" label={t('sync.gotIt')} onPress={() => dismiss.mutate()} loading={dismiss.isPending} />
         </Card>
       ) : null}
 
@@ -153,13 +153,13 @@ function JobBody({ job }: { job: FieldJob }) {
         <View style={styles.row}>
           {job.customer ? (
             <View style={styles.flex}>
-              <Button variant="soft" icon="phone-outline" label={t('field.call')} onPress={() => Linking.openURL(`tel:${job.customer?.phone}`)} />
+              <Button variant="secondary" icon="phone-outline" label={t('field.call')} onPress={() => Linking.openURL(`tel:${job.customer?.phone}`)} />
             </View>
           ) : null}
           {job.address ? (
             <View style={styles.flex}>
               <Button
-                variant="soft"
+                variant="secondary"
                 icon="navigation-variant-outline"
                 label={t('field.dir')}
                 onPress={() => Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.address ?? '')}`)}

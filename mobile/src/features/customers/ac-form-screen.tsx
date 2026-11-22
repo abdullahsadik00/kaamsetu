@@ -136,7 +136,7 @@ export function AcFormScreen() {
           />
         </Card>
       ) : (
-        <Button variant="dashed" icon="plus-circle-outline" label={t('customers.moreDetails')} onPress={() => setMore(true)} />
+        <Button variant="secondary" icon="plus-circle-outline" label={t('customers.moreDetails')} onPress={() => setMore(true)} />
       )}
       <View style={styles.tip}>
         <Icon name="check-decagram-outline" size={20} color={colors.teal} />

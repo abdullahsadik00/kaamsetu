@@ -113,7 +113,7 @@ export function FinishForm({ job, busy, onSave }: { job: FieldJob; busy: boolean
             ))}
           </Card>
         ) : null}
-        <Button variant="dashed" label={t('field.addPart')} onPress={() => setPartSheet(true)} />
+        <Button variant="secondary" label={t('field.addPart')} onPress={() => setPartSheet(true)} />
       </View>
 
       <View style={styles.section}>

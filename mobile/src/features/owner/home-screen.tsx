@@ -129,7 +129,7 @@ export function OwnerHomeScreen() {
           <AppText variant="section">{t('owner.getStartedTitle')}</AppText>
           <AppText color={colors.slate}>{t('owner.getStartedBody')}</AppText>
           <Button icon="account-plus-outline" label={t('owner.addStaff')} onPress={() => router.push('/employees/new')} />
-          <Button variant="text" label={t('owner.employees')} onPress={() => router.push('/employees')} />
+          <Button variant="text" icon="account-group-outline" label={t('owner.employees')} onPress={() => router.push('/employees')} />
         </Card>
       ) : null}
 
@@ -370,7 +370,7 @@ function Row({ icon, tone, title, sub, onPress }: { icon: IconName; tone: Tone; 
 }
 
 function QuickAction({ icon, label, onPress, primary }: { icon: IconName; label: string; onPress: () => void; primary?: boolean }) {
-  const fg = primary ? colors.white : colors.ink;
+  const fg = primary ? colors.white : colors.teal;
   return (
     <Pressable
       accessibilityRole="button"
@@ -383,7 +383,7 @@ function QuickAction({ icon, label, onPress, primary }: { icon: IconName; label:
       ]}
     >
       <Icon name={icon} size={28} color={primary ? colors.white : colors.teal} />
-      <AppText weight="semibold" color={fg}>
+      <AppText weight="semibold" color={fg} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
         {label}
       </AppText>
     </Pressable>
@@ -416,6 +416,7 @@ const styles = StyleSheet.create({
   tile: { flex: 1, minHeight: 100, borderRadius: radius.md, padding: space.lg, justifyContent: 'space-between', gap: space.md },
   tilePrimary: { backgroundColor: colors.teal },
   tilePrimaryPressed: { backgroundColor: colors.tealDark },
-  tilePlain: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line },
+  // Same as a secondary button: teal border and text.
+  tilePlain: { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.teal },
   tilePlainPressed: { backgroundColor: colors.tealTint },
 });

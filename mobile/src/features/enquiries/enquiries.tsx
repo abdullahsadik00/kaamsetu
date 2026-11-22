@@ -179,7 +179,7 @@ export function EnquiryScreen() {
                 label={t('uiEnquiry.convert')}
                 onPress={() => router.push({ pathname: '/jobs/new', params: { enquiryId: e.id } })}
               />
-              <Button variant="text" label={t('uiEnquiry.closeEnquiry')} onPress={() => setClosing(true)} />
+              <Button variant="text" icon="close-circle-outline" label={t('uiEnquiry.closeEnquiry')} onPress={() => setClosing(true)} />
             </View>
           ) : e.job ? (
             <Button
@@ -206,10 +206,10 @@ export function EnquiryScreen() {
           {e.customer ? (
             <View style={styles.actions}>
               <View style={styles.flex}>
-                <Button variant="soft" icon="phone-outline" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${e.customer?.phone}`)} />
+                <Button variant="secondary" icon="phone-outline" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${e.customer?.phone}`)} />
               </View>
               <View style={styles.flex}>
-                <Button variant="soft" icon="whatsapp" label={t('uiOwner.whatsapp')} onPress={() => Linking.openURL(`https://wa.me/${phoneDigits}`)} />
+                <Button variant="secondary" icon="whatsapp" label={t('uiOwner.whatsapp')} onPress={() => Linking.openURL(`https://wa.me/${phoneDigits}`)} />
               </View>
             </View>
           ) : null}

@@ -137,7 +137,7 @@ export function CustomerScreen() {
       ))}
 
       <Button
-        variant="dashed"
+        variant="secondary"
         icon="plus"
         label={t('customers.addAddress')}
         onPress={() => router.push({ pathname: '/customers/[id]/site', params: { id } })}
@@ -202,7 +202,7 @@ function OutstandingCard({ customerId }: { customerId: string }) {
       <View style={styles.badges}>
         <View style={{ flex: 1 }}>
           <Button
-            variant="soft"
+            variant="secondary"
             icon="receipt-text-outline"
             label={t('uiBilling.newBill')}
             onPress={() => router.push({ pathname: '/bills/new', params: { customerId } })}
@@ -210,7 +210,7 @@ function OutstandingCard({ customerId }: { customerId: string }) {
         </View>
         <View style={{ flex: 1 }}>
           <Button
-            variant="soft"
+            variant="secondary"
             icon="file-document-outline"
             label={t('uiBilling.newQuote')}
             onPress={() => router.push({ pathname: '/quotations/new', params: { customerId } })}

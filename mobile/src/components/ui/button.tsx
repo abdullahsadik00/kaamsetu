@@ -6,16 +6,19 @@ import { AppText } from './app-text';
 import { Icon, type IconName } from './icon';
 
 /**
- * DESIGN.md buttons:
- * - primary: teal fill (main action)
- * - secondary: white, teal outline
- * - tonal: teal tint fill (Call, WhatsApp)
- * - soft: grey fill (Update status, Directions)
- * - destructive: red outline (Log out, Cancel job)
- * - dashed: dashed outline (+ Add AC)
- * - text: link-style (Skip for now)
+ * One button system (BUG-07, TP-14):
+ * - primary: solid teal, white text. The one main action on a screen.
+ * - secondary: white fill, 1.5 dp teal border, teal text. Every other action
+ *   (Call, WhatsApp, Directions, Update status, + Add AC, Edit…).
+ * - destructive: white fill, red border, red text (Log out, Remove).
+ * - text: link-style, teal text (Skip for now, Close enquiry).
+ *
+ * Every button is a fixed height (48 dp, or 56 dp `large`) with a centred,
+ * single-line label that shrinks a little rather than wrap; keep labels short.
+ * Icon rule: buttons shown together (one row or one footer) either all have
+ * an icon or none do.
  */
-export type ButtonVariant = 'primary' | 'secondary' | 'tonal' | 'soft' | 'destructive' | 'dashed' | 'text';
+export type ButtonVariant = 'primary' | 'secondary' | 'destructive' | 'text';
 
 type Props = {
   label: string;
@@ -35,11 +38,8 @@ type Props = {
 const TEXT: Record<ButtonVariant, string> = {
   primary: colors.white,
   secondary: colors.teal,
-  tonal: colors.tealTintText,
-  soft: colors.ink,
   destructive: colors.bad,
-  dashed: colors.tealTintText,
-  text: colors.tealTintText,
+  text: colors.teal,
 };
 
 export function Button({
@@ -85,6 +85,9 @@ export function Button({
           color={textColor}
           variant={size === 'large' ? 'body' : 'support'}
           style={[styles.label, size === 'large' && styles.largeText]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.8}
         >
           {shown}
         </AppText>
@@ -95,23 +98,19 @@ export function Button({
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: touch.min,
+    height: touch.min,
     borderRadius: radius.md,
     paddingHorizontal: space.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  large: { minHeight: touch.action },
+  large: { height: touch.action },
   largeText: { fontSize: 17 },
-  // A label too long for one line wraps centred, beside the icon, not flush left.
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: space.sm, maxWidth: '100%' },
   label: { flexShrink: 1, textAlign: 'center' },
   primary: { backgroundColor: colors.teal },
   secondary: { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.teal },
-  tonal: { backgroundColor: colors.tealTint },
-  soft: { backgroundColor: colors.soft },
-  destructive: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.bad },
-  dashed: { backgroundColor: colors.surface, borderWidth: 1, borderStyle: 'dashed', borderColor: colors.line2 },
+  destructive: { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: colors.bad },
   text: { backgroundColor: 'transparent' },
   inactive: { backgroundColor: colors.soft, borderColor: colors.soft, opacity: 0.8 },
 });
@@ -119,9 +118,6 @@ const styles = StyleSheet.create({
 const pressedStyle = StyleSheet.create({
   primary: { backgroundColor: colors.tealDark },
   secondary: { backgroundColor: colors.tealTint },
-  tonal: { backgroundColor: '#D3E9E4' },
-  soft: { backgroundColor: colors.line },
   destructive: { backgroundColor: colors.badTint },
-  dashed: { backgroundColor: colors.tealTint },
   text: { backgroundColor: colors.tealTint },
 });

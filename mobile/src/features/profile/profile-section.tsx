@@ -110,6 +110,7 @@ export function ProfileSection() {
       />
       <Button
         variant="text"
+        icon="delete-outline"
         label={t("profile.deleteAccount")}
         onPress={onDelete}
         loading={remove.isPending}

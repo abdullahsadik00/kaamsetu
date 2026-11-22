@@ -184,7 +184,7 @@ export function TodayScreen() {
               <AppText weight="semibold">{senior.name}</AppText>
             </View>
             {senior.phone ? (
-              <Button variant="soft" icon="phone-outline" label={t('field.call')} onPress={() => call(senior.phone ?? '')} testID="call-senior" />
+              <Button variant="secondary" icon="phone-outline" label={t('field.call')} onPress={() => call(senior.phone ?? '')} testID="call-senior" />
             ) : null}
           </Card>
         ) : null}
@@ -213,7 +213,7 @@ export function TodayScreen() {
                   <AppText weight="semibold" style={styles.flex}>
                     {j.customer.name}
                   </AppText>
-                  <Button variant="soft" icon="phone-outline" label={t('field.call')} onPress={() => call(j.customer?.phone ?? '')} testID={`call-customer-${j.id}`} />
+                  <Button variant="secondary" icon="phone-outline" label={t('field.call')} onPress={() => call(j.customer?.phone ?? '')} testID={`call-customer-${j.id}`} />
                 </View>
               ) : null}
               {j.address ? <AppText color={colors.slate}>{[j.address, j.landmark].filter(Boolean).join(' · ')}</AppText> : null}

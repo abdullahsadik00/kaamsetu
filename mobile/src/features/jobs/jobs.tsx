@@ -449,7 +449,7 @@ function JobForm({
             </AppText>
             {site ? (
               <Button
-                variant="dashed"
+                variant="secondary"
                 icon="plus"
                 label={t('customers.addAc')}
                 onPress={() => router.push({ pathname: '/customers/[id]/ac', params: { id: c.id, siteId: site.id } })}
@@ -651,16 +651,13 @@ export function JobScreen() {
         footer={
           open ? (
             j.teamId ? (
-              <View style={styles.footerRow}>
-                <View style={styles.flex}>
-                  <Button variant="soft" label={t('uiOwner.changeTeamTime')} onPress={openAssign} />
-                </View>
+              // Stacked full width: "Change team or time" does not fit half a footer in hi/mr.
+              <>
+                <Button variant="secondary" icon="calendar-edit" label={t('uiOwner.changeTeamTime')} onPress={openAssign} />
                 {teamPhone ? (
-                  <View style={styles.flex}>
-                    <Button variant="tonal" icon="phone-outline" label={t('uiOwner.callTeam')} onPress={() => Linking.openURL(`tel:${teamPhone}`)} />
-                  </View>
+                  <Button variant="secondary" icon="phone-outline" label={t('uiOwner.callTeam')} onPress={() => Linking.openURL(`tel:${teamPhone}`)} />
                 ) : null}
-              </View>
+              </>
             ) : (
               <Button size="large" icon="account-group-outline" label={t('uiOwner.assignTeam')} onPress={openAssign} />
             )
@@ -686,16 +683,16 @@ export function JobScreen() {
             {j.customer ? (
               <>
                 <View style={styles.flex}>
-                  <Button variant="soft" icon="phone-outline" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${j.customer?.phone}`)} />
+                  <Button variant="secondary" icon="phone-outline" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${j.customer?.phone}`)} />
                 </View>
                 <View style={styles.flex}>
-                  <Button variant="soft" icon="whatsapp" label={t('uiOwner.whatsapp')} onPress={() => Linking.openURL(`https://wa.me/${phoneDigits}`)} />
+                  <Button variant="secondary" icon="whatsapp" label={t('uiOwner.whatsapp')} onPress={() => Linking.openURL(`https://wa.me/${phoneDigits}`)} />
                 </View>
               </>
             ) : null}
             <View style={styles.flex}>
               <Button
-                variant="soft"
+                variant="secondary"
                 icon="account-outline"
                 label={t('uiOwner.customer')}
                 onPress={() => router.push({ pathname: '/customers/[id]', params: { id: j.customerId } })}
@@ -906,7 +903,6 @@ const styles = StyleSheet.create({
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   tag: { minHeight: 36, justifyContent: 'center', paddingHorizontal: space.md, borderRadius: radius.full, backgroundColor: colors.soft },
   actions: { flexDirection: 'row', gap: space.sm, marginTop: space.xs },
-  footerRow: { flexDirection: 'row', gap: space.sm },
   headerMore: { flexDirection: 'row', alignItems: 'center', gap: 2, minHeight: 44, paddingLeft: space.sm },
   sheetList: { borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, overflow: 'hidden' },
   teamOption: {
