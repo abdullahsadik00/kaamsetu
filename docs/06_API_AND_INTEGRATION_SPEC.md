@@ -169,6 +169,8 @@ Potential endpoints:
 - `GET /sync/changes?cursor=`
 - `POST /sync/operations`
 
+**Free trial, 22 Nov 2026 (T7.1):** `GET /organization` also returns `trialEndsAt` (ISO time) for the owner while the business is on its free trial; `null` for staff and when not on a trial. Nothing is blocked when it passes.
+
 **Help contacts, 22 Nov 2026 (T7.3):** `GET /support` (any signed-in person, also before joining a business) returns `{ whatsapp: '+91…' | null, email: string | null }` from the settings `SUPPORT_WHATSAPP` and `SUPPORT_EMAIL`. The app hides a contact that is null.
 
 **Data export, 22 Nov 2026 (doc 10 §4):** `GET /organization/export` (owner, 5 an hour) returns `{ format: 'kaamsetu-business-export', version: 1, exportedAt, notes, business, people, customers, sites, acs, teams, teamMembers, dayHelpers, enquiries, enquiryAcs, jobs, jobAcs, assignments, statusHistory, updates, reports, cash, rates, invoices, invoiceItems, payments, auditLog }`. Money in paise, times UTC. No login data. Each call adds a `DATA_EXPORTED` audit row.

@@ -137,6 +137,8 @@ describe('Business onboarding and adding staff (e2e, T4.1 / D-027)', () => {
       .set(bearer(owner.accessToken))
       .expect(200);
     expect(org.body.data.name).toBe('Test Cool Air');
+    // Only the owner sees when the trial ends (T7.1).
+    expect(org.body.data.trialEndsAt).toBe(res.body.data.trialEndsAt);
 
     const sub = await prisma.subscription.findUnique({
       where: { organizationId: res.body.data.id },
@@ -193,6 +195,8 @@ describe('Business onboarding and adding staff (e2e, T4.1 / D-027)', () => {
       .expect(200);
     expect(joined.body.data.membership.role).toBe('SENIOR_TECHNICIAN');
     senior = joined.body.data as Session;
+    const seen = await http().get('/api/v1/organization').set(bearer(senior.accessToken)).expect(200);
+    expect(seen.body.data.trialEndsAt).toBeNull();
   });
 
   it('refuses duplicates, numbers from other businesses, and non-owners', async () => {

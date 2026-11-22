@@ -76,6 +76,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-45 | 4 Owner | Owner saves without internet | T4.9 (D-021) | Pending | | Needs the new APK and backend |
 | TP-46 | 4 Owner | Download business data | T7.3 | Pending | | Needs the new APK and backend |
 | TP-47 | 4 Owner, technician | Help: WhatsApp support, privacy, terms | T7.3 | Pending | | Needs the new APK; set `SUPPORT_WHATSAPP` on Render first |
+| TP-48 | 4 Owner, technician | Free trial days left | T7.1 | Pending | | Needs the new APK (built after 22 Nov evening) |
 | TP-39b | 4 Owner | Updates from teams, bell, job feed | T4.7 (D-037) | Pending | | |
 | TP-36b | 4 Owner | Home dashboard | T4.12 | Pending | | |
 | TP-34 | 4 Owner | Quotations and bills | T4.10 | Pending | | GST rates wait for Q-04 |
@@ -548,6 +549,16 @@ Before: set `SUPPORT_WHATSAPP` (your number) and `SUPPORT_EMAIL` on Render and r
 - Step 2: the browser opens the privacy policy, then the terms, dated 22 November 2026.
 - Step 3: the mail app opens to your support email, subject "KaamSetu help (version …): ".
 - The line under the card shows the app version. In Hindi or Marathi the card reads **मदद** / **मदत**.
+
+### TP-48 Free trial days left
+1. Owner: **More**. Look under the business name.
+2. On the laptop: `npm run pilot -- extend-trial --business-phone <test business mobile> --until <a date 3 weeks ahead> --yes`. On the phone pull down or reopen **More**.
+3. Technician: **Profile**.
+
+**Expected**
+- Step 1: "Free trial · N days left" (30 days from when the test business was made, if it was made in the app).
+- Step 2: the days left match the new date.
+- Step 3: no trial line for staff.
 
 ### TP-25 Reset login and remove an employee (run last)
 1. **More › Employees** › **Test Helper** › **Reset login** and confirm.

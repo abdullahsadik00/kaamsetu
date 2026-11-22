@@ -14,6 +14,8 @@
  *   npm run pilot -- export --business-phone 98xxxxxxxx [--out file.json]   (data request)
  *   npm run pilot -- import-customers --business-phone 98xxxxxxxx --file customers.csv [--yes]
  *       (the owner's existing customers, docs/PILOT_GUIDE.md §2)
+ *   npm run pilot -- extend-trial --business-phone 98xxxxxxxx --until 2027-02-28 [--yes]
+ *       (free trial to the end of that day, India time; the pilot runs longer than 30 days)
  *
  * Needs DATABASE_URL and, for invites, the server's OTP_HASH_SECRET.
  * Staff are invited by the owner in the app (More › Employees).
@@ -43,6 +45,7 @@ const { positionals, values } = parseArgs({
     role: { type: 'string' },
     out: { type: 'string' },
     file: { type: 'string' },
+    until: { type: 'string' },
     yes: { type: 'boolean', default: false },
   },
 });
@@ -195,9 +198,41 @@ async function importCustomersFromFile() {
   }
 }
 
+const istDate = (d: Date) => d.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium' });
+
+/**
+ * Moves a business's free-trial end (D-014) to the end of --until, India
+ * time. Only for a business still on its trial; nothing in the app is
+ * blocked when a trial ends yet (T7.1), the owner just sees the date.
+ */
+async function extendTrial() {
+  const org = await businessByPhone();
+  const until = need('until');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(until)) throw new UsageError('--until must be a date like 2027-02-28');
+  const end = new Date(`${until}T23:59:59+05:30`);
+  if (Number.isNaN(end.getTime()) || end.toISOString().slice(0, 10) !== until) {
+    throw new UsageError(`--until ${until} is not a real date`);
+  }
+  if (end <= new Date()) throw new UsageError('--until must be in the future');
+  const sub = await prisma.subscription.findUnique({ where: { organizationId: org.id } });
+  if (!sub || sub.status !== 'TRIALING') {
+    throw new UsageError(`"${org.name}" is not on a free trial (${sub?.status ?? 'no subscription'})`);
+  }
+  confirmWrite(
+    `move the free trial of "${org.name}" from ${sub.trialEndsAt ? istDate(sub.trialEndsAt) : '-'} to ${istDate(end)}`,
+  );
+  await prisma.subscription.update({
+    where: { organizationId: org.id },
+    data: { trialEndsAt: end, currentPeriodEnd: end },
+  });
+  console.log(`✓ Free trial of "${org.name}" now ends ${istDate(end)}. The owner sees it on More.`);
+}
+
 async function list() {
   const org = await businessByPhone();
   console.log(`Target database: ${target()}\n${org.name} (${org.phone}, ${org.city ?? '-'})`);
+  const sub = await prisma.subscription.findUnique({ where: { organizationId: org.id } });
+  if (sub) console.log(`  ${sub.status}${sub.trialEndsAt ? `, trial ends ${istDate(sub.trialEndsAt)}` : ''}`);
   const members = await prisma.organizationMember.findMany({
     where: { organizationId: org.id },
     include: { user: true },
@@ -315,6 +350,7 @@ const COMMANDS: Record<string, () => Promise<void>> = {
   'sign-out': signOut,
   export: exportData,
   'import-customers': importCustomersFromFile,
+  'extend-trial': extendTrial,
 };
 
 async function main() {

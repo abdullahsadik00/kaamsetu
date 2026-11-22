@@ -69,3 +69,28 @@ describe('Download business data (doc 10 §4)', () => {
     expect(mockShare).not.toHaveBeenCalled();
   });
 });
+
+describe('Free trial (T7.1)', () => {
+  const withTrial = (endsAt: string | null) =>
+    jest.spyOn(api, 'get').mockImplementation(async () => ({ name: 'Cool Care', city: 'Pune', trialEndsAt: endsAt }) as never);
+
+  it('shows the days left', async () => {
+    withTrial(new Date(Date.now() + 11.5 * 86_400_000).toISOString());
+    await renderScreen(<OwnerMoreScreen />);
+    expect(await screen.findByText('Free trial · 12 days left')).toBeTruthy();
+  });
+
+  it('after the end only says so; everything stays usable', async () => {
+    withTrial(new Date(Date.now() - 2 * 86_400_000).toISOString());
+    await renderScreen(<OwnerMoreScreen />);
+    expect((await screen.findByTestId('trial')).props.children).toMatch(/^Free trial ended on .+\. Keep working/);
+    expect(screen.getByText('Download business data')).toBeTruthy();
+  });
+
+  it('shows nothing when not on a trial', async () => {
+    withTrial(null);
+    await renderScreen(<OwnerMoreScreen />);
+    await screen.findByText('Cool Care');
+    expect(screen.queryByTestId('trial')).toBeNull();
+  });
+});

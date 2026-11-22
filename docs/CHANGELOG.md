@@ -2,6 +2,13 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-22 — Free trial status (T7.1, first part)
+
+- App: the owner sees "Free trial · 12 days left" under the business name on **More**; after the end, "Free trial ended on …. Keep working; we will talk to you about a plan." Nothing is blocked or deleted when a trial ends; what happens then is still to decide (T7.1). Hindi and Marathi included. Phone test TP-48.
+- Backend: `GET /organization` adds `trialEndsAt` for the owner while on the trial (null for staff and when not on a trial).
+- Pilot script: `npm run pilot -- extend-trial --business-phone <mobile> --until 2027-02-28 [--yes]` (the pilot runs 8–10 weeks, longer than the 30-day trial); `list` shows the trial end.
+- Tests: app 161 passed; e2e 169 passed.
+
 ## 2026-11-22 — Hindi and Marathi pilot papers
 
 - `docs/pilot/staff-handout.hi.md` and `.mr.md`: one-page notes for senior technicians and helpers (joining, daily work, no internet, "needs attention", phone settings, help), using the app's own Hindi/Marathi button labels.
