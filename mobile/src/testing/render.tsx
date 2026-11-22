@@ -20,7 +20,8 @@ export async function renderScreen(ui: ReactElement) {
     // gcTime Infinity: no 5-minute cleanup timers keeping Jest alive after the tests.
     defaultOptions: {
       queries: { retry: false, gcTime: Infinity },
-      mutations: { retry: false, gcTime: Infinity },
+      // As in the app (_layout): saves run at once, online or not.
+      mutations: { retry: false, gcTime: Infinity, networkMode: 'always' },
     },
   });
   return await render(<QueryClientProvider client={client}>{ui}</QueryClientProvider>);

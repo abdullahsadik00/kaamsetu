@@ -12,9 +12,10 @@ import { ChoiceChips } from '@/components/ui/choice-chips';
 import { Icon } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
+import { isOffline, newId, saveOffline } from '@/features/sync/owner-offline';
 import { colors, radius, space } from '@/theme/tokens';
 
-import { addEquipment, CUSTOMERS_KEY, useCustomer, type AcType } from './api';
+import { addEquipment, CUSTOMERS_KEY, useCustomer, type AcType, type Customer, type Equipment } from './api';
 
 const TYPES: AcType[] = ['SPLIT', 'WINDOW', 'CASSETTE', 'DUCTABLE', 'TOWER', 'OTHER'];
 const BRANDS = ['Voltas', 'LG', 'Daikin', 'Blue Star', 'Samsung', 'Hitachi', 'Lloyd', 'Carrier'] as const;
@@ -41,10 +42,10 @@ export function AcFormScreen() {
   const [gas, setGas] = useState<(typeof GASES)[number]>('unknown');
 
   const save = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const b = brand === 'other' ? otherBrand.trim() : brand;
       const r = roomText.trim() || (room ? t(`customers.rooms.${room}`) : '');
-      return addEquipment({
+      const body = {
         customerId: id,
         siteId,
         type,
@@ -54,7 +55,27 @@ export function AcFormScreen() {
         ...(model.trim() ? { model: model.trim() } : {}),
         ...(serial.trim() ? { serialNumber: serial.trim() } : {}),
         ...(gas !== 'unknown' ? { refrigerant: gas } : {}),
-      });
+      };
+      if (!isOffline()) return addEquipment(body);
+      // No internet (D-021): saved on the phone and shown on the customer page now.
+      const acId = newId();
+      await saveOffline(qc, 'equipment.create', acId, body, [{ type: 'Customer', id }]);
+      const local: Equipment = {
+        id: acId,
+        siteId,
+        type,
+        brand: b || null,
+        capacityTons: body.capacityTons,
+        locationLabel: r || null,
+        model: model.trim() || null,
+        serialNumber: serial.trim() || null,
+        refrigerant: gas !== 'unknown' ? gas : null,
+        status: 'ACTIVE',
+      };
+      qc.setQueryData<Customer>([...CUSTOMERS_KEY, id], (c) =>
+        c ? { ...c, sites: c.sites.map((s) => (s.id === siteId ? { ...s, equipment: [...s.equipment, local] } : s)) } : c,
+      );
+      return local;
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: CUSTOMERS_KEY });

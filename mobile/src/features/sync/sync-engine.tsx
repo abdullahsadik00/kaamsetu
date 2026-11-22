@@ -116,6 +116,8 @@ export function SyncEngine({ userId }: { userId: string }) {
     const changed = () => {
       void queryClient.invalidateQueries({ queryKey: ['my-jobs'] });
       void queryClient.invalidateQueries({ queryKey: ['job-local'] });
+      // The owner's "Waiting to send" list (D-021).
+      void queryClient.invalidateQueries({ queryKey: ['owner-pending'] });
     };
     const run = () => {
       if (mine) void mine.sync.run().then(logFailure);
@@ -146,6 +148,8 @@ export function SyncEngine({ userId }: { userId: string }) {
           // Accepted by the server: show the new status now, without waiting for the pull.
           onSent: async (op) => {
             if (op.entityType === 'ServiceJob' && OP_STATUS[op.operation]) await store.setStatus(op.entityId, OP_STATUS[op.operation]);
+            // An owner's offline save arrived (D-021): reload lists so the server's copy shows.
+            if (op.operation.endsWith('.create')) void queryClient.invalidateQueries();
             changed();
           },
         });

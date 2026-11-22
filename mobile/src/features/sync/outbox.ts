@@ -217,6 +217,16 @@ export class Outbox {
     return rows.map(fromRow);
   }
 
+  /** Unsent operations of these kinds (e.g. the owner's offline saves), oldest first. */
+  async unsentOf(operations: readonly string[]): Promise<OutboxOperation[]> {
+    if (operations.length === 0) return [];
+    const rows = await this.db.getAllAsync<Row>(
+      `SELECT * FROM outbox WHERE operation IN (${operations.map(() => '?').join(', ')}) AND state <> 'SENT' ORDER BY seq`,
+      [...operations],
+    );
+    return rows.map(fromRow);
+  }
+
   /** Every operation on one record still on the phone (sent ones too), oldest first. */
   async allFor(entityType: string, entityId: string): Promise<OutboxOperation[]> {
     const rows = await this.db.getAllAsync<Row>(
