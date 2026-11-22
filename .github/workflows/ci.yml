@@ -57,6 +57,8 @@ jobs:
         run: npx prisma migrate deploy
       - name: Build (type-checks the code)
         run: npm run build
+      - name: Type-check tests and scripts too
+        run: npx tsc --noEmit -p tsconfig.json
       - name: Lint
         run: npm run lint
       - name: Unit tests
