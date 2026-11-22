@@ -72,6 +72,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-22b | 4 Owner | New visit for the same work | T4.6 | Pending | | |
 | TP-42 | 4 Owner | Customer's past jobs and AC history | T4.4 | Pending | | Needs the new APK and backend |
 | TP-43 | 4 Owner | Rate list and bill date | T4.10 (D-039) | Pending | | Needs the new APK and backend |
+| TP-44 | 4 Owner | Owner screens without internet | T4.9 (D-021) | Pending | | Needs the new APK |
 | TP-39b | 4 Owner | Updates from teams, bell, job feed | T4.7 (D-037) | Pending | | |
 | TP-36b | 4 Owner | Home dashboard | T4.12 | Pending | | |
 | TP-34 | 4 Owner | Quotations and bills | T4.10 | Pending | | GST rates wait for Q-04 |
@@ -495,6 +496,17 @@ Log out and log in as the **owner** for the rest.
 - Step 3: Gas filling shows ₹2,700. AC service moves under **Not used (1)**, and you can turn it back on with **Use again**.
 - Step 4: the line is filled with Gas filling and ₹2,700 (GST only if the bill is a GST bill). AC service is not offered.
 - Step 5: the draft shows yesterday's date. Changing Gas filling's price later does not change this bill.
+
+### TP-44 Owner screens without internet (D-021)
+1. With internet, open **Home**, **Jobs**, **Customers** › Rohan, **Billing** and **Enquiries**. Wait a few seconds.
+2. Turn on airplane mode. Close the app fully (swipe it away) and open it again.
+3. Open the same screens again, then pull down on **Jobs**.
+4. Turn airplane mode off.
+
+**Expected**
+- Step 3: every screen opened in step 1 shows what it showed before, with no error. A screen you never opened may show a spinner or an empty state; it must not crash. Pulling down does not show an error.
+- Step 4: the screens refresh by themselves within a few seconds.
+- Saving a bill or payment offline is not possible (online only, D-018).
 
 ### TP-25 Reset login and remove an employee (run last)
 1. **More › Employees** › **Test Helper** › **Reset login** and confirm.

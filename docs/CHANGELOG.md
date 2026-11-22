@@ -2,6 +2,12 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-22 — Owner screens without internet (D-021)
+
+- App: what the owner has loaded (Home, jobs, customers and ACs, enquiries, bills) is kept in the phone's database for 3 days and shown after a restart without internet. Loads wait while offline instead of failing, and refresh when the internet is back. A business or role switch throws the kept copy away. Field jobs keep using their own store (T4.9).
+- New package `@tanstack/react-query-persist-client` (JS only). 3 tests on a real SQLite database; app 127 tests passed. Phone test: TP-44.
+- Not yet: saving enquiries, jobs, customers and ACs offline (rest of D-021).
+
 ## 2026-11-22 — Rate list and bill date (T4.10, D-039)
 
 - Owner: **More › Rate list**: usual prices for services and parts with GST; add, change, **Not used any more** / **Use again**. New bill or quotation lines have **From your rate list** chips that fill name, rate and GST in one tap. The bill and quotation form lets you pick the date: Today, Yesterday or up to six days back.
