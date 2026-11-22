@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 
 import { restoreSession, useSession } from '@/features/auth/session';
 import { SyncEngine } from '@/features/sync/sync-engine';
+import { followConnectivity, KEEP_MS } from '@/features/sync/query-persist';
 import { initErrorReporting, withErrorReporting } from '@/monitoring/error-reporting';
 import { i18n, initI18n } from '@/localization/i18n';
 import { fontFamily, fontFiles } from '@/theme/fonts';
@@ -16,9 +17,11 @@ import { colors } from '@/theme/tokens';
 initErrorReporting();
 SplashScreen.preventAutoHideAsync();
 
+followConnectivity();
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { retry: 1, staleTime: 30_000 },
+    // gcTime as long as screens are kept offline (D-021), or kept data is dropped early.
+    queries: { retry: 1, staleTime: 30_000, gcTime: KEEP_MS },
     mutations: { retry: 0 },
   },
 });
