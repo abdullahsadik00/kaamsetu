@@ -2,6 +2,12 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-22 — Help in the app (T7.3)
+
+- App: a **Help** card on More (owner) and Profile (technician, helper, and the join screen): **Message us on WhatsApp** with the app version already typed, **Email us**, **Privacy policy**, **Terms of use**, and the app version. Hindi and Marathi included. Phone test TP-47.
+- Backend: `GET /support` gives the WhatsApp number and email from the settings `SUPPORT_WHATSAPP` (new) and `SUPPORT_EMAIL`, to anyone signed in, so they can change without a new app. A contact that is not set is hidden in the app.
+- Tests: app 160 passed (new `help-card.test.tsx`); e2e for `/support` in `site.e2e-spec.ts`; route inventory updated.
+
 ## 2026-11-22 — Privacy policy and terms brought up to date (T7.2)
 
 - `/privacy`: lists the work data the app now keeps (customers, ACs, enquiries, jobs, team updates, work reports, cash, rate list, quotations, bills, payments) instead of "as features arrive"; the activity record (audit log); what stays on the phone and that logging out removes it; that photos are not collected yet; the customer-list import; bills sent through WhatsApp; telling people and the Data Protection Board if data is exposed; the owner's data download; customers of a business ask the business.

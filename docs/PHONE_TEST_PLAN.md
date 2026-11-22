@@ -75,6 +75,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-44 | 4 Owner | Owner screens without internet | T4.9 (D-021) | Pending | | Needs the new APK |
 | TP-45 | 4 Owner | Owner saves without internet | T4.9 (D-021) | Pending | | Needs the new APK and backend |
 | TP-46 | 4 Owner | Download business data | T7.3 | Pending | | Needs the new APK and backend |
+| TP-47 | 4 Owner, technician | Help: WhatsApp support, privacy, terms | T7.3 | Pending | | Needs the new APK; set `SUPPORT_WHATSAPP` on Render first |
 | TP-39b | 4 Owner | Updates from teams, bell, job feed | T4.7 (D-037) | Pending | | |
 | TP-36b | 4 Owner | Home dashboard | T4.12 | Pending | | |
 | TP-34 | 4 Owner | Quotations and bills | T4.10 | Pending | | GST rates wait for Q-04 |
@@ -535,6 +536,18 @@ Log out and log in as the **owner** for the rest.
 - Step 1: the line says "Preparing the file…", then the share sheet opens with `kaamsetu-data-<today>.json`.
 - Step 2: the file arrives; opened on a PC it lists your customers, jobs and bills by name (amounts in paise: ₹800 shows as 80000).
 - Step 3: "Could not download. Check the internet and try again." No share sheet.
+
+### TP-47 Help
+Before: set `SUPPORT_WHATSAPP` (your number) and `SUPPORT_EMAIL` on Render and redeploy.
+1. Owner: **More**, scroll to **Help** › **Message us on WhatsApp**.
+2. Back in the app: **Privacy policy**, then **Terms of use**.
+3. Technician: **Profile** › **Help** › **Email us**.
+
+**Expected**
+- Step 1: WhatsApp opens a chat with your number, message already typed: "KaamSetu help (version …): ".
+- Step 2: the browser opens the privacy policy, then the terms, dated 22 November 2026.
+- Step 3: the mail app opens to your support email, subject "KaamSetu help (version …): ".
+- The line under the card shows the app version. In Hindi or Marathi the card reads **मदद** / **मदत**.
 
 ### TP-25 Reset login and remove an employee (run last)
 1. **More › Employees** › **Test Helper** › **Reset login** and confirm.

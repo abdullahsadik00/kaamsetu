@@ -169,6 +169,8 @@ Potential endpoints:
 - `GET /sync/changes?cursor=`
 - `POST /sync/operations`
 
+**Help contacts, 22 Nov 2026 (T7.3):** `GET /support` (any signed-in person, also before joining a business) returns `{ whatsapp: '+91…' | null, email: string | null }` from the settings `SUPPORT_WHATSAPP` and `SUPPORT_EMAIL`. The app hides a contact that is null.
+
 **Data export, 22 Nov 2026 (doc 10 §4):** `GET /organization/export` (owner, 5 an hour) returns `{ format: 'kaamsetu-business-export', version: 1, exportedAt, notes, business, people, customers, sites, acs, teams, teamMembers, dayHelpers, enquiries, enquiryAcs, jobs, jobAcs, assignments, statusHistory, updates, reports, cash, rates, invoices, invoiceItems, payments, auditLog }`. Money in paise, times UTC. No login data. Each call adds a `DATA_EXPORTED` audit row.
 
 **Owner operations, 22 Nov 2026 (D-021):** the owner may also send `customer.create` (entityType `Customer`; payload = `POST /customers` body plus `siteId` for the first address), `equipment.create` (`Equipment`; `POST /equipment` body), `enquiry.create` (`ServiceRequest`; `POST /enquiries` body) and `job.create` (`ServiceJob`; `POST /jobs` body). `entityId` (and `siteId`) are made on the phone and become the record ids; job and enquiry numbers come from the server. Same rules and error codes as the online endpoints; a customer saved offline is kept even when the mobile number is already saved (no warning possible offline; merge is P1). `dependsOn` names an earlier operation in the batch; if it was refused this one is `DEPENDENCY_FAILED`. Staff get `FORBIDDEN_ROLE`; a wrong `entityType` is `VALIDATION_FAILED`.

@@ -67,6 +67,7 @@ Change it in Render › Environment, then **Save and deploy**. Keep the new valu
 | Database password (Supabase › Settings › Database) | The server cannot reach the database until `DATABASE_URL` is updated. | Update Render `DATABASE_URL` and GitHub secret `STAGING_BACKUP_DATABASE_URL`. |
 | `STAGING_BACKUP_PASSPHRASE` (GitHub secret) | New backups use the new passphrase. | Keep the old passphrase 14 days: older backups still need it. |
 | `SENTRY_DSN` | Error reports go to the new project. | — |
+| `SUPPORT_WHATSAPP`, `SUPPORT_EMAIL` | Not secret. The app's **Help** and the public pages show the new contact within an hour (the app keeps it an hour). | — |
 
 Change all of them at once if you think any one has leaked.
 
