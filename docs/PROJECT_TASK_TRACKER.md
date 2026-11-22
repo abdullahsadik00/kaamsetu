@@ -119,7 +119,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Work:** parser per known format (pure function, fully unit-tested against T1.9 samples); review screen; ticket number, source partner; duplicate-ticket warning; "Closed in brand portal" tick.
 - **Acceptance:** every sample format fills name, phone, address, pincode, job type, ticket number and charges correctly; unknown text falls back to manual entry without losing what was pasted.
 
-### T4.6 Job creation and assignment — Critical — In Progress (owner side built early under D-030: create with ACs/type/day/slot/team/amount, assign and change team with history, reschedule with version check, cancel with reason, follow-up; backend 7c86feb; enquiry link done under D-033; helper swap later; phone test pending, see PHONE_TEST_PLAN TP-13–15, TP-22) — depends T4.4, T4.5, T4.2
+### T4.6 Job creation and assignment — Critical — In Progress (owner side built early under D-030: create with ACs/type/day/slot/team/amount, assign and change team with history, reschedule with version check, cancel with reason, follow-up; backend 7c86feb; enquiry link done under D-033; one-day helper swap done 22 Nov 2026 under D-038 (phone test TP-40); phone test pending, see PHONE_TEST_PLAN TP-13–15, TP-22) — depends T4.4, T4.5, T4.2
 - **Objective:** create and assign a job in about a minute.
 - **Stories:** create job with ACs, service type, complaint, day and slot, team, amount to collect; reassign; one-day helper swap; cancel with reason; follow-up job linked.
 - **DB:** ServiceJob, JobEquipment, JobAssignment, JobTechnician, JobStatusHistory, job number sequence. **API:** doc 06 §6.
@@ -128,7 +128,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Tests:** state machine exhaustive; assignment history; isolation; technician sees job after assignment.
 - **Acceptance:** repeat-customer job created and assigned in ≈ 1 minute by the owner.
 
-### T4.7 Technician job workflow — Critical — In Progress (built early under D-031: `GET /my/jobs` team-scoped, helpers slimmer (Q-01); Start/Hold/Finish saved in the phone outbox and sent to `POST /sync/operations`, idempotent; My Work and helper Today's work screens with call and directions, last list kept offline; backend b7a5789, app a8d37f4; job updates feed, "Latest from teams" and part-needed reasons later; phone test pending, see PHONE_TEST_PLAN TP-16–18, TP-20, TP-23–24) — depends T4.6, T3.8
+### T4.7 Technician job workflow — Critical — In Progress (built early under D-031: `GET /my/jobs` team-scoped, helpers slimmer (Q-01); Start/Hold/Finish saved in the phone outbox and sent to `POST /sync/operations`, idempotent; My Work and helper Today's work screens with call and directions, last list kept offline; backend b7a5789, app a8d37f4; job updates feed done 22 Nov 2026 under D-037 (Appointment fixed, Part needed, Note for owner; owner Updates from teams, Home bell, job page feed; phone test TP-39); phone test pending, see PHONE_TEST_PLAN TP-16–18, TP-20, TP-23–24) — depends T4.6, T3.8
 - **Objective:** technician knows what to do and reports progress.
 - **Stories:** My Work (today/tomorrow); job detail; call; directions; appointment fixed; start; part needed; customer not ready; can't continue; note; owner sees "Latest from teams".
 - **Frontend:** built on the local SQLite store from day one. **DB:** JobUpdate. **API:** `POST /jobs/:id/updates`, sync pull.

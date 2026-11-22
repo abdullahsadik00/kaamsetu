@@ -71,6 +71,8 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-36 | Home dashboard | T4.12 | Pending | | Needs the next APK |
 | TP-37 | Hindi and Marathi wording review | T3.14 | Pending | | Needs a Hindi and a Marathi speaker |
 | TP-38 | Usability test with real users | T5.6 | Not built yet | | After TP-36 |
+| TP-39 | Updates from teams: appointment, part, note | T4.7 (D-037) | Pending | | Needs the next APK |
+| TP-40 | Lend a helper to another team for a day | T4.6 (D-038) | Pending | | Needs the next APK and a Team 2 |
 
 ---
 
@@ -396,6 +398,40 @@ Same as TP-06, with **Test Helper**, the helper's Google account and **900000300
 - In step 8 the error card shows **Try again**.
 - Staff phones never show this screen; another business's owner sees only their own numbers.
 
+
+### TP-39 Updates from teams (T4.7)
+1. Senior: open a Team 1 job for today › **Update status** › **Appointment fixed** › **Tomorrow**, **Afternoon** › **Save**.
+2. **Update status** › **Part needed** › **Capacitor**, tap **+** once (2), **No, work stopped**, note "Customer has no stabiliser" › **Ask owner to arrange a part**.
+3. **Update status** › **Note for owner** › tap **Need ladder** › **Save**.
+4. Turn on **Airplane mode**, add one more **Note for owner** ("Running late, 30 min"), then turn Airplane mode **off**.
+5. Owner: open **Home** and pull down.
+6. Tap the **bell**, then the **Delays & parts** tab, then back to **All updates**. Tap the part row.
+7. Back on **Home**, pull down again.
+
+**Expected**
+- Steps 1–4: each saves at once; the job page lists them under **Your updates** with **Saved on phone** → **Sent** (the offline one sends when the internet is back). The job status does not change. After step 1 the job shows tomorrow, afternoon.
+- Step 5: the bell shows a red count; **Needs your action** has "Part needed: 2 × Capacitor · Customer has no stabiliser" first; **Latest from teams** shows the new rows with job number, Test Senior and time.
+- Step 6: **Updates from teams** lists "Appointment fixed: Tomorrow, Afternoon", "Part needed: 2 Capacitor · work stopped", "Note: Need ladder" and the offline note, newest first, new rows tinted. **Delays & parts** shows only the part row (and any holds). The row opens the job, whose **Updates from team** card lists the same updates.
+- Step 7: the bell count is gone.
+- Staff phones never show the bell or this screen.
+
+### TP-40 Lend a helper for a day (T4.6)
+Before: as the owner, add **Team 2** with a senior (add **Test Senior 2**, 9000003005, Senior technician, joined like TP-06) and give Team 2 a job for today. Test Helper stays in Team 1.
+1. Owner: **More › Teams** › **Team 2**. Under **Swaps for the day** it says "Everyone works with their own team."
+2. **Lend a helper for a day** › **Test Helper** › **Today** › **Lend for the day**.
+3. Lend **Test Helper** to Team 2 again for **Today** (or from Team 3 if you have one).
+4. Open **Team 1**, look at **Swaps for the day** for **Today**.
+5. Helper's phone: pull down on **Today's work**.
+6. Owner: Team 2 › tap Test Helper › **Undo**. Helper's phone: pull down again.
+7. Lend Test Helper to Team 2 for **Tomorrow**, then check Today on the helper's phone.
+
+**Expected**
+- Step 2: Test Helper shows on Team 2 as "lent from Team 1"; Team 1's members list is unchanged.
+- Step 3: "This helper already works with another team that day. Undo that first." (or "already in that team").
+- Step 4: Team 1 shows Test Helper "with Team 2 for the day".
+- Step 5: Today's work shows **Team 2's** job and not Team 1's jobs.
+- Step 6: after **Undo this swap?** › **Undo**, Team 2 is back to "Everyone works with their own team."; the helper sees Team 1's jobs again.
+- Step 7: today's list stays Team 1; the swap only applies tomorrow.
 
 ## Part C — Needs a second phone
 

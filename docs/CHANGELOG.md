@@ -2,6 +2,14 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-22 — Updates from teams (T4.7, D-037) and one-day helper swap (T4.6, D-038)
+
+- Technician: **Update status** has three more rows under **Other**: **Appointment fixed** (day and time; moves the job), **Part needed** (part, how many, can continue or not, note) and **Note for owner** (quick notes or typed). Saved on the phone first and sent like other work; the job page lists them under **Your updates** with Saved / Sent.
+- Owner: **Updates from teams** screen (bell on Home with the unread count, or **See all** under Latest from teams): newest first, **Delays & parts** tab, **Show older**, work the server could not apply with what was saved. **Part needed** rows in Needs your action. The job page shows **Updates from team**.
+- Owner: team page **Swaps for the day**: lend a helper to this team for today, tomorrow or the day after, see who is lent in or out, **Undo**. The helper's phone shows the other team's jobs that day only.
+- Backend: `JobUpdate` and `TeamDayHelper` tables (two migrations), `GET /updates`, `POST /updates/seen`, `POST/DELETE /teams/:id/day-helpers`, `?day=` on teams. e2e 147 passed; app 118 tests passed.
+- Fix: the two new e2e suites used phone numbers inside the seed's demo ranges and failed on the main dev database; moved to free prefixes.
+
 ## 2026-11-22 — Billing app screens (T4.10/T4.11, D-034)
 
 - App: Billing tab with To collect, cash with teams, Ready to bill (**Make bill**) and **Cash with teams** (**Got it** / **Not received** with a reason), plus **Bills | Quotations** with To collect / Not paid / Partly paid / Paid / All bills. New bill (blank, from the customer page, or filled from a completed job) with item and discount sheets and GST per line as CGST + SGST (provisional, Q-04); draft edit with version check, **Save bill** (issue), cancel with a reason. Bill page with **Record payment** (cash/UPI/bank/other, one idempotency key per form, asks before over-paying) and **Remove payment** with a reason. Quotations: create, edit, **Send quotation**, cancel, **Turn into bill**. PDFs go out through the share sheet; **Send reminder** opens WhatsApp. **Make bill** on completed jobs; the customer page shows what they owe. New packages `expo-print`, `expo-sharing` (new native build). 14 component tests.
