@@ -46,7 +46,6 @@ export function BillingScreen() {
       <View style={styles.titleRow}>
         <AppText variant="title">{t('owner.billing')}</AppText>
         <Button
-          icon="plus"
           label={segment === 'bills' ? t('uiBilling.newBill') : t('uiBilling.newQuote')}
           onPress={() => router.push(segment === 'bills' ? '/bills/new' : '/quotations/new')}
         />

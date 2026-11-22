@@ -133,7 +133,8 @@ export function JobsScreen() {
     <Screen>
       <View style={styles.titleRow}>
         <AppText variant="title">{t('owner.jobs')}</AppText>
-        <Button icon="plus" label={t('uiOwner.newShort')} onPress={() => router.push('/jobs/new')} />
+        {/* Tab header action: the word alone, no plus (BUG-13). */}
+        <Button label={t('uiOwner.newShort')} onPress={() => router.push('/jobs/new')} />
       </View>
       <View style={styles.segments} accessibilityRole="tablist">
         {(['enquiries', 'jobs'] as const).map((s) => {

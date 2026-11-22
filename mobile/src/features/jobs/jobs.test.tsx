@@ -1,10 +1,10 @@
-import { screen } from '@testing-library/react-native';
+import { screen, within } from '@testing-library/react-native';
 import { StyleSheet } from 'react-native';
 
 import { api } from '@/features/auth/session';
 import { renderScreen, setupI18n } from '@/testing/render';
 
-import { JobScreen } from './jobs';
+import { JobScreen, JobsScreen } from './jobs';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories cannot use imports
 jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
@@ -53,8 +53,20 @@ describe('Owner job page (BUG-10)', () => {
     expect(cellOf('Call')).toMatchObject({ flex: 1 });
     expect(cellOf('WhatsApp')).toMatchObject({ flex: 1 });
     expect(cellOf('Customer')).not.toMatchObject({ flex: 1 });
+    // Call has its phone icon: the glyph plus the word (the BUG-13 check below relies on this).
+    expect(within(screen.getByRole('button', { name: 'Call' })).getAllByText(/.*/, { includeHiddenElements: true })).toHaveLength(2);
     for (const name of ['Call', 'WhatsApp', 'Customer']) {
       expect(screen.getByText(name).props.numberOfLines).toBe(1);
     }
+  });
+});
+
+describe('Jobs tab header (BUG-13)', () => {
+  it('"New" is the word alone, with no plus icon', async () => {
+    jest.spyOn(api, 'get').mockResolvedValue([] as never);
+    await renderScreen(<JobsScreen />);
+    const button = await screen.findByRole('button', { name: 'New' });
+    // An icon would be a second, screen-reader-hidden Text (the glyph) inside the button.
+    expect(within(button).getAllByText(/.*/, { includeHiddenElements: true })).toHaveLength(1);
   });
 });
