@@ -12,6 +12,7 @@ import { JobStore, type StoredJob, type SyncScope } from './job-store';
 import { JobSync, OP_STATUS, type BootstrapAnswer, type ChangesAnswer, type PullApi, type SyncOutcome } from './job-sync';
 import { Outbox, type OutboxOperation } from './outbox';
 import { OutboxSender, type SendResult } from './outbox-sender';
+import { keepQueries } from './query-persist';
 
 type BatchResponse = {
   results: { id: string; status: SendResult['result']; code?: string }[];
@@ -119,6 +120,20 @@ export function SyncEngine({ userId }: { userId: string }) {
     const run = () => {
       if (mine) void mine.sync.run().then(logFailure);
     };
+    // Loaded screens kept on the phone for this business and role (D-021).
+    let stopKeeping: (() => void) | null = null;
+    const keep = (db: SqlDatabase) => {
+      stopKeeping?.();
+      stopKeeping = null;
+      const s = currentScope();
+      if (!s) return;
+      keepQueries(queryClient, db, `${s.organizationId}:${s.memberId}:${s.role}`)
+        .then((stop) => {
+          if (cancelled || mine?.db !== db) stop();
+          else stopKeeping = stop;
+        })
+        .catch((error: unknown) => console.warn('Kept screens could not load', error));
+    };
 
     openUserDatabase(userId)
       .then(async (db) => {
@@ -141,6 +156,7 @@ export function SyncEngine({ userId }: { userId: string }) {
         // Clear another business's data before anything is shown, then sync.
         await sync.checkScope();
         changed();
+        keep(db);
         await outbox.recoverInterrupted();
         run();
       })
@@ -163,9 +179,14 @@ export function SyncEngine({ userId }: { userId: string }) {
     const session = useSession.subscribe((s, prev) => {
       const a = s.profile?.membership;
       const b = prev.profile?.membership;
-      if (a?.organizationId !== b?.organizationId || a?.memberId !== b?.memberId || a?.role !== b?.role) run();
+      if (a?.organizationId !== b?.organizationId || a?.memberId !== b?.memberId || a?.role !== b?.role) {
+        if (mine) keep(mine.db);
+        run();
+      }
     });
     const unregister = onLogout(async () => {
+      stopKeeping?.();
+      stopKeeping = null;
       mine?.sender.stop();
       if (active === mine) active = null;
       mine = null;
@@ -181,6 +202,7 @@ export function SyncEngine({ userId }: { userId: string }) {
       clearInterval(timer);
       session();
       unregister();
+      stopKeeping?.();
       mine?.sender.stop();
       if (active === mine) active = null;
     };
