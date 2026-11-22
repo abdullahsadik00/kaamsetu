@@ -43,7 +43,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-02 | Owner | Set up a new business | T4.1 | Passed | 21 Nov 2026 | Step 2 in chat |
 | TP-03 | Owner | Change language | T3.6 | Passed | 21 Nov 2026 | Step 3 in chat |
 | TP-04 | Owner | Add employees | T4.1 | Passed | 21 Nov 2026 | Step 4 in chat |
-| TP-05 | 1 Owner | Log out and pick another Google account | T3.11 | Pending | | |
+| TP-05 | 1 Owner | Log out and pick another Google account | T3.11 | Passed | 22 Nov 2026 | First try picked a non-owner account and showed Join your business, as expected |
 | TP-09 | 1 Owner | Make teams | T4.2 | Pending | | |
 | TP-10 | 1 Owner | Add a customer, duplicate warning, search | T4.3 | Pending | | |
 | TP-11 | 1 Owner | Second address, edit, archive | T4.3 | Pending | | |
