@@ -48,13 +48,14 @@ type FormOut = z.output<typeof schema>;
 
 /** Add customer (with first address) or edit customer details (T4.3). */
 export function CustomerFormScreen() {
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  // returnTo=job: opened from the New enquiry or job form, which should get the customer back (BUG-14).
+  const { id, returnTo } = useLocalSearchParams<{ id?: string; returnTo?: string }>();
   const existing = useQuery({ ...useCustomer(id ?? ''), enabled: Boolean(id) });
   if (id && existing.isPending) return <ActivityIndicator style={{ flex: 1 }} color={colors.teal} />;
-  return <CustomerForm customer={id ? existing.data : undefined} />;
+  return <CustomerForm customer={id ? existing.data : undefined} backToJob={returnTo === 'job'} />;
 }
 
-function CustomerForm({ customer }: { customer?: Customer }) {
+function CustomerForm({ customer, backToJob }: { customer?: Customer; backToJob?: boolean }) {
   const { t } = useTranslation();
   const qc = useQueryClient();
   const editing = Boolean(customer);
@@ -110,6 +111,11 @@ function CustomerForm({ customer }: { customer?: Customer }) {
     return local;
   };
 
+  /** After adding (or picking the existing) customer: back to the job form with them selected, or open them. */
+  const done = (customerId: string) => {
+    if (backToJob) router.dismissTo({ pathname: '/jobs/new', params: { customerId } });
+    else router.replace({ pathname: '/customers/[id]', params: { id: customerId } });
+  };
   const save = useMutation({
     mutationFn: async ({ v, anyway }: { v: FormOut; anyway: boolean }) => {
       const common = {
@@ -133,7 +139,7 @@ function CustomerForm({ customer }: { customer?: Customer }) {
     onSuccess: (saved) => {
       void qc.invalidateQueries({ queryKey: CUSTOMERS_KEY });
       if (customer) router.back();
-      else router.replace({ pathname: '/customers/[id]', params: { id: saved.id } });
+      else done(saved.id);
     },
     onError: (error) => {
       if (error instanceof ApiError && error.code === 'CUSTOMER_PHONE_EXISTS') {
@@ -209,7 +215,7 @@ function CustomerForm({ customer }: { customer?: Customer }) {
             variant="secondary"
             label={t('customers.openExisting', { name: duplicate.name })}
             onPress={() =>
-              router.replace({ pathname: '/customers/[id]', params: { id: duplicate.customerId } })
+              done(duplicate.customerId)
             }
           />
           <Button variant="text" label={t('customers.addAnyway')} onPress={() => submit(true)} />

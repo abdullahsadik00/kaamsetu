@@ -152,7 +152,7 @@ export function NewTeamScreen() {
           onChange={setHelpers}
         />
       ) : null}
-      <Button variant="dashed" icon="plus" label={t('uiPeople.newPerson')} onPress={() => router.push('/employees/new')} />
+      <Button variant="secondary" icon="plus" label={t('uiPeople.newPerson')} onPress={() => router.push('/employees/new')} />
       {save.error ? <AppText color={colors.bad}>{errorMessage(t, save.error)}</AppText> : null}
     </Screen>
   );
@@ -269,7 +269,7 @@ export function TeamScreen() {
       >
         {picked?.phone ? (
           <Button
-            variant="tonal"
+            variant="secondary"
             icon="phone-outline"
             label={t('customers.call')}
             onPress={() => Linking.openURL(`tel:${picked.phone}`)}

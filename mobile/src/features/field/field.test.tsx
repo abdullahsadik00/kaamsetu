@@ -1,4 +1,6 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { Linking, StyleSheet } from 'react-native';
 
 import { migrate } from '@/db/migrations';
 import { openNodeDatabase, type NodeSqlDatabase } from '@/db/node-sqlite.testing';
@@ -27,9 +29,9 @@ jest.mock('@/features/sync/sync-engine', () => ({
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories cannot use imports
 jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
 const mockPush = jest.fn();
-const mockNavigate = jest.fn();
+const mockDismissTo = jest.fn();
 jest.mock('expo-router', () => ({
-  router: { push: (...a: unknown[]) => mockPush(...a), navigate: (...a: unknown[]) => mockNavigate(...a), back: jest.fn() },
+  router: { push: (...a: unknown[]) => mockPush(...a), dismissTo: (...a: unknown[]) => mockDismissTo(...a), back: jest.fn() },
 }));
 jest.mock('expo-crypto', () => ({ randomUUID: () => '7f1d6f0e-0000-4000-8000-000000000001' }));
 
@@ -85,7 +87,7 @@ beforeEach(async () => {
   mockNotify.mockClear();
   mockSyncNow.mockReset().mockResolvedValue({ ok: true });
   mockPush.mockClear();
-  mockNavigate.mockClear();
+  mockDismissTo.mockClear();
 });
 afterEach(() => {
   mockDb.close();
@@ -98,7 +100,7 @@ describe('My Work (T4.7, T4.9)', () => {
     await synced([job]);
     await renderScreen(<MyWorkScreen />);
     await fireEvent.press(await screen.findByText('Meera'));
-    expect(mockPush).toHaveBeenCalledWith({ pathname: '/job/[id]', params: { id: 'job-1' } });
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/my-work/[id]', params: { id: 'job-1' } });
     expect(get).not.toHaveBeenCalled(); // works fully offline
   });
 
@@ -253,7 +255,7 @@ describe('Needs attention (T4.9, docs/09 §7)', () => {
     expect(screen.queryByText('Start work')).toBeNull();
     await fireEvent.press(screen.getByText('OK, got it'));
 
-    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('/my-work'));
+    await waitFor(() => expect(mockDismissTo).toHaveBeenCalledWith('/my-work'));
     expect(await mockStore.get('job-1')).toBeNull();
     expect(await mockOutbox.unsentCount()).toBe(0);
   });
@@ -270,6 +272,47 @@ describe("Helper's Today's work (Q-01)", () => {
     expect(screen.getByTestId('call-senior')).toBeTruthy();
     expect(screen.getByTestId('call-customer-job-1')).toBeTruthy();
     expect(screen.queryByText('Start work')).toBeNull();
+  });
+
+  it('with an address the card has Call and Directions side by side, and Directions opens Maps (BUG-17, BUG-18)', async () => {
+    const { complaint: _c, amountToCollect: _m, equipment: _e, ...helperCard } = job;
+    await synced([helperCard], 'HELPER');
+    const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+    await renderScreen(<TodayScreen />);
+    expect(await screen.findByText('Flat 1, Kothrud')).toBeTruthy();
+    const call = screen.getByTestId('call-customer-job-1');
+    const directions = screen.getByTestId('directions-job-1');
+    for (const b of [call, directions]) expect(StyleSheet.flatten(b.parent?.props.style)).toMatchObject({ flex: 1 });
+    await fireEvent.press(directions);
+    expect(open).toHaveBeenCalledWith('https://www.google.com/maps/search/?api=1&query=Flat%201%2C%20Kothrud');
+  });
+
+  it('without an address there is no Directions', async () => {
+    const { address: _a, complaint: _c, amountToCollect: _m, equipment: _e, landmark: _l, ...slim } = job;
+    await synced([slim], 'HELPER');
+    await renderScreen(<TodayScreen />);
+    expect(await screen.findByTestId('call-customer-job-1')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Directions' })).toBeNull();
+  });
+
+  it('a Service job and a Repair job show different job type icons (BUG-16)', async () => {
+    await synced(
+      [
+        { ...job, status: 'IN_PROGRESS' },
+        { ...job, id: 'job-2', jobNumber: 1002, type: 'REPAIR', locality: 'Baner', timeSlot: 'AFTERNOON' },
+      ],
+      'HELPER',
+    );
+    await renderScreen(<TodayScreen />);
+    expect(await screen.findByText('Baner')).toBeTruthy();
+    // Each Icon is a screen-reader-hidden Text whose child is the glyph from the icon font.
+    const shown = (name: keyof typeof MaterialCommunityIcons.glyphMap) => {
+      const g = MaterialCommunityIcons.glyphMap[name];
+      return screen.queryAllByText(typeof g === 'number' ? String.fromCodePoint(g) : g, { includeHiddenElements: true });
+    };
+    expect(shown('air-conditioner')).toHaveLength(1);
+    expect(shown('wrench-outline')).toHaveLength(1);
+    expect(shown('fan')).toHaveLength(0);
   });
 });
 

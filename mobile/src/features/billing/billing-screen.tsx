@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
-import { Button } from '@/components/ui/button';
+import { Button, ButtonRow } from '@/components/ui/button';
 import { Card, SectionLabel } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Screen } from '@/components/ui/screen';
@@ -46,7 +46,6 @@ export function BillingScreen() {
       <View style={styles.titleRow}>
         <AppText variant="title">{t('owner.billing')}</AppText>
         <Button
-          icon="plus"
           label={segment === 'bills' ? t('uiBilling.newBill') : t('uiBilling.newQuote')}
           onPress={() => router.push(segment === 'bills' ? '/bills/new' : '/quotations/new')}
         />
@@ -139,7 +138,7 @@ function ReadyToBillCard({ rows }: { rows: ReadyToBill[] }) {
             </AppText>
           </View>
           <Button
-            variant="tonal"
+            variant="secondary"
             label={t('uiBilling.makeBill')}
             onPress={() => router.push({ pathname: '/bills/new', params: { jobId: j.jobId } })}
           />
@@ -179,28 +178,25 @@ function CashWithTeams({ rows }: { rows: CashRow[] }) {
           <AppText variant="small" color={colors.slate}>
             {t('uiBilling.cashJob', { customer: c.customerName, n: c.jobNumber ?? '—' })}
           </AppText>
-          <View style={styles.actions}>
-            <View style={styles.flex}>
-              <Button
-                variant="tonal"
+          <ButtonRow>
+            <Button
+                variant="secondary"
                 icon="check"
                 label={t('uiBilling.gotIt')}
                 onPress={() => confirm.mutate(c.id)}
                 loading={confirm.isPending && confirm.variables === c.id}
                 disabled={confirm.isPending}
               />
-            </View>
-            <View style={styles.flex}>
-              <Button
-                variant="soft"
+            <Button
+                variant="secondary"
+                icon="close"
                 label={t('uiBilling.notReceived')}
                 onPress={() => {
                   reject.reset();
                   setRejecting(c);
                 }}
               />
-            </View>
-          </View>
+          </ButtonRow>
         </View>
       ))}
       {confirm.error ? <AppText color={colors.bad}>{billingError(t, confirm.error)}</AppText> : null}
@@ -228,7 +224,6 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.md },
   row: { flexDirection: 'row', alignItems: 'center', gap: space.md, paddingTop: space.sm, borderTopWidth: 1, borderTopColor: colors.warmLine },
   cashRow: { gap: 2, paddingTop: space.sm, borderTopWidth: 1, borderTopColor: colors.rowLine },
-  actions: { flexDirection: 'row', gap: space.sm, marginTop: space.xs },
   segments: { flexDirection: 'row', padding: space.xs, borderRadius: radius.md, backgroundColor: colors.soft },
   segment: { flex: 1, minHeight: 44, alignItems: 'center', justifyContent: 'center', borderRadius: radius.sm },
   segmentOn: { backgroundColor: colors.surface },

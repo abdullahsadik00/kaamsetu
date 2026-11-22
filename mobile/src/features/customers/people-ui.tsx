@@ -4,7 +4,7 @@ import { Linking, Pressable, StyleSheet, Switch, TextInput, View } from 'react-n
 
 import { AppText } from '@/components/ui/app-text';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
-import { Button } from '@/components/ui/button';
+import { Button, ButtonRow } from '@/components/ui/button';
 import { Icon, type IconName } from '@/components/ui/icon';
 import { useLanguage } from '@/localization/i18n';
 import { fontFamily } from '@/theme/fonts';
@@ -68,14 +68,10 @@ export function ConfirmSheet({
       onClose={onClose}
       title={title}
       footer={
-        <View style={styles.row}>
-          <View style={styles.flex}>
-            <Button variant="soft" label={t('common.cancel')} onPress={onClose} />
-          </View>
-          <View style={styles.flex}>
-            <Button variant="destructive" label={confirmLabel} onPress={onConfirm} loading={loading} />
-          </View>
-        </View>
+        <ButtonRow>
+          <Button variant="secondary" label={t('common.cancel')} onPress={onClose} />
+          <Button variant="destructive" label={confirmLabel} onPress={onConfirm} loading={loading} />
+        </ButtonRow>
       }
     >
       <AppText color={colors.slate}>{body}</AppText>
@@ -83,25 +79,21 @@ export function ConfirmSheet({
   );
 }
 
-/** Call + WhatsApp tonal buttons for an E.164 phone; `extra` sits at the end of the row. */
+/** Call + WhatsApp secondary buttons for an E.164 phone; `extra` sits at the end of the row. */
 export function ContactButtons({ phone, extra }: { phone: string; extra?: ReactNode }) {
   const { t } = useTranslation();
   const digits = phone.replace(/\D/g, '');
   return (
-    <View style={styles.row}>
-      <View style={styles.flex}>
-        <Button variant="tonal" icon="phone-outline" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${phone}`)} />
-      </View>
-      <View style={styles.flex}>
-        <Button
-          variant="tonal"
+    <ButtonRow>
+      <Button variant="secondary" icon="phone-outline" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${phone}`)} />
+      <Button
+          variant="secondary"
           icon="whatsapp"
           label={t('uiPeople.whatsapp')}
           onPress={() => Linking.openURL(`https://wa.me/${digits}`)}
         />
-      </View>
-      {extra ? <View style={styles.flex}>{extra}</View> : null}
-    </View>
+      {extra}
+    </ButtonRow>
   );
 }
 

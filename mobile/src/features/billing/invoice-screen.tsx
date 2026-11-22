@@ -9,13 +9,13 @@ import { ApiError } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
 import { Badge } from '@/components/ui/badge';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
-import { Button } from '@/components/ui/button';
+import { Button, ButtonRow } from '@/components/ui/button';
 import { Card, Field, SectionLabel } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { dayString } from '@/features/jobs/jobs';
-import { ConfirmDialog, FormSection, OptionChips, SheetRow } from '@/features/jobs/parts';
+import { ConfirmDialog, FormSection, HeaderMore, OptionChips, SheetRow } from '@/features/jobs/parts';
 import { colors, radius, space } from '@/theme/tokens';
 
 import {
@@ -121,38 +121,30 @@ export function InvoiceScreen({ kind }: { kind: Kind }) {
 
   const footer = isBill ? (
     b.status === 'DRAFT' ? (
-      <View style={styles.footerRow}>
-        <View style={styles.flex}>
-          <Button
+      <ButtonRow>
+        <Button
             variant="secondary"
             size="large"
             label={t('uiBilling.editDraft')}
             onPress={() => router.push({ pathname: '/bills/new', params: { id: b.id } })}
           />
-        </View>
-        <View style={styles.flex}>
-          <Button size="large" label={t('uiBilling.issue')} onPress={() => issue.mutate()} loading={issue.isPending} />
-        </View>
-      </View>
+        <Button size="large" label={t('uiBilling.issue')} onPress={() => issue.mutate()} loading={issue.isPending} />
+      </ButtonRow>
     ) : b.status === 'ISSUED' ? (
       <Button size="large" icon="plus" label={t('uiBilling.recordPayment')} onPress={() => setPanel('pay')} />
     ) : undefined
   ) : open ? (
     <>
       <Button size="large" icon="receipt-text-outline" label={t('uiBilling.toBill')} onPress={() => convert.mutate()} loading={convert.isPending} />
-      <View style={styles.footerRow}>
-        <View style={styles.flex}>
-          <Button
-            variant="soft"
+      <ButtonRow>
+        <Button
+            variant="secondary"
             icon="pencil-outline"
             label={t('uiBilling.editQuote')}
             onPress={() => router.push({ pathname: '/quotations/new', params: { id: b.id } })}
           />
-        </View>
-        <View style={styles.flex}>
-          <Button variant="tonal" icon="whatsapp" label={t('uiBilling.sendQuote')} onPress={() => share(b)} loading={sharing} />
-        </View>
-      </View>
+        <Button variant="secondary" icon="whatsapp" label={t('uiBilling.sendQuote')} onPress={() => share(b)} loading={sharing} />
+      </ButtonRow>
     </>
   ) : undefined;
 
@@ -161,12 +153,7 @@ export function InvoiceScreen({ kind }: { kind: Kind }) {
       <Stack.Screen
         options={{
           title,
-          headerRight: () => (
-            <Pressable accessibilityRole="button" accessibilityLabel={t('uiBilling.more')} onPress={() => setPanel('more')} hitSlop={8} style={styles.headerMore}>
-              <AppText weight="semibold">{t('uiBilling.more')}</AppText>
-              <Icon name="dots-vertical" />
-            </Pressable>
-          ),
+          headerRight: () => <HeaderMore label={t('uiBilling.more')} onPress={() => setPanel('more')} />,
         }}
       />
       <Screen footer={footer}>
@@ -191,14 +178,11 @@ export function InvoiceScreen({ kind }: { kind: Kind }) {
             <MoneyRow strong label={isBill ? t('uiBilling.billTotal') : t('uiBilling.total')} value={rupees(b.total)} />
           )}
           {isBill && b.status === 'ISSUED' ? (
-            <View style={styles.actions}>
-              <View style={styles.flex}>
-                <Button variant="tonal" icon="whatsapp" label={t('uiBilling.sendBill')} onPress={() => share(b)} loading={sharing} />
-              </View>
+            <ButtonRow>
+              <Button variant="secondary" icon="whatsapp" label={t('uiBilling.sendBill')} onPress={() => share(b)} loading={sharing} />
               {left && b.customer ? (
-                <View style={styles.flex}>
-                  <Button
-                    variant="soft"
+                <Button
+                    variant="secondary"
                     icon="bell-ring-outline"
                     label={t('uiBilling.sendReminder')}
                     onPress={() =>
@@ -210,9 +194,8 @@ export function InvoiceScreen({ kind }: { kind: Kind }) {
                       )
                     }
                   />
-                </View>
               ) : null}
-            </View>
+            </ButtonRow>
           ) : null}
           {pdfError ? <AppText color={colors.bad}>{t('uiBilling.pdfFailed')}</AppText> : null}
         </Card>
@@ -518,9 +501,6 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   center: { textAlign: 'center' },
   between: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.sm },
-  actions: { flexDirection: 'row', gap: space.sm, marginTop: space.xs },
-  footerRow: { flexDirection: 'row', gap: space.sm },
-  headerMore: { flexDirection: 'row', alignItems: 'center', gap: 2, minHeight: 44, paddingLeft: space.sm },
   sheetList: { borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, overflow: 'hidden' },
   line: {
     minHeight: 48,

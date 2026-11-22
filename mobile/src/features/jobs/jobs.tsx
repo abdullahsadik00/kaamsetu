@@ -1,6 +1,6 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Linking, Pressable, StyleSheet, View } from 'react-native';
 
@@ -8,7 +8,7 @@ import { ApiError, errorMessage } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
 import { Badge, STATUS_TONE } from '@/components/ui/badge';
 import { BottomSheet } from '@/components/ui/bottom-sheet';
-import { Button } from '@/components/ui/button';
+import { Button, ButtonRow } from '@/components/ui/button';
 import { Card, Field, SectionLabel } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Icon } from '@/components/ui/icon';
@@ -33,11 +33,11 @@ import type { FeedItem } from '@/features/updates/api';
 import { JobFeed } from '@/features/updates/feed';
 import { colors, radius, space } from '@/theme/tokens';
 
-import { ConfirmDialog, FilterChips, FormSection, OptionChips, SheetRow } from './parts';
+import { JOB_TYPES, type JobType } from './job-type';
+import { ConfirmDialog, FilterChips, FormSection, HeaderMore, OptionChips, SheetRow } from './parts';
 
 // ---------- API (docs/06 §6, D-030) ----------
 
-type JobType = 'SERVICE' | 'REPAIR' | 'INSTALLATION' | 'UNINSTALLATION' | 'GAS_FILLING' | 'OTHER';
 type Slot = 'MORNING' | 'AFTERNOON' | 'EVENING';
 export type Status = 'NEW' | 'ASSIGNED' | 'IN_PROGRESS' | 'ON_HOLD' | 'COMPLETED' | 'CANCELLED';
 
@@ -82,7 +82,7 @@ export const useJobs = (filter: string) =>
 const useJob = (id: string) =>
   queryOptions({ queryKey: [...JOBS_KEY, id], queryFn: () => api.get<Job>(`/jobs/${id}`) });
 
-const TYPES: JobType[] = ['SERVICE', 'REPAIR', 'INSTALLATION', 'UNINSTALLATION', 'GAS_FILLING', 'OTHER'];
+const TYPES = JOB_TYPES;
 const SLOTS: Slot[] = ['MORNING', 'AFTERNOON'];
 
 /** Local calendar date as YYYY-MM-DD, `offset` days from today. */
@@ -135,7 +135,8 @@ export function JobsScreen() {
     <Screen>
       <View style={styles.titleRow}>
         <AppText variant="title">{t('owner.jobs')}</AppText>
-        <Button icon="plus" label={t('uiOwner.newShort')} onPress={() => router.push('/jobs/new')} />
+        {/* Tab header action: the word alone, no plus (BUG-13). */}
+        <Button label={t('uiOwner.newShort')} onPress={() => router.push('/jobs/new')} />
       </View>
       <PendingSaves only={['job.create', 'enquiry.create']} />
       <View style={styles.segments} accessibilityRole="tablist">
@@ -228,6 +229,12 @@ export function NewJobScreen() {
   const { t } = useTranslation();
   const params = useLocalSearchParams<{ customerId?: string; enquiryId?: string }>();
   const [customerId, setCustomerId] = useState<string | null>(params.customerId ?? null);
+  // Add customer from here comes back with ?customerId=… (BUG-14): select them, keep the rest.
+  const [seenCustomerParam, setSeenCustomerParam] = useState(params.customerId);
+  if (params.customerId !== seenCustomerParam) {
+    setSeenCustomerParam(params.customerId);
+    if (params.customerId) setCustomerId(params.customerId);
+  }
   const [q, setQ] = useState('');
   const found = useQuery({ ...useCustomers(q.trim()), enabled: !customerId && !params.enquiryId });
   const enquiry = useQuery({ ...useEnquiry(params.enquiryId ?? ''), enabled: !!params.enquiryId });
@@ -241,7 +248,16 @@ export function NewJobScreen() {
 
   if (!customerId) {
     return (
-      <Screen footer={<Button variant="secondary" icon="account-plus-outline" label={t('customers.add')} onPress={() => router.push('/customers/new')} />}>
+      <Screen
+        footer={
+          <Button
+            variant="secondary"
+            icon="account-plus-outline"
+            label={t('customers.add')}
+            onPress={() => router.push({ pathname: '/customers/new', params: { returnTo: 'job' } })}
+          />
+        }
+      >
         <TextField
           label={t('jobs.whichCustomer')}
           optionalLabel={t('uiOwner.searchByHint')}
@@ -301,6 +317,8 @@ function JobForm({
   const [source, setSource] = useState<Source>('WHATSAPP');
   const [teamId, setTeamId] = useState<string | null>(null);
   const [amount, setAmount] = useState('');
+  // isPending only shows after a re-render; this stops a fast double tap creating two jobs or enquiries.
+  const submitting = useRef(false);
   const job = () => ({
     ...(day !== 'none' ? { scheduledDate: day, timeSlot: slot } : {}),
     ...(teamId ? { teamId } : {}),
@@ -367,33 +385,40 @@ function JobForm({
   const site = c.sites.find((s) => s.id === siteId) ?? c.sites[0];
   const activeTeams = (teams.data ?? []).filter((tm) => tm.active);
   const addTag = (text: string) => setComplaint((v) => (v.trim() ? `${v.trim()}, ${text}` : text));
+  const submit = (run: (site: string) => Promise<unknown>) => {
+    if (!site || submitting.current) return;
+    submitting.current = true;
+    // On success the screen is replaced; on error (shown below the form) the owner can try again.
+    run(site.id).catch(() => {
+      submitting.current = false;
+    });
+  };
 
   return (
     <Screen
       footer={
-        <View style={styles.footerRow}>
+        // Stacked full width (job on top, enquiry below) so both labels fit one line in every language.
+        <>
+          <Button
+            size="large"
+            label={teamId ? t('uiEnquiry.createJob') : t('uiEnquiry.saveJob')}
+            loadingLabel={teamId ? t('uiEnquiry.creatingJob') : t('uiEnquiry.savingJob')}
+            onPress={() => submit(save.mutateAsync)}
+            loading={save.isPending}
+            disabled={busy}
+          />
           {enquiry ? null : (
-            <View style={styles.flex}>
-              <Button
-                variant="secondary"
-                size="large"
-                label={t('uiEnquiry.saveEnquiry')}
-                onPress={() => site && saveEnquiry.mutate(site.id)}
-                loading={saveEnquiry.isPending}
-                disabled={busy}
-              />
-            </View>
-          )}
-          <View style={styles.flex}>
             <Button
+              variant="secondary"
               size="large"
-              label={t('uiEnquiry.createJob')}
-              onPress={() => site && save.mutate(site.id)}
-              loading={save.isPending}
+              label={t('uiEnquiry.saveEnquiry')}
+              loadingLabel={t('uiEnquiry.savingEnquiry')}
+              onPress={() => submit(saveEnquiry.mutateAsync)}
+              loading={saveEnquiry.isPending}
               disabled={busy}
             />
-          </View>
-        </View>
+          )}
+        </>
       }
     >
       {enquiry ? <Stack.Screen options={{ title: t('uiEnquiry.convertTitle', { n: enquiry.number }) }} /> : null}
@@ -458,7 +483,7 @@ function JobForm({
             </AppText>
             {site ? (
               <Button
-                variant="dashed"
+                variant="secondary"
                 icon="plus"
                 label={t('customers.addAc')}
                 onPress={() => router.push({ pathname: '/customers/[id]/ac', params: { id: c.id, siteId: site.id } })}
@@ -642,34 +667,20 @@ export function JobScreen() {
       <Stack.Screen
         options={{
           title: `#${j.jobNumber}`,
-          headerRight: () => (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('uiOwner.more')}
-              onPress={() => setPanel('more')}
-              hitSlop={8}
-              style={styles.headerMore}
-            >
-              <AppText weight="semibold">{t('uiOwner.more')}</AppText>
-              <Icon name="dots-vertical" />
-            </Pressable>
-          ),
+          headerRight: () => <HeaderMore label={t('uiOwner.more')} onPress={() => setPanel('more')} />,
         }}
       />
       <Screen
         footer={
           open ? (
             j.teamId ? (
-              <View style={styles.footerRow}>
-                <View style={styles.flex}>
-                  <Button variant="soft" label={t('uiOwner.changeTeamTime')} onPress={openAssign} />
-                </View>
+              // Stacked full width: "Change team or time" does not fit half a footer in hi/mr.
+              <>
+                <Button variant="secondary" icon="calendar-edit" label={t('uiOwner.changeTeamTime')} onPress={openAssign} />
                 {teamPhone ? (
-                  <View style={styles.flex}>
-                    <Button variant="tonal" icon="phone-outline" label={t('uiOwner.callTeam')} onPress={() => Linking.openURL(`tel:${teamPhone}`)} />
-                  </View>
+                  <Button variant="secondary" icon="phone-outline" label={t('uiOwner.callTeam')} onPress={() => Linking.openURL(`tel:${teamPhone}`)} />
                 ) : null}
-              </View>
+              </>
             ) : (
               <Button size="large" icon="account-group-outline" label={t('uiOwner.assignTeam')} onPress={openAssign} />
             )
@@ -691,26 +702,19 @@ export function JobScreen() {
           <AppText variant="support" color={colors.slate}>
             {[j.customer ? displayPhone(j.customer.phone) : null, address].filter(Boolean).join(' · ')}
           </AppText>
-          <View style={styles.actions}>
-            {j.customer ? (
-              <>
-                <View style={styles.flex}>
-                  <Button variant="soft" icon="phone-outline" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${j.customer?.phone}`)} />
-                </View>
-                <View style={styles.flex}>
-                  <Button variant="soft" icon="whatsapp" label={t('uiOwner.whatsapp')} onPress={() => Linking.openURL(`https://wa.me/${phoneDigits}`)} />
-                </View>
-              </>
-            ) : null}
-            <View style={styles.flex}>
-              <Button
-                variant="soft"
-                icon="account-outline"
-                label={t('uiOwner.customer')}
-                onPress={() => router.push({ pathname: '/customers/[id]', params: { id: j.customerId } })}
-              />
-            </View>
-          </View>
+          {/* Two per row (BUG-10): three across left each label ~33 dp at 360 dp and they wrapped. */}
+          {j.customer ? (
+            <ButtonRow>
+              <Button variant="secondary" icon="phone-outline" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${j.customer?.phone}`)} />
+              <Button variant="secondary" icon="whatsapp" label={t('uiOwner.whatsapp')} onPress={() => Linking.openURL(`https://wa.me/${phoneDigits}`)} />
+            </ButtonRow>
+          ) : null}
+          <Button
+            variant="secondary"
+            icon="account-outline"
+            label={t('uiOwner.customer')}
+            onPress={() => router.push({ pathname: '/customers/[id]', params: { id: j.customerId } })}
+          />
         </Card>
 
         <Card>
@@ -914,9 +918,6 @@ const styles = StyleSheet.create({
   iconLine: { flexDirection: 'row', alignItems: 'center', gap: space.xs },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   tag: { minHeight: 36, justifyContent: 'center', paddingHorizontal: space.md, borderRadius: radius.full, backgroundColor: colors.soft },
-  actions: { flexDirection: 'row', gap: space.sm, marginTop: space.xs },
-  footerRow: { flexDirection: 'row', gap: space.sm },
-  headerMore: { flexDirection: 'row', alignItems: 'center', gap: 2, minHeight: 44, paddingLeft: space.sm },
   sheetList: { borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, overflow: 'hidden' },
   teamOption: {
     flexDirection: 'row',

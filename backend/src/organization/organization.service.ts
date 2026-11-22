@@ -117,6 +117,10 @@ export class OrganizationService {
       );
     }
     const now = new Date();
+    const led = await this.prisma.teamMember.findMany({
+      where: { organizationMemberId: member.id, leftAt: null, isPrimary: true },
+      select: { teamId: true },
+    });
     await this.prisma.$transaction([
       this.prisma.organizationMember.update({
         where: { id: member.id },
@@ -136,6 +140,15 @@ export class OrganizationService {
       }),
       audit(this.prisma, auth, 'EMPLOYEE_REMOVED', 'OrganizationMember', member.id, { role: member.role }),
     ]);
+    // A team whose lead was removed gets its longest-serving senior as lead,
+    // as when a lead leaves the team (BUG-19).
+    for (const { teamId } of led) {
+      const next = await this.prisma.teamMember.findFirst({
+        where: { teamId, leftAt: null, position: 'SENIOR_TECHNICIAN' },
+        orderBy: { joinedAt: 'asc' },
+      });
+      if (next) await this.prisma.teamMember.update({ where: { id: next.id }, data: { isPrimary: true } });
+    }
     return { removed: true };
   }
 

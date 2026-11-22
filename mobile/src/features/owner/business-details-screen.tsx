@@ -93,7 +93,7 @@ function BusinessView({ business }: { business: Business }) {
           {t('business.saved')}
         </AppText>
       ) : null}
-      <Button variant="soft" icon="pencil-outline" label={t('uiOwner.editDetails')} onPress={() => setEditing(true)} />
+      <Button variant="secondary" icon="pencil-outline" label={t('uiOwner.editDetails')} onPress={() => setEditing(true)} />
     </Screen>
   );
 }

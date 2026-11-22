@@ -62,11 +62,14 @@ export type SiteInput = {
 
 export const CUSTOMERS_KEY = ['customers'] as const;
 
-export const useCustomers = (q: string) =>
+/** Customer list; `archived` shows only archived customers (to find and bring one back). */
+export const useCustomers = (q: string, archived = false) =>
   queryOptions({
-    queryKey: [...CUSTOMERS_KEY, 'list', q],
-    queryFn: () =>
-      api.get<CustomerRow[]>(`/customers${q ? `?q=${encodeURIComponent(q)}` : ''}`),
+    queryKey: [...CUSTOMERS_KEY, 'list', q, archived],
+    queryFn: () => {
+      const params = [q ? `q=${encodeURIComponent(q)}` : null, archived ? 'archived=true' : null].filter(Boolean).join('&');
+      return api.get<CustomerRow[]>(`/customers${params ? `?${params}` : ''}`);
+    },
   });
 
 export const useCustomer = (id: string) =>

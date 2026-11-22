@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Linking, Pressable, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
-import { Button } from '@/components/ui/button';
+import { Button, ButtonRow } from '@/components/ui/button';
 import { Card, SectionLabel } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Icon } from '@/components/ui/icon';
@@ -17,7 +17,7 @@ import { colors, radius, space } from '@/theme/tokens';
 
 import { rupees, shortDate, todayIso, useDismissAttention, useLocalState, useMyJobs, useSaveOp, type FieldJob, type SavedUpdate } from './data';
 import { FinishForm, type FinishPayload } from './finish-form';
-import { jobSummary, slotLabel, StatusBadge } from './parts';
+import { jobSummary, mapsUrl, slotLabel, StatusBadge } from './parts';
 import { HoldSheet, UpdateStatusSheet, type HoldSide } from './status-sheets';
 import { AppointmentSheet, NoteSheet, PartSheet, type UpdateKind } from './update-sheets';
 
@@ -45,7 +45,8 @@ export function JobScreen({ id }: { id: string }) {
 }
 
 function goMyWork() {
-  router.navigate('/my-work');
+  // Back down the My Work stack to the list (or to it, if the job page was opened on its own).
+  router.dismissTo('/my-work');
 }
 
 function JobBody({ job }: { job: FieldJob }) {
@@ -119,7 +120,7 @@ function JobBody({ job }: { job: FieldJob }) {
               />
             ) : null}
             {s === 'IN_PROGRESS' ? <Button label={t('field.finish')} icon="check" size="large" onPress={() => setMode('finish')} /> : null}
-            <Button variant="soft" icon="sync" label={t('uiField.updateStatus')} onPress={() => setSheet(true)} />
+            <Button variant="secondary" icon="sync" label={t('uiField.updateStatus')} onPress={() => setSheet(true)} />
           </>
         )
       }
@@ -145,28 +146,24 @@ function JobBody({ job }: { job: FieldJob }) {
             {t('sync.attention')} · {t('field.callOwner')}
           </AppText>
           <AppText>{refusedMessage(t, state.data.code)}</AppText>
-          <Button variant="soft" label={t('sync.gotIt')} onPress={() => dismiss.mutate()} loading={dismiss.isPending} />
+          <Button variant="secondary" label={t('sync.gotIt')} onPress={() => dismiss.mutate()} loading={dismiss.isPending} />
         </Card>
       ) : null}
 
       {job.customer || job.address ? (
-        <View style={styles.row}>
+        <ButtonRow>
           {job.customer ? (
-            <View style={styles.flex}>
-              <Button variant="soft" icon="phone-outline" label={t('field.call')} onPress={() => Linking.openURL(`tel:${job.customer?.phone}`)} />
-            </View>
+            <Button variant="secondary" icon="phone-outline" label={t('field.call')} onPress={() => Linking.openURL(`tel:${job.customer?.phone}`)} />
           ) : null}
           {job.address ? (
-            <View style={styles.flex}>
-              <Button
-                variant="soft"
+            <Button
+                variant="secondary"
                 icon="navigation-variant-outline"
                 label={t('field.dir')}
-                onPress={() => Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.address ?? '')}`)}
+                onPress={() => Linking.openURL(mapsUrl(job.address ?? ''))}
               />
-            </View>
           ) : null}
-        </View>
+        </ButtonRow>
       ) : null}
 
       {job.address ? (
@@ -376,7 +373,6 @@ function Confirmation({ job, payload }: { job: FieldJob; payload: FinishPayload 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   center: { textAlign: 'center' },
-  row: { flexDirection: 'row', gap: space.sm },
   head: { gap: space.xs },
   backBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: space.sm },
   back: { flexDirection: 'row', alignItems: 'center', gap: space.sm, minHeight: 48, flexShrink: 1 },

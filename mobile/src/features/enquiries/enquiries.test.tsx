@@ -1,4 +1,5 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 
 import { api } from '@/features/auth/session';
 import { NewJobScreen } from '@/features/jobs/jobs';
@@ -118,7 +119,7 @@ describe('Enquiries (T4.5)', () => {
     await renderScreen(<NewJobScreen />);
     expect(await screen.findByDisplayValue('Hall AC makes noise at night')).toBeTruthy();
     expect(screen.queryByText('Save enquiry')).toBeNull();
-    await fireEvent.press(screen.getByText('Create job & assign'));
+    await fireEvent.press(screen.getByText('Save job'));
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith(
         '/enquiries/enq-1/convert',
@@ -126,5 +127,62 @@ describe('Enquiries (T4.5)', () => {
       ),
     );
     expect(mockReplace).toHaveBeenCalledWith({ pathname: '/jobs/[id]', params: { id: 'job-9' } });
+  });
+
+  it('the job button says "Create job & assign" only once a team is picked (BUG-04)', async () => {
+    mockParams = { customerId: 'cust-1' };
+    jest.spyOn(api, 'get').mockImplementation(((path: string) =>
+      Promise.resolve(
+        path.startsWith('/customers') ? customer : path === '/teams' ? [{ id: 'team-1', name: 'Team Ravi', active: true }] : [],
+      )) as never);
+    await renderScreen(<NewJobScreen />);
+    expect(await screen.findByRole('button', { name: 'Save job' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save enquiry' })).toBeTruthy();
+    await fireEvent.press(await screen.findByText('Team Ravi'));
+    expect(screen.getByRole('button', { name: 'Create job & assign' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Save job' })).toBeNull();
+  });
+
+  it('while saving, both buttons are off, the tapped one says what it is doing, and a second tap does nothing (BUG-06)', async () => {
+    mockParams = { customerId: 'cust-1' };
+    jest.spyOn(api, 'get').mockImplementation(((path: string) =>
+      Promise.resolve(path.startsWith('/customers') ? customer : [])) as never);
+    const post = jest.spyOn(api, 'post').mockReturnValue(new Promise(() => {}) as never);
+    await renderScreen(<NewJobScreen />);
+    const job = await screen.findByRole('button', { name: 'Save job' });
+    await fireEvent.press(job);
+    await fireEvent.press(job);
+    const saving = await screen.findByRole('button', { name: 'Saving job…' });
+    expect(screen.getByText('Saving job…')).toBeTruthy();
+    expect(saving.props.accessibilityState).toMatchObject({ disabled: true, busy: true });
+    expect(screen.getByRole('button', { name: 'Save enquiry' }).props.accessibilityState).toMatchObject({ disabled: true });
+    await fireEvent.press(screen.getByRole('button', { name: 'Save enquiry' }));
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(post).toHaveBeenCalledWith('/jobs', expect.objectContaining({ customerId: 'cust-1' }));
+  });
+
+  it('a converted enquiry shows a compact "Job made" chip on its own line at the top (BUG-12)', async () => {
+    mockParams = { id: 'enq-1' };
+    jest.spyOn(api, 'get').mockResolvedValue({ ...enquiry, status: 'CONVERTED', jobId: 'job-9', jobNumber: 9, job: { id: 'job-9', number: 9 } } as never);
+    await renderScreen(<EnquiryScreen />);
+    const chip = (await screen.findByText('Job made')).parent;
+    expect(StyleSheet.flatten(chip?.props.style)).toMatchObject({ alignSelf: 'flex-start', flexShrink: 0 });
+    // Not squeezed into a row beside the saved-at line any more.
+    expect(StyleSheet.flatten(chip?.parent?.props.style) ?? {}).not.toMatchObject({ flexDirection: 'row' });
+    expect(screen.getByRole('button', { name: 'Open job #9' })).toBeTruthy();
+  });
+
+  it('Add customer from the form comes back with that customer selected (BUG-14)', async () => {
+    jest.spyOn(api, 'get').mockImplementation(((path: string) =>
+      Promise.resolve(path.startsWith('/customers/') ? customer : [])) as never);
+    await renderScreen(<NewJobScreen />);
+    await fireEvent.press(await screen.findByText('Add customer'));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/customers/new', params: { returnTo: 'job' } });
+
+    // The customer form dismisses back here with ?customerId=…; the next render picks it up.
+    mockParams = { customerId: 'cust-1' };
+    await fireEvent.changeText(screen.getByLabelText('Which customer?'), 'R');
+    expect(await screen.findByText('Rohan Kulkarni')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save job' })).toBeTruthy();
   });
 });

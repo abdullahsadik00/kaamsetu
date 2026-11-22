@@ -23,6 +23,9 @@ export function jobSummary(t: TFunction, job: FieldJob, withLocality = true): st
     .join(' · ');
 }
 
+/** Google Maps search for a job's address: Directions on the senior job page and the helper card. */
+export const mapsUrl = (address: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+
 export function slotLabel(t: TFunction, job: FieldJob): string | null {
   return job.timeSlot ? t(`jobs.slots.${job.timeSlot}`) : null;
 }

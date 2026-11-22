@@ -3,7 +3,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
 import { Icon, type IconName } from '@/components/ui/icon';
-import { colors, radius, space } from '@/theme/tokens';
+import { colors, radius, space, touch } from '@/theme/tokens';
 
 type Option<T extends string> = { value: T; label: string; icon?: IconName };
 
@@ -75,7 +75,14 @@ export function FilterChips<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters} accessibilityLabel={label}>
+    // ScrollView grows by default; inside the screen's growing body it took the leftover height and the chips stretched.
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.filterRow}
+      contentContainerStyle={styles.filters}
+      accessibilityLabel={label}
+    >
       {options.map((o) => {
         const on = o.value === value;
         return (
@@ -84,6 +91,7 @@ export function FilterChips<T extends string>({
             accessibilityRole="radio"
             accessibilityState={{ checked: on }}
             onPress={() => onChange(o.value)}
+            hitSlop={FILTER_SLOP}
             style={[styles.filter, on && styles.filterOn]}
           >
             <AppText variant="support" weight="semibold" color={on ? colors.tealTintText : colors.ink}>
@@ -93,6 +101,24 @@ export function FilterChips<T extends string>({
         );
       })}
     </ScrollView>
+  );
+}
+
+const FILTER_HEIGHT = 36;
+/** Pills look 36 dp but still take a 48 dp touch. */
+const FILTER_SLOP = { top: (touch.min - FILTER_HEIGHT) / 2, bottom: (touch.min - FILTER_HEIGHT) / 2 };
+
+/** Header ⋮ that opens a page's action sheet: one icon, named "More" for screen readers (BUG-08). */
+export function HeaderMore({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={({ pressed }) => [styles.headerMore, pressed && styles.chipPressed]}
+    >
+      <Icon name="dots-vertical" color={colors.ink} />
+    </Pressable>
   );
 }
 
@@ -144,7 +170,7 @@ export function ConfirmDialog({
           {children}
           <View style={styles.dialogActions}>
             <Pressable accessibilityRole="button" onPress={onKeep} style={styles.dialogBtn}>
-              <AppText weight="semibold" color={colors.slate}>
+              <AppText weight="semibold" color={colors.slate} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
                 {keepLabel}
               </AppText>
             </Pressable>
@@ -155,7 +181,7 @@ export function ConfirmDialog({
               onPress={onConfirm}
               style={({ pressed }) => [styles.dialogBtn, styles.dangerBtn, pressed && { opacity: 0.85 }, off && styles.dangerOff]}
             >
-              <AppText weight="semibold" color={colors.white}>
+              <AppText weight="semibold" color={colors.white} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
                 {confirmLabel}
               </AppText>
             </Pressable>
@@ -186,17 +212,19 @@ const styles = StyleSheet.create({
   gridChip: { flexGrow: 1, flexBasis: '30%' },
   chipOn: { backgroundColor: colors.tealTint, borderColor: colors.teal },
   chipPressed: { backgroundColor: colors.soft },
-  filters: { gap: space.sm, paddingRight: space.lg },
+  filterRow: { flexGrow: 0 },
+  filters: { gap: space.sm, paddingRight: space.lg, paddingVertical: (touch.min - FILTER_HEIGHT) / 2, alignItems: 'center' },
   filter: {
-    minHeight: 44,
+    height: FILTER_HEIGHT,
     justifyContent: 'center',
     paddingHorizontal: space.lg,
-    borderRadius: radius.md,
+    borderRadius: radius.full,
     borderWidth: 1,
     borderColor: colors.line2,
     backgroundColor: colors.surface,
   },
   filterOn: { backgroundColor: colors.tealTint, borderColor: colors.teal },
+  headerMore: { width: touch.min, height: touch.min, alignItems: 'center', justifyContent: 'center', borderRadius: radius.full },
   sheetRow: {
     minHeight: 56,
     flexDirection: 'row',
@@ -208,8 +236,9 @@ const styles = StyleSheet.create({
   },
   dim: { flex: 1, backgroundColor: 'rgba(20,33,61,0.45)', justifyContent: 'center', padding: space.lg },
   dialog: { backgroundColor: colors.surface, borderRadius: radius.lg, padding: space.xl, gap: space.md },
-  dialogActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: space.sm, marginTop: space.sm },
-  dialogBtn: { minHeight: 48, paddingHorizontal: space.lg, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
+  // Keep and confirm split the row 50/50 (BUG-09), not just as wide as their words.
+  dialogActions: { flexDirection: 'row', gap: space.sm, marginTop: space.sm },
+  dialogBtn: { flex: 1, height: touch.min, paddingHorizontal: space.md, borderRadius: radius.md, alignItems: 'center', justifyContent: 'center' },
   dangerBtn: { backgroundColor: colors.bad },
   dangerOff: { opacity: 0.5 },
 });

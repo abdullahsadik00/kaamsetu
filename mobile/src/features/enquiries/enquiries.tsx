@@ -7,7 +7,7 @@ import { ActivityIndicator, Linking, StyleSheet, View } from 'react-native';
 import { errorMessage } from '@/api/errors';
 import { AppText } from '@/components/ui/app-text';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Button, ButtonRow } from '@/components/ui/button';
 import { Card, Field } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
 import { Screen } from '@/components/ui/screen';
@@ -179,7 +179,7 @@ export function EnquiryScreen() {
                 label={t('uiEnquiry.convert')}
                 onPress={() => router.push({ pathname: '/jobs/new', params: { enquiryId: e.id } })}
               />
-              <Button variant="text" label={t('uiEnquiry.closeEnquiry')} onPress={() => setClosing(true)} />
+              <Button variant="text" icon="close-circle-outline" label={t('uiEnquiry.closeEnquiry')} onPress={() => setClosing(true)} />
             </View>
           ) : e.job ? (
             <Button
@@ -191,12 +191,11 @@ export function EnquiryScreen() {
           ) : undefined
         }
       >
-        <View style={styles.between}>
-          <AppText variant="support" color={colors.slate} style={styles.flex}>
-            {savedAt(e.createdAt)} · {t('uiEnquiry.via', { source: t(`uiEnquiry.src_${e.source}`) })}
-          </AppText>
-          <Badge label={t(BADGE[e.status].key)} tone={BADGE[e.status].tone} />
-        </View>
+        {/* Status chip on its own line at the top, as on the job page (BUG-12); it hugs its text. */}
+        <Badge label={t(BADGE[e.status].key)} tone={BADGE[e.status].tone} />
+        <AppText variant="support" color={colors.slate}>
+          {savedAt(e.createdAt)} · {t('uiEnquiry.via', { source: t(`uiEnquiry.src_${e.source}`) })}
+        </AppText>
 
         <Card>
           <AppText variant="section">{e.customerName}</AppText>
@@ -204,14 +203,10 @@ export function EnquiryScreen() {
             {[e.customer ? displayPhone(e.customer.phone) : null, address].filter(Boolean).join(' · ')}
           </AppText>
           {e.customer ? (
-            <View style={styles.actions}>
-              <View style={styles.flex}>
-                <Button variant="soft" icon="phone-outline" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${e.customer?.phone}`)} />
-              </View>
-              <View style={styles.flex}>
-                <Button variant="soft" icon="whatsapp" label={t('uiOwner.whatsapp')} onPress={() => Linking.openURL(`https://wa.me/${phoneDigits}`)} />
-              </View>
-            </View>
+            <ButtonRow>
+              <Button variant="secondary" icon="phone-outline" label={t('customers.call')} onPress={() => Linking.openURL(`tel:${e.customer?.phone}`)} />
+              <Button variant="secondary" icon="whatsapp" label={t('uiOwner.whatsapp')} onPress={() => Linking.openURL(`https://wa.me/${phoneDigits}`)} />
+            </ButtonRow>
           ) : null}
         </Card>
 
@@ -267,7 +262,6 @@ export function EnquiryScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   between: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.sm },
-  actions: { flexDirection: 'row', gap: space.sm, marginTop: space.xs },
   footer: { gap: space.xs },
   center: { textAlign: 'center' },
 });

@@ -13,7 +13,7 @@ export function Badge({ label, tone, icon }: Props) {
   return (
     <View style={[styles.badge, { backgroundColor: c.fill }]}>
       {icon ? <Icon name={icon} size={14} color={c.text} /> : null}
-      <AppText variant="small" weight="semibold" color={c.text}>
+      <AppText variant="small" weight="semibold" color={c.text} numberOfLines={1}>
         {label}
       </AppText>
     </View>
@@ -35,6 +35,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
+    // Never squeezed below its text by a flex: 1 neighbour in a row (BUG-11: "Job made" wrapped).
+    flexShrink: 0,
     gap: space.xs,
     paddingHorizontal: space.sm,
     paddingVertical: 2,

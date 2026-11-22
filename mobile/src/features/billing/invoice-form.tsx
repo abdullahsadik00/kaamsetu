@@ -397,7 +397,7 @@ function InvoiceForm({ kind, start, onConflict }: { kind: Kind; start: Start; on
               <AppText weight="semibold">{rupees(it.qty * it.unitPrice)}</AppText>
             </Pressable>
           ))}
-          <Button variant="dashed" icon="plus" label={t('uiBilling.addItem')} onPress={() => openItem('new')} />
+          <Button variant="secondary" icon="plus" label={t('uiBilling.addItem')} onPress={() => openItem('new')} />
           <Button
             variant="text"
             icon="percent"

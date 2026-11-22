@@ -22,7 +22,8 @@ export function CustomersScreen() {
   const { t } = useTranslation();
   const [q, setQ] = useState('');
   const query = useDeferredValue(q.trim());
-  const list = useQuery(useCustomers(query));
+  const [archived, setArchived] = useState(false);
+  const list = useQuery(useCustomers(query, archived));
   const add = () => router.push('/customers/new');
 
   return (
@@ -34,6 +35,7 @@ export function CustomersScreen() {
         onChangeText={setQ}
       />
       <PendingSaves only={['customer.create', 'equipment.create']} />
+      {archived ? <AppText variant="section">{t('customers.archivedTitle')}</AppText> : null}
       {list.isPending ? <ActivityIndicator color={colors.teal} /> : null}
       {list.isError ? (
         <View style={{ gap: space.sm }}>
@@ -41,7 +43,9 @@ export function CustomersScreen() {
           <Button variant="secondary" label={t('common.retry')} onPress={() => list.refetch()} />
         </View>
       ) : null}
-      {list.data?.length === 0 ? (
+      {list.data?.length === 0 && archived ? (
+        <AppText color={colors.slate}>{t('customers.noArchived')}</AppText>
+      ) : list.data?.length === 0 ? (
         query ? (
           <EmptyState
             icon="account-search-outline"
@@ -69,6 +73,13 @@ export function CustomersScreen() {
             />
           ))}
         </Card>
+      ) : null}
+      {list.isSuccess ? (
+        <Button
+          variant="text"
+          label={archived ? t('customers.showActive') : t('customers.showArchived')}
+          onPress={() => setArchived(!archived)}
+        />
       ) : null}
     </Screen>
   );

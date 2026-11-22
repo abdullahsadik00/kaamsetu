@@ -108,6 +108,7 @@ export function JoinScreen() {
           />
           <Button
             size="large"
+            icon="login"
             label={join.isPending ? t('join.joining') : t('join.join')}
             onPress={() => submit()}
             loading={join.isPending}
@@ -115,7 +116,7 @@ export function JoinScreen() {
           <Button variant="text" icon="qrcode-scan" label={t('join.scan')} onPress={() => setManual(false)} />
         </View>
       ) : (
-        <Button variant="text" label={t('join.enterCode')} onPress={() => setManual(true)} />
+        <Button variant="text" icon="keyboard-outline" label={t('join.enterCode')} onPress={() => setManual(true)} />
       )}
 
       {join.error ? (
