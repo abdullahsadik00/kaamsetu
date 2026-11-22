@@ -83,6 +83,14 @@ async function upsertMember(
   return member.id;
 }
 
+const DEMO_RATES: [string, number, number][] = [
+  ['AC service (split)', 50000, 0],
+  ['AC service (window)', 40000, 0],
+  ['Gas filling', 250000, 18],
+  ['Capacitor', 45000, 18],
+  ['Installation', 150000, 18],
+];
+
 async function seedBusiness(
   b: DemoBusiness,
 ): Promise<{ people: number; invite: { code: string; qr: string } }> {
@@ -112,6 +120,11 @@ async function seedBusiness(
       { name: team.helper, phone: `+91${b.staffPrefix}2${n}` },
       'HELPER',
     );
+  }
+  // A starter rate list (T4.10, D-039), prices in paise; kept if already there.
+  for (const [name, unitPrice, gstRate] of DEMO_RATES) {
+    const has = await prisma.rateItem.findFirst({ where: { organizationId: org.id, name } });
+    if (!has) await prisma.rateItem.create({ data: { organizationId: org.id, name, unitPrice, gstRate } });
   }
   return {
     people: 1 + b.teams.length * 2,
