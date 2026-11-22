@@ -2,6 +2,11 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-22 — Download business data in the app
+
+- App: **More › Download business data** saves everything the business entered as one file and opens the share sheet (Drive, email, WhatsApp). Needs the internet; says so when it cannot download. Hindi and Marathi included.
+- New package `expo-file-system` (native: needs a new APK). Phone test TP-46. App tests 132 passed.
+
 ## 2026-11-22 — Business data export (server)
 
 - Backend: `GET /organization/export` (owner only) gives everything the business entered as one JSON file; login data is left out; each export is in the audit log. Pilot command `export` writes the same file for a data request. The app button comes later (needs a file package).

@@ -74,6 +74,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-43 | 4 Owner | Rate list and bill date | T4.10 (D-039) | Pending | | Needs the new APK and backend |
 | TP-44 | 4 Owner | Owner screens without internet | T4.9 (D-021) | Pending | | Needs the new APK |
 | TP-45 | 4 Owner | Owner saves without internet | T4.9 (D-021) | Pending | | Needs the new APK and backend |
+| TP-46 | 4 Owner | Download business data | T7.3 | Pending | | Needs the new APK and backend |
 | TP-39b | 4 Owner | Updates from teams, bell, job feed | T4.7 (D-037) | Pending | | |
 | TP-36b | 4 Owner | Home dashboard | T4.12 | Pending | | |
 | TP-34 | 4 Owner | Quotations and bills | T4.10 | Pending | | GST rates wait for Q-04 |
@@ -524,6 +525,16 @@ Log out and log in as the **owner** for the rest.
 - Step 6: the card goes away; the job has a number and the enquiry an E- number; Offline Test is in Customers once.
 - Step 7: the new job is on the senior's My Work.
 - Bills and payments still say they need the internet (D-018).
+
+### TP-46 Download business data
+1. Owner: **More** › **Download business data**.
+2. In the share sheet pick Gmail (send to yourself) or Drive.
+3. Turn on airplane mode and tap **Download business data** again.
+
+**Expected**
+- Step 1: the line says "Preparing the file…", then the share sheet opens with `kaamsetu-data-<today>.json`.
+- Step 2: the file arrives; opened on a PC it lists your customers, jobs and bills by name (amounts in paise: ₹800 shows as 80000).
+- Step 3: "Could not download. Check the internet and try again." No share sheet.
 
 ### TP-25 Reset login and remove an employee (run last)
 1. **More › Employees** › **Test Helper** › **Reset login** and confirm.
