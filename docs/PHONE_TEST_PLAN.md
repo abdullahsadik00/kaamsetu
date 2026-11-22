@@ -49,7 +49,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-11 | 1 Owner | Second address, edit, archive | T4.3 | Failed | 22 Nov 2026 | Steps 1–2 fine; after archiving, the customer could not be found again. BUG-02: added Show archived customers; recheck step 4 on the final build |
 | TP-12 | 1 Owner | Add and remove ACs | T4.4 | Passed | 22 Nov 2026 | BUG-03: sheet overlay animation not smooth; recheck feel on the final build |
 | TP-13 | 1 Owner | Owner creates a job | T4.6 | Passed | 22 Nov 2026 | Works; UI bugs BUG-04 to BUG-06 to recheck on the final build |
-| TP-14 | 1 Owner | Give to a team, change team, change day | T4.6 | Pending | | |
+| TP-14 | 1 Owner | Give to a team, change team, change day | T4.6 | Passed | 22 Nov 2026 | Works; BUG-07 button consistency to recheck on the final build |
 | TP-15 | 1 Owner | Cancel a job | T4.6 | Pending | | |
 | TP-30 | 1 Owner | Enquiries | T4.5 | Pending | | |
 | TP-41 | 1 Owner | Prepare jobs for the field rounds | — | Pending | | Not a feature test; just set-up |

@@ -16,14 +16,15 @@ Every bug found in phone testing (`PHONE_TEST_PLAN.md`), one row each, for count
 | BUG-04 | 22 Nov 2026 | TP-13 | Owner | New enquiry or job form (T4.5/T4.6) | Minor | **Create job & assign** wraps to two lines and is left-aligned while **Save enquiry** is one centered line | Code | Not yet known | — | fix/phone-test-bugs | Open |
 | BUG-05 | 22 Nov 2026 | TP-13 | Owner | Jobs tab and Enquiries tab filter chips | Minor | **Today / Tomorrow / All open / Completed** (and the enquiry chips) look vertically stretched | Code | Not yet known | — | fix/phone-test-bugs | Open |
 | BUG-06 | 22 Nov 2026 | TP-13 | Owner | New enquiry or job form saving | Minor | While saving, the tapped button's text turns into a loading state and the other button stays active; wanted both disabled and a clear "Creating job…" label | Code | Not yet known | — | fix/phone-test-bugs | Open |
+| BUG-07 | 22 Nov 2026 | TP-14 | Owner | Buttons across the app (job page first seen) | Minor | **Change team or time** wraps to two lines; in one group a button has a phone icon and the others none. Every screen should use one consistent primary/secondary button style | Code | Not yet known | — | fix/phone-test-bugs | Open |
 
 ## Summary
 
 | | Count |
 |---|---|
-| Bugs found | 6 |
+| Bugs found | 7 |
 | Crash | 1 |
 | Blocker | 0 |
 | Major | 1 |
-| Minor | 4 |
+| Minor | 5 |
 | Verified on a build | 0 |
