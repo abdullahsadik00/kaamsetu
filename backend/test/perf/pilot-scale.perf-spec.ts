@@ -87,7 +87,7 @@ describe('List endpoints at pilot scale (T5.4)', () => {
     const jobs = Array.from({ length: SCALE.jobs }, (_, i) => {
       const offset = 7 - Math.floor((i / SCALE.jobs) * 730);
       const c = i % 25 === 0 ? 0 : i % SCALE.customers;
-      const status =
+      const status: 'ASSIGNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' =
         offset > 0
           ? 'ASSIGNED'
           : offset === 0

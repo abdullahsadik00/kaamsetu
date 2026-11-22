@@ -10,6 +10,7 @@
  *   npm run pilot -- owner-invite --business-phone 98xxxxxxxx --yes
  *   npm run pilot -- list --business-phone 98xxxxxxxx
  *   npm run pilot -- purge-closed [--yes]   (closed > 30 days ago; run monthly)
+ *   npm run pilot -- sign-out --phone 98xxxxxxxx [--yes]   (lost or stolen phone, docs/RUNBOOK.md)
  *
  * Needs DATABASE_URL and, for invites, the server's OTP_HASH_SECRET.
  * Staff are invited by the owner in the app (More › Employees).
@@ -175,6 +176,28 @@ async function list() {
 }
 
 /**
+ * Signs a person out on every phone (lost or stolen phone). Works for the
+ * owner too, who cannot reset their own login in the app. Each request
+ * checks the device, so the old phone stops at once; their Google login
+ * stays, so they sign in again on the new phone. Unsent work on the lost
+ * phone is lost with it.
+ */
+async function signOut() {
+  const phone = mobile('phone');
+  const user = await prisma.user.findUnique({
+    where: { phone },
+    include: { devices: { where: { revokedAt: null }, select: { id: true, lastSeenAt: true } } },
+  });
+  if (!user) throw new UsageError(`No user with mobile ${phone}`);
+  console.log(`Target database: ${target()}
+${user.name} (${phone}): ${user.devices.length} signed-in phone(s)`);
+  if (!user.devices.length) return;
+  if (!values.yes) throw new UsageError('Would sign them out on every phone. Add --yes.');
+  const done = await prisma.device.updateMany({ where: { userId: user.id, revokedAt: null }, data: { revokedAt: new Date() } });
+  console.log(`Signed out on ${done.count} phone(s).`);
+}
+
+/**
  * Permanently removes businesses closed by "Delete my account" more than
  * 30 days ago (privacy policy), with their members, invites and
  * subscription, and the anonymised users left without any business.
@@ -240,6 +263,7 @@ const COMMANDS: Record<string, () => Promise<void>> = {
   'owner-invite': ownerInvite,
   list,
   'purge-closed': purgeClosed,
+  'sign-out': signOut,
 };
 
 async function main() {
