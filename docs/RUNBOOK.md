@@ -1,6 +1,6 @@
 # Runbook
 
-What to do when something needs doing or goes wrong (doc 13 §7). Written for the pilot staging setup (Render, Supabase, GitHub Actions). Update it when production is chosen (Q-09).
+What to do when something needs doing or goes wrong (doc 13 §7). Setting up and training a new pilot business: `docs/PILOT_GUIDE.md`. Written for the pilot staging setup (Render, Supabase, GitHub Actions). Update it when production is chosen (Q-09).
 
 Commands run from `app/backend` in PowerShell. Where a command needs the database, set these in that window only, copied from Render › kaamsetu-api-staging › Environment:
 
