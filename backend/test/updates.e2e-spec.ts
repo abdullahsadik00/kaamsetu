@@ -8,8 +8,8 @@ import { configureApp } from '../src/app.setup.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { TenantFactory, type TestTenant } from './helpers/tenants.js';
 
-const PREFIX_A = '90000031';
-const PREFIX_B = '90000032';
+const PREFIX_A = '90000047';
+const PREFIX_B = '90000048';
 
 type Item = {
   id: string;
