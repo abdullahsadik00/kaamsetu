@@ -72,6 +72,7 @@ exports[`Every route: roles and login (e2e, T5.2) > the inventory matches the re
   "GET    /api/v1/rate-items  OWNER",
   "POST   /api/v1/rate-items  OWNER",
   "PATCH  /api/v1/rate-items/:id  OWNER",
+  "GET    /api/v1/support  signed-in",
   "GET    /api/v1/sync/bootstrap  SENIOR_TECHNICIAN,HELPER",
   "GET    /api/v1/sync/changes  SENIOR_TECHNICIAN,HELPER",
   "POST   /api/v1/sync/operations  SENIOR_TECHNICIAN,HELPER,OWNER",
