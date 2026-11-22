@@ -50,7 +50,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-12 | 1 Owner | Add and remove ACs | T4.4 | Passed | 22 Nov 2026 | BUG-03: sheet overlay animation not smooth; recheck feel on the final build |
 | TP-13 | 1 Owner | Owner creates a job | T4.6 | Passed | 22 Nov 2026 | Works; UI bugs BUG-04 to BUG-06 to recheck on the final build |
 | TP-14 | 1 Owner | Give to a team, change team, change day | T4.6 | Passed | 22 Nov 2026 | Works; BUG-07 button consistency to recheck on the final build |
-| TP-15 | 1 Owner | Cancel a job | T4.6 | Pending | | |
+| TP-15 | 1 Owner | Cancel a job | T4.6 | Passed | 22 Nov 2026 | Works; BUG-08 to BUG-10 (More icon, dialog buttons, wrapping) to recheck on the final build |
 | TP-30 | 1 Owner | Enquiries | T4.5 | Pending | | |
 | TP-41 | 1 Owner | Prepare jobs for the field rounds | — | Pending | | Not a feature test; just set-up |
 | TP-06 | 2 Senior | Senior joins with the invite code | T3.11 | Pending | | |

@@ -16,15 +16,18 @@ Every bug found in phone testing (`PHONE_TEST_PLAN.md`), one row each, for count
 | BUG-04 | 22 Nov 2026 | TP-13 | Owner | New enquiry or job form (T4.5/T4.6) | Minor | **Create job & assign** wraps to two lines and is left-aligned while **Save enquiry** is one centered line | Code | Not yet known | — | fix/phone-test-bugs | Open |
 | BUG-05 | 22 Nov 2026 | TP-13 | Owner | Jobs tab and Enquiries tab filter chips | Minor | **Today / Tomorrow / All open / Completed** (and the enquiry chips) look vertically stretched | Code | Not yet known | — | fix/phone-test-bugs | Open |
 | BUG-06 | 22 Nov 2026 | TP-13 | Owner | New enquiry or job form saving | Minor | While saving, the tapped button's text turns into a loading state and the other button stays active; wanted both disabled and a clear "Creating job…" label | Code | Not yet known | — | fix/phone-test-bugs | Open |
-| BUG-07 | 22 Nov 2026 | TP-14 | Owner | Buttons across the app (job page first seen) | Minor | **Change team or time** wraps to two lines; in one group a button has a phone icon and the others none. Every screen should use one consistent primary/secondary button style | Code | Not yet known | — | fix/phone-test-bugs | Open |
+| BUG-07 | 22 Nov 2026 | TP-14 | Owner | Buttons across the app (job page first seen) | Minor | **Change team or time** wraps to two lines; in one group a button has a phone icon and the others none. Every screen should use one consistent primary/secondary button style; secondary buttons get a primary-colour (teal) border | Code | Not yet known | — | fix/phone-test-bugs | Open |
+| BUG-08 | 22 Nov 2026 | TP-15 | Owner | Owner job page, More | Minor | **More (⋮)** shows both an icon and the word More for one action | Code | Not yet known | — | fix/phone-test-bugs | Open |
+| BUG-09 | 22 Nov 2026 | TP-15 | Owner | Confirm dialogs and sheets (Cancel job first seen) | Minor | **Keep job** and **Cancel job** are only as wide as their text, leaving white space; two buttons should split the row 50/50 | Code | Not yet known | — | fix/phone-test-bugs | Open |
+| BUG-10 | 22 Nov 2026 | TP-15 | Owner | Cancelled job page, contact buttons | Minor | After cancelling, **WhatsApp** and **Customer** wrap onto two lines | Code | Not yet known | — | fix/phone-test-bugs | Open |
 
 ## Summary
 
 | | Count |
 |---|---|
-| Bugs found | 7 |
+| Bugs found | 10 |
 | Crash | 1 |
 | Blocker | 0 |
 | Major | 1 |
-| Minor | 5 |
+| Minor | 8 |
 | Verified on a build | 0 |
