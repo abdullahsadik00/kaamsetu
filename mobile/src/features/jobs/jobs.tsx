@@ -1,6 +1,6 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ActivityIndicator, Linking, Pressable, StyleSheet, View } from 'react-native';
 
@@ -298,6 +298,8 @@ function JobForm({
   const [source, setSource] = useState<Source>('WHATSAPP');
   const [teamId, setTeamId] = useState<string | null>(null);
   const [amount, setAmount] = useState('');
+  // isPending only shows after a re-render; this stops a fast double tap creating two jobs or enquiries.
+  const submitting = useRef(false);
   const job = () => ({
     ...(day !== 'none' ? { scheduledDate: day, timeSlot: slot } : {}),
     ...(teamId ? { teamId } : {}),
@@ -349,6 +351,14 @@ function JobForm({
   const site = c.sites.find((s) => s.id === siteId) ?? c.sites[0];
   const activeTeams = (teams.data ?? []).filter((tm) => tm.active);
   const addTag = (text: string) => setComplaint((v) => (v.trim() ? `${v.trim()}, ${text}` : text));
+  const submit = (run: (site: string) => Promise<unknown>) => {
+    if (!site || submitting.current) return;
+    submitting.current = true;
+    // On success the screen is replaced; on error (shown below the form) the owner can try again.
+    run(site.id).catch(() => {
+      submitting.current = false;
+    });
+  };
 
   return (
     <Screen
@@ -358,7 +368,8 @@ function JobForm({
           <Button
             size="large"
             label={teamId ? t('uiEnquiry.createJob') : t('uiEnquiry.saveJob')}
-            onPress={() => site && save.mutate(site.id)}
+            loadingLabel={teamId ? t('uiEnquiry.creatingJob') : t('uiEnquiry.savingJob')}
+            onPress={() => submit(save.mutateAsync)}
             loading={save.isPending}
             disabled={busy}
           />
@@ -367,7 +378,8 @@ function JobForm({
               variant="secondary"
               size="large"
               label={t('uiEnquiry.saveEnquiry')}
-              onPress={() => site && saveEnquiry.mutate(site.id)}
+              loadingLabel={t('uiEnquiry.savingEnquiry')}
+              onPress={() => submit(saveEnquiry.mutateAsync)}
               loading={saveEnquiry.isPending}
               disabled={busy}
             />

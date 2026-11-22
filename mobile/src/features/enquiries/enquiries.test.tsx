@@ -141,4 +141,22 @@ describe('Enquiries (T4.5)', () => {
     expect(screen.getByRole('button', { name: 'Create job & assign' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Save job' })).toBeNull();
   });
+
+  it('while saving, both buttons are off, the tapped one says what it is doing, and a second tap does nothing (BUG-06)', async () => {
+    mockParams = { customerId: 'cust-1' };
+    jest.spyOn(api, 'get').mockImplementation(((path: string) =>
+      Promise.resolve(path.startsWith('/customers') ? customer : [])) as never);
+    const post = jest.spyOn(api, 'post').mockReturnValue(new Promise(() => {}) as never);
+    await renderScreen(<NewJobScreen />);
+    const job = await screen.findByRole('button', { name: 'Save job' });
+    await fireEvent.press(job);
+    await fireEvent.press(job);
+    const saving = await screen.findByRole('button', { name: 'Saving job…' });
+    expect(screen.getByText('Saving job…')).toBeTruthy();
+    expect(saving.props.accessibilityState).toMatchObject({ disabled: true, busy: true });
+    expect(screen.getByRole('button', { name: 'Save enquiry' }).props.accessibilityState).toMatchObject({ disabled: true });
+    await fireEvent.press(screen.getByRole('button', { name: 'Save enquiry' }));
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(post).toHaveBeenCalledWith('/jobs', expect.objectContaining({ customerId: 'cust-1' }));
+  });
 });

@@ -25,7 +25,10 @@ type Props = {
   /** `large` = 56 dp technician action. */
   size?: 'normal' | 'large';
   disabled?: boolean;
+  /** Busy: the button is disabled and shows a small spinner beside `loadingLabel` (or the label). */
   loading?: boolean;
+  /** What is happening while loading, e.g. "Creating job…". */
+  loadingLabel?: string;
   testID?: string;
 };
 
@@ -39,13 +42,26 @@ const TEXT: Record<ButtonVariant, string> = {
   text: colors.tealTintText,
 };
 
-export function Button({ label, onPress, variant = 'primary', icon, size = 'normal', disabled, loading, testID }: Props) {
+export function Button({
+  label,
+  onPress,
+  variant = 'primary',
+  icon,
+  size = 'normal',
+  disabled,
+  loading,
+  loadingLabel,
+  testID,
+}: Props) {
   const inactive = disabled || loading;
-  const textColor = TEXT[variant];
+  // Inactive buttons sit on grey, so their text goes slate (white or teal there read as still tappable).
+  const textColor = inactive ? colors.slate : TEXT[variant];
+  const shown = loading && loadingLabel ? loadingLabel : label;
+  const iconSize = size === 'large' ? 22 : 20;
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={label}
+      accessibilityLabel={shown}
       accessibilityState={{ disabled: inactive, busy: loading }}
       testID={testID}
       onPress={onPress}
@@ -58,21 +74,21 @@ export function Button({ label, onPress, variant = 'primary', icon, size = 'norm
         inactive && styles.inactive,
       ]}
     >
-      {loading ? (
-        <ActivityIndicator color={textColor} />
-      ) : (
-        <View style={styles.row}>
-          {icon ? <Icon name={icon} size={size === 'large' ? 22 : 20} color={textColor} /> : null}
-          <AppText
-            weight="semibold"
-            color={textColor}
-            variant={size === 'large' ? 'body' : 'support'}
-            style={[styles.label, size === 'large' && styles.largeText]}
-          >
-            {label}
-          </AppText>
-        </View>
-      )}
+      <View style={styles.row}>
+        {loading ? (
+          <ActivityIndicator size="small" color={textColor} style={{ width: iconSize, height: iconSize }} />
+        ) : icon ? (
+          <Icon name={icon} size={iconSize} color={textColor} />
+        ) : null}
+        <AppText
+          weight="semibold"
+          color={textColor}
+          variant={size === 'large' ? 'body' : 'support'}
+          style={[styles.label, size === 'large' && styles.largeText]}
+        >
+          {shown}
+        </AppText>
+      </View>
     </Pressable>
   );
 }
