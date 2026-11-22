@@ -18,6 +18,7 @@ import {
   UpdateInvoiceSchema,
 } from './billing.service.js';
 import type { CreateBill, CreateQuotation, ListBills, ListQuotations, PaymentInput, UpdateInvoice } from './billing.service.js';
+import { RatesController, RatesService } from './rates.js';
 
 const Id = new ZodValidationPipe(z.uuid());
 const Reason = new ZodValidationPipe(ReasonSchema);
@@ -180,8 +181,8 @@ export class PaymentsController {
 }
 
 @Module({
-  controllers: [BillsController, QuotationsController, PaymentsController],
-  providers: [BillingService],
+  controllers: [BillsController, QuotationsController, PaymentsController, RatesController],
+  providers: [BillingService, RatesService],
   // The owner home reuses the Billing tab summary (T4.12).
   exports: [BillingService],
 })

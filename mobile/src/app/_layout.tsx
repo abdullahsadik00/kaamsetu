@@ -84,6 +84,7 @@ function RootLayout() {
           <Stack.Screen name="enquiries/[id]" options={{ ...pushed, title: '' }} />
           <Stack.Screen name="jobs/[id]" options={{ ...pushed, title: '' }} />
           <Stack.Screen name="teams/index" options={{ ...pushed, title: t('teams.title') }} />
+          <Stack.Screen name="rates" options={{ ...pushed, title: t('uiBilling.rateList') }} />
           <Stack.Screen name="teams/new" options={{ ...pushed, title: t('teams.add') }} />
           <Stack.Screen name="teams/[id]" options={{ ...pushed, title: '' }} />
           <Stack.Screen name="customers/new" options={{ ...pushed, title: t('customers.addTitle') }} />

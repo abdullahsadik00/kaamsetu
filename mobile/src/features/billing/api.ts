@@ -285,3 +285,18 @@ export function longDate(d: string): string {
   const date = new Date(y, m - 1, day);
   return Number.isNaN(date.getTime()) ? d : date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
+
+// ---------- Rate list (T4.10, D-039) ----------
+
+export type RateItem = { id: string; name: string; unitPrice: number; gstRate: GstRate; active: boolean };
+export type RateInput = { name: string; unitPrice: number; gstRate: GstRate };
+
+/** Active items for the bill picker; `all` adds the ones turned off (rate list screen). */
+export const useRates = (all = false) =>
+  queryOptions({
+    queryKey: [...BILLING_KEY, 'rates', all],
+    queryFn: () => api.get<RateItem[]>(`/rate-items${all ? '?all=true' : ''}`),
+  });
+export const createRate = (body: RateInput) => api.post<RateItem>('/rate-items', body);
+export const updateRate = (id: string, body: Partial<RateInput> & { active?: boolean }) =>
+  api.request<RateItem>('PATCH', `/rate-items/${id}`, { body });

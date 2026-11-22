@@ -28,6 +28,7 @@ import {
   parseRupees,
   rupees,
   toInput,
+  useRates,
   updateInvoice,
   useInvoice,
   usePrefill,
@@ -39,10 +40,23 @@ import {
 } from './api';
 import { billingError, MoneyRow, openInvoice } from './parts';
 
-const today = () => {
+/** YYYY-MM-DD on this phone, `back` days ago. */
+const daysAgo = (back: number) => {
   const d = new Date();
+  d.setDate(d.getDate() - back);
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+const today = () => daysAgo(0);
+/** Today and the six days before; a draft's older date stays on offer. */
+const dateChoices = (current: string) => {
+  const week = [0, 1, 2, 3, 4, 5, 6].map(daysAgo);
+  return week.includes(current) ? week : [...week, current];
+};
+/** "Thu 19" for a YYYY-MM-DD date. */
+const shortDay = (d: string) => {
+  const [y, m, day] = d.split('-').map(Number);
+  return new Date(y, m - 1, day).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' });
 };
 
 /** What the form starts from: a saved draft, a job's prefill, or a blank customer. */
@@ -240,9 +254,11 @@ function InvoiceForm({ kind, start, onConflict }: { kind: Kind; start: Start; on
   const [items, setItems] = useState<ItemInput[]>(start.items);
   const [discount, setDiscount] = useState(start.discount);
   const [gstBill, setGstBill] = useState(start.gstBill);
+  const [billDate, setBillDate] = useState(start.billDate);
   /** Index of the line being edited, 'new', or null when the sheet is closed. */
   const [editing, setEditing] = useState<number | 'new' | null>(null);
   const [draft, setDraft] = useState<Draft>({ description: '', qty: '1', rate: '', gstRate: 0 });
+  const rates = useQuery(useRates());
   const [draftError, setDraftError] = useState(false);
   const [discountOpen, setDiscountOpen] = useState(false);
   const [discountText, setDiscountText] = useState('');
@@ -255,13 +271,14 @@ function InvoiceForm({ kind, start, onConflict }: { kind: Kind; start: Start; on
   const save = useMutation({
     mutationFn: () => {
       if (start.edit) {
-        return updateInvoice(kind, start.edit.id, { version: start.edit.version, gstBill, discount, items });
+        return updateInvoice(kind, start.edit.id, { version: start.edit.version, gstBill, discount, billDate, items });
       }
       return createInvoice(kind, {
         ...(start.jobId ? { jobId: start.jobId } : { customerId: start.customerId }),
         ...(start.siteId ? { siteId: start.siteId } : {}),
         gstBill,
         discount,
+        billDate,
         items,
       });
     },
@@ -439,10 +456,17 @@ function InvoiceForm({ kind, start, onConflict }: { kind: Kind; start: Start; on
         </Card>
 
         <Card tone="recessed">
-          <AppText variant="support" color={colors.muted}>
-            {kind === 'BILL' ? t('uiBilling.billDate') : t('uiBilling.quoteDate')}
-          </AppText>
-          <AppText weight="semibold">{longDate(start.billDate)}</AppText>
+          {/* Bill date: today or the last week, e.g. a bill made the day after the work (T4.10). */}
+          <OptionChips
+            label={kind === 'BILL' ? t('uiBilling.billDate') : t('uiBilling.quoteDate')}
+            options={dateChoices(start.billDate).map((d, i) => ({
+              value: d,
+              label: d === today() ? t('jobs.today') : d === daysAgo(1) ? t('uiBilling.yesterday') : i < 7 ? shortDay(d) : longDate(d),
+            }))}
+            value={billDate}
+            onChange={setBillDate}
+          />
+          <AppText weight="semibold">{longDate(billDate)}</AppText>
           <AppText variant="small" color={colors.muted}>
             {start.edit ? start.edit.number : t('uiBilling.numberLater')}
           </AppText>
@@ -469,6 +493,20 @@ function InvoiceForm({ kind, start, onConflict }: { kind: Kind; start: Start; on
           </>
         }
       >
+        {/* Rate list (T4.10, D-039): one tap fills the name, rate and GST; all can still be changed. */}
+        {editing === 'new' && rates.data?.length ? (
+          <FormSection label={t('uiBilling.fromRateList')}>
+            <OptionChips
+              label={t('uiBilling.fromRateList')}
+              options={rates.data.map((r) => ({ value: r.id, label: r.name }))}
+              value={rates.data.find((r) => r.name === draft.description.trim())?.id ?? null}
+              onChange={(id) => {
+                const r = rates.data?.find((x) => x.id === id);
+                if (r) setDraft((d) => ({ ...d, description: r.name, rate: toInput(r.unitPrice), gstRate: gstBill ? r.gstRate : 0 }));
+              }}
+            />
+          </FormSection>
+        ) : null}
         <TextField
           label={t('uiBilling.itemWhat')}
           value={draft.description}

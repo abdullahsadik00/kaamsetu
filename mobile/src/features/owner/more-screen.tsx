@@ -51,6 +51,7 @@ export function OwnerMoreScreen() {
           onPress={() => router.push('/employees')}
           divider
         />
+        <ListRow icon="tag-outline" title={t('uiBilling.rateList')} subtitle={t('uiBilling.rateListHint')} onPress={() => router.push('/rates')} divider />
         <ListRow icon="store-outline" title={t('business.title')} subtitle={t('uiOwner.businessHint')} onPress={() => router.push('/business')} />
       </Card>
       <ProfileSection />
