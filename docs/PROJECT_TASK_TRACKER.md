@@ -177,7 +177,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 | ID | Task | Pri | Status | Depends | Acceptance |
 |---|---|---|---|---|---|
 | T5.1 | Maestro end-to-end core loop | Critical | Not Started | T4.11 | Runs green on emulator |
-| T5.2 | Full isolation + role suite review | Critical | Not Started | T4.12 | Every endpoint covered |
+| T5.2 | Full isolation + role suite review | Critical | Completed 22 Nov 2026 (`test/route-inventory.e2e-spec.ts`: snapshot of all routes with roles; 401 without token and 403 for every excluded role on every route; review found no business route without roles. Isolation: every by-id query taking an id from the URL is preceded by a `scoped()` lookup; each module's e2e tests another business's ids (404). Re-run when routes change) | T4.12 | Every endpoint covered |
 | T5.3 | Offline/sync/conflict test campaign on real phones | Critical | Not Started | T4.9 | Doc 09 §10 all pass |
 | T5.4 | Performance and device compatibility | High | Not Started | T4.12 | Doc 12 §6 targets met |
 | T5.5 | Security review | Critical | Not Started | T4.12 | Doc 10 §5 checklist complete |

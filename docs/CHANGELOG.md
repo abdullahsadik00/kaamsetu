@@ -2,6 +2,10 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-22 — Every route checked for login and roles (T5.2)
+
+- Backend test `route-inventory.e2e-spec.ts`: a reviewed snapshot of all routes and who may call them; every non-public route refuses a missing token (401) and every role not allowed (403). Review of by-id queries: all are scoped to the caller's business first. No problems found.
+
 ## 2026-11-22 — Owner saves without internet (D-021)
 
 - App: without internet the owner's new customers, ACs, enquiries and jobs are saved on the phone and sent in order when online. A new customer or AC shows at once, so a job can be made for it offline. **Waiting to send** on Home, Jobs and Customers lists what has not reached the server; a refused one shows why with **OK, got it**. Job and enquiry numbers come when sent. Converting an enquiry, changing a team, bills and payments stay online-only.
