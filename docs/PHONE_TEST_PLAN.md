@@ -15,7 +15,7 @@ Every check to run on a real phone, grouped **by role**: first everything the **
 
 ## Setup
 
-- **APK** (install over the old app; you stay logged in): build started 22 Nov 2026, https://expo.dev/accounts/vyapaar-labs-team/projects/kaamsetu/builds/a8c190dc-21fb-4e6a-8b4e-fcaa520d3310 (the install link appears there when the build is done).
+- **APK** (install over the old app; you stay logged in): https://expo.dev/artifacts/eas/vtqzn3ptkRuJJyEfU1uUti0iQzBOynIjDMJ0dg3WWTw.apk (build a8c190dc, 22 Nov 2026: includes enquiries, offline sync, billing, dashboard, updates feed and helper swap).
 - **Server:** staging on Render's free plan. After 15 minutes with no use it sleeps, so the first screen can take about 50 seconds to load. That is not a fail. Staging must have the latest `main` (push first) for TP-30 and TP-33 to TP-40.
 - **Google accounts:** four accounts that are test users on the Google consent screen: **owner**, **senior**, **helper** and one **spare** (for TP-08 and TP-40).
 - **One phone:** switch between people with **More › Log out** (owner) or **Profile › Log out** (senior/helper).
