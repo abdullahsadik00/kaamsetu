@@ -2,6 +2,11 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-22 — Business data export (server)
+
+- Backend: `GET /organization/export` (owner only) gives everything the business entered as one JSON file; login data is left out; each export is in the audit log. Pilot command `export` writes the same file for a data request. The app button comes later (needs a file package).
+- Tests: e2e 165 passed (new `export.e2e-spec.ts`).
+
 ## 2026-11-22 — Runbook
 
 - `docs/RUNBOOK.md`: deploy, roll back, restore a backup, lost phone, change a secret, suspected data breach, "my work is not sending", monthly tasks.

@@ -188,5 +188,5 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 | T6.3 | Pilot with 1–2 teams, then all teams; weekly review | Critical | Not Started | T6.2 | Gate G6 |
 | T7.1 | Plans, 30-day trial, limits, billing provider | High | Not Started | G6 | Trial expiry handled without data loss |
 | T7.2 | Legal: terms, privacy, DPDP review, trademark/domain check | Critical | Not Started | — (can start earlier) | Published documents |
-| T7.3 | Self-service onboarding, data export, support process, user guide | High | Not Started | G6 | Unrelated business onboards alone |
+| T7.3 | Self-service onboarding, data export, support process, user guide | High | In Progress (data export on the server done 22 Nov 2026: `GET /organization/export` and `npm run pilot -- export`; the app button needs `expo-file-system`) | G6 | Unrelated business onboards alone |
 | T8.x | Post-MVP candidates | — | Not Started | G7 | Each needs evidence + decision log entry |

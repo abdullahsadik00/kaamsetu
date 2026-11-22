@@ -99,6 +99,10 @@ Signs: someone has data they should not, an unknown sign-in, a leaked `.env` or 
    Common reasons: the owner cancelled the job or gave it to another team while the phone was offline (`conflict`), or the person was removed from the team. The refused report is kept on the server (`payload`); enter what is needed by hand.
 5. **Signed out:** if the phone shows the login screen, the login was reset or has lapsed. Unsent work stays on the phone; sign in again **as the same person** and it goes out.
 
+## 8. Owner asks for their data
+
+`npm run pilot -- export --business-phone <business mobile> --out export.json` writes everything the business entered (no login data). Send the file to the owner only (their registered email or WhatsApp), then delete your copy: it holds their customers' personal data.
+
 ## Monthly
 
 - `npm run pilot -- purge-closed`, then with `--yes` (privacy policy: closed businesses are deleted after 30 days).
