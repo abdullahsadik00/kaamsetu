@@ -11,7 +11,7 @@ import { TenantFactory, type TestTenant } from './helpers/tenants.js';
 const PREFIX_A = '90000079';
 const PREFIX_B = '90000069';
 
-type Job = { id: string; status: string; scheduledDate: string | null; customer: { name: string } | null; amountToCollect?: number };
+type Job = { id: string; status: string; scheduledDate: string | null; customer: { name: string } | null; amountToCollect?: number; address?: string | null };
 type Changes = { cursor: string; jobs: Job[]; removed: string[]; more: boolean; reset: boolean };
 
 describe('Sync: bootstrap and changes (e2e, T4.9, D-035)', () => {
@@ -84,12 +84,13 @@ describe('Sync: bootstrap and changes (e2e, T4.9, D-035)', () => {
     expect(BigInt(res.cursor)).toBeGreaterThan(0n);
   });
 
-  it('bootstrap: the helper gets the slimmer view (Q-01); the owner and other businesses get nothing', async () => {
+  it('bootstrap: the helper gets the slimmer view (Q-01, D-022); the owner and other businesses get nothing', async () => {
     const res = await bootstrap(a.tokens.HELPER);
     expect(res.jobs.map((j) => j.id)).toEqual([jobId]);
-    expect(res.jobs[0]).toMatchObject({ locality: 'Kothrud', customer: { name: 'Meera' } });
+    expect(res.jobs[0]).toMatchObject({ locality: 'Kothrud', address: 'Flat 1, Kothrud', customer: { name: 'Meera' } });
     expect(res.jobs[0]).not.toHaveProperty('amountToCollect');
-    expect(res.jobs[0]).not.toHaveProperty('address');
+    expect(res.jobs[0]).not.toHaveProperty('complaint');
+    expect(res.jobs[0]).not.toHaveProperty('equipment');
     await http().get('/api/v1/sync/bootstrap').set(owner).expect(403);
     expect((await bootstrap(b.tokens.SENIOR_TECHNICIAN)).jobs).toEqual([]);
   });
@@ -125,10 +126,15 @@ describe('Sync: bootstrap and changes (e2e, T4.9, D-035)', () => {
   it('changes: a customer edit reaches the job card', async () => {
     const senior = a.tokens.SENIOR_TECHNICIAN;
     const c0 = (await bootstrap(senior)).cursor;
+    const h0 = (await bootstrap(a.tokens.HELPER)).cursor;
     await http().patch(`/api/v1/customers/${customer.id}`).set(owner).send({ name: 'Meera Joshi' }).expect(200);
     const c1 = await changes(senior, c0);
     expect(c1.jobs.length).toBeGreaterThan(0);
     expect(c1.jobs.every((j) => j.customer?.name === 'Meera Joshi')).toBe(true);
+    // The helper's changes carry the address as well (BUG-17), still without the senior-only fields.
+    const h1 = await changes(a.tokens.HELPER, h0);
+    expect(h1.jobs.length).toBeGreaterThan(0);
+    expect(h1.jobs.every((j) => j.address === 'Flat 1, Kothrud' && !('complaint' in j))).toBe(true);
   });
 
   it('changes: jobs given to another team or cancelled come back as removals (tombstones)', async () => {

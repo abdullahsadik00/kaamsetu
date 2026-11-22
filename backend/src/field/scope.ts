@@ -93,7 +93,11 @@ export function onFieldPhone(
   return job.status === 'COMPLETED' && !!job.completedAt && dayIn(timeZone, job.completedAt) === today;
 }
 
-/** Field staff's card for each job: customer, place, team lead; full details for seniors only (Q-01). */
+/**
+ * Field staff's card for each job (Q-01, D-022): customer name and phone,
+ * address, job type and the team lead for everyone; what they said, money
+ * and ACs for seniors only.
+ */
 export async function presentJobs(prisma: PrismaService, auth: AuthContext, jobs: JobWithAcs[], teamIds: string[]) {
   const helper = auth.role === 'HELPER';
   const customers = await prisma.customer.findMany({
@@ -129,12 +133,13 @@ export async function presentJobs(prisma: PrismaService, auth: AuthContext, jobs
       locality: site?.locality ?? site?.city ?? null,
       senior: j.assignedTeamId ? (lead.get(j.assignedTeamId) ?? null) : null,
       completedAt: j.completedAt?.toISOString() ?? null,
+      // Helpers too (D-022): they go to the house with the senior (BUG-17).
+      address: site ? [site.addressLine1, site.locality, site.city].filter(Boolean).join(', ') : null,
+      landmark: site?.landmark ?? null,
     };
     if (helper) return base;
     return {
       ...base,
-      address: site ? [site.addressLine1, site.locality, site.city].filter(Boolean).join(', ') : null,
-      landmark: site?.landmark ?? null,
       complaint: j.complaint,
       amountToCollect: j.amountToCollect,
       equipment: j.equipment.map((e) => a.get(e.equipmentId)).filter(Boolean),

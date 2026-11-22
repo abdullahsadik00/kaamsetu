@@ -57,11 +57,13 @@ describe('Field: my jobs and sync operations (e2e, T4.7)', () => {
     expect(res.body.data[0]).toMatchObject({ complaint: 'Not cooling', amountToCollect: 80000, locality: 'Kothrud', customer: { name: 'Meera' } });
   });
 
-  it('the helper gets a slimmer view (Q-01) and cannot change jobs', async () => {
+  it('the helper gets a slimmer view (Q-01, D-022) and cannot change jobs', async () => {
     const res = await http().get('/api/v1/my/jobs').set(as(a.tokens.HELPER)).expect(200);
-    expect(res.body.data[0]).toMatchObject({ locality: 'Kothrud', customer: { name: 'Meera' } });
+    // The address too, so the helper can find the house (BUG-17); no money, problem or ACs.
+    expect(res.body.data[0]).toMatchObject({ locality: 'Kothrud', address: 'Flat 1, Kothrud', landmark: null, customer: { name: 'Meera' } });
     expect(res.body.data[0]).not.toHaveProperty('amountToCollect');
-    expect(res.body.data[0]).not.toHaveProperty('address');
+    expect(res.body.data[0]).not.toHaveProperty('complaint');
+    expect(res.body.data[0]).not.toHaveProperty('equipment');
     const r = await send(a.tokens.HELPER, op('job.start', jobId));
     expect(r.body.data.results[0]).toMatchObject({ status: 'rejected', code: 'FORBIDDEN_ROLE' });
   });
