@@ -13,14 +13,17 @@ Every bug found in phone testing (`PHONE_TEST_PLAN.md`), one row each, for count
 | BUG-01 | 22 Nov 2026 | TP-09 | Owner | Teams › team page (T4.6) | Crash | After **Save team**, and on opening the team again, the app closed ("KaamSetu keeps stopping") | Server mismatch, Code | The **Swaps for the day** card read `borrowed.length` from a staging server that had not been updated yet and sent no swap lists | 45f4b7c | main (fixed before the branch existed) | Fixed |
 | BUG-02 | 22 Nov 2026 | TP-11 | Owner | Customers list (T4.3) | Major | After **Archive customer** the customer was gone from the list and could not be opened to **Bring back customer** | Gap | The list only asked for active customers; nothing showed archived ones | def2268 | fix/phone-test-bugs | Fixed |
 | BUG-03 | 22 Nov 2026 | TP-12 | Owner | Bottom sheets, all screens (remove AC first seen) | Minor | When a sheet opens, the black overlay slides up from the bottom together with the sheet instead of fading; the motion is not smooth | Code | The sheet used the Modal's built-in `slide` animation, which moves the whole layer (overlay included) with a plain curve | 9e73bc6 | fix/phone-test-bugs | Fixed |
+| BUG-04 | 22 Nov 2026 | TP-13 | Owner | New enquiry or job form (T4.5/T4.6) | Minor | **Create job & assign** wraps to two lines and is left-aligned while **Save enquiry** is one centered line | Code | Not yet known | — | fix/phone-test-bugs | Open |
+| BUG-05 | 22 Nov 2026 | TP-13 | Owner | Jobs tab and Enquiries tab filter chips | Minor | **Today / Tomorrow / All open / Completed** (and the enquiry chips) look vertically stretched | Code | Not yet known | — | fix/phone-test-bugs | Open |
+| BUG-06 | 22 Nov 2026 | TP-13 | Owner | New enquiry or job form saving | Minor | While saving, the tapped button's text turns into a loading state and the other button stays active; wanted both disabled and a clear "Creating job…" label | Code | Not yet known | — | fix/phone-test-bugs | Open |
 
 ## Summary
 
 | | Count |
 |---|---|
-| Bugs found | 3 |
+| Bugs found | 6 |
 | Crash | 1 |
 | Blocker | 0 |
 | Major | 1 |
-| Minor | 1 |
+| Minor | 4 |
 | Verified on a build | 0 |
