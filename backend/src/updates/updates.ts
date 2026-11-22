@@ -7,7 +7,7 @@ import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import { holdSide } from '../dashboard/hold-side.js';
 import type { JobStatus, MemberRole, Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { requireOrg, scoped } from '../tenancy/tenant.js';
+import { scoped } from '../tenancy/tenant.js';
 
 /**
  * One row of "Updates from teams" (Stitch 03, T4.7):
