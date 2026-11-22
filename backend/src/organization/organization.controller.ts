@@ -127,7 +127,10 @@ export class OrganizationController {
     return present(await this.organizations.addEmployee(auth, body));
   }
 
-  /** The caller's own business. Any member may see its basic details. */
+  /**
+   * The caller's own business. Any member may see its basic details; only the
+   * owner sees when the free trial ends (null when not on a trial, T7.1).
+   */
   @Roles(...ALL_ROLES)
   @Get('organization')
   async organization(@CurrentAuth() auth: AuthContext) {
@@ -142,10 +145,13 @@ export class OrganizationController {
         gstBills: true,
         gstin: true,
         timezone: true,
+        subscription: { select: { status: true, trialEndsAt: true } },
       },
     });
     if (!org) throw AppError.notFound('ORGANIZATION_NOT_FOUND');
-    return org;
+    const { subscription, ...details } = org;
+    const onTrial = auth.role === 'OWNER' && subscription?.status === 'TRIALING';
+    return { ...details, trialEndsAt: onTrial ? (subscription?.trialEndsAt ?? null) : null };
   }
 
   @Roles('OWNER')
