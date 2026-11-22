@@ -72,7 +72,7 @@ Validate that the selected senior technician and helpers are active members of t
 
 ## 5. Customers and equipment
 
-**Implemented 20 Nov 2026 (D-028), owner only:** `GET /customers?q=&archived=` (name, any case, or any digits of the mobile), `POST /customers` (with first `site`; `409 CUSTOMER_PHONE_EXISTS` + `details.customerId` unless `allowDuplicatePhone`), `GET`/`PATCH /customers/:id` (incl. `archived`), `POST /customers/:id/sites`, `POST /equipment`, `PATCH /equipment/:id` (incl. `archived`). History and `/customers/:id/outstanding` wait for jobs and bills.
+**Implemented 20 Nov 2026 (D-028), owner only:** `GET /customers?q=&archived=` (name, any case, or any digits of the mobile), `POST /customers` (with first `site`; `409 CUSTOMER_PHONE_EXISTS` + `details.customerId` unless `allowDuplicatePhone`), `GET`/`PATCH /customers/:id` (incl. `archived`), `POST /customers/:id/sites`, `POST /equipment`, `PATCH /equipment/:id` (incl. `archived`). **History, 22 Nov 2026 (T4.4):** `GET /customers/:id/history` (the customer's jobs, newest day first: number, type, status, day, team name, outcome, report note, parts) and `GET /equipment/:id/history` (`{ equipment, jobs }`, each job also with `work` and `workNote` for this AC); owner only, `CUSTOMER_NOT_FOUND` / `EQUIPMENT_NOT_FOUND` for other businesses. `/customers/:id/outstanding` is in §8 (T4.11).
 
 - `GET /customers?q=`
 - `POST /customers`
@@ -84,6 +84,7 @@ Validate that the selected senior technician and helpers are active members of t
 - `GET /equipment?customerId=`
 - `POST /equipment`
 - `GET /equipment/:id`
+- `GET /equipment/:id/history`
 - `PATCH /equipment/:id`
 
 Search should support customer name and phone number.

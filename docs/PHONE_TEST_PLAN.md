@@ -70,6 +70,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-08 | 3 Helper | Wrong mobile number on Join | T3.13 | Pending | | Uses the spare account |
 | TP-21 | 4 Owner | Owner sees the work report and money | T4.8 | Pending | | |
 | TP-22b | 4 Owner | New visit for the same work | T4.6 | Pending | | |
+| TP-42 | 4 Owner | Customer's past jobs and AC history | T4.4 | Pending | | Needs the new APK and backend |
 | TP-39b | 4 Owner | Updates from teams, bell, job feed | T4.7 (D-037) | Pending | | |
 | TP-36b | 4 Owner | Home dashboard | T4.12 | Pending | | |
 | TP-34 | 4 Owner | Quotations and bills | T4.10 | Pending | | GST rates wait for Q-04 |
@@ -467,6 +468,18 @@ Log out and log in as the **owner** for the rest.
 - Step 6: entry leaves **Cash with teams**; job A's bill gets a Cash payment from the team.
 - Step 7: entry leaves the list and is not added to any bill.
 - Step 8: "To collect from this customer" ₹3,050, "Billed ₹6,100 · Received ₹3,050".
+
+### TP-42 Customer's past jobs and AC history (T4.4)
+1. **Customers** › **Rohan Kulkarni**. Scroll to **Past jobs**.
+2. Under the Home address, tap the **Bedroom** AC (Split, Voltas, 1.5 ton).
+3. Tap any job row.
+4. Go back twice and tap the **Hall** AC.
+
+**Expected**
+- Step 1: **Past jobs** lists Rohan's jobs, newest day first. Each row shows the day, job type, status, job number, team and, for finished jobs, the outcome (e.g. "Work done"), parts used and the senior's note.
+- Step 2: the AC page shows Bedroom, Split · Voltas · 1.5 ton, and **AC history** lists only the jobs that included this AC, with the work done on it (e.g. "Cleaned, Gas filled").
+- Step 3: the job page opens.
+- Step 4: an AC that was never on a job says "This AC has not been in a job yet."
 
 ### TP-25 Reset login and remove an employee (run last)
 1. **More › Employees** › **Test Helper** › **Reset login** and confirm.

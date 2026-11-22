@@ -2,6 +2,12 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-22 — Customer and AC history (T4.4)
+
+- Owner: the customer page has **Past jobs** (newest day first: day, type, status, job number, team, outcome, parts and the senior's note; tap a row to open the job). Tapping an AC opens its page: details and **AC history**, only the jobs that included this AC, with the work done on it. Strings in en/hi/mr.
+- Backend: `GET /customers/:id/history`, `GET /equipment/:id/history`, owner only and scoped to the business. New e2e `history.e2e-spec.ts` (ordering, per-AC work, other business 404, staff 403); app 122 tests passed.
+- Phone test: TP-42.
+
 ## 2026-11-22 — Updates from teams (T4.7, D-037) and one-day helper swap (T4.6, D-038)
 
 - Technician: **Update status** has three more rows under **Other**: **Appointment fixed** (day and time; moves the job), **Part needed** (part, how many, can continue or not, note) and **Note for owner** (quick notes or typed). Saved on the phone first and sent like other work; the job page lists them under **Your updates** with Saved / Sent.

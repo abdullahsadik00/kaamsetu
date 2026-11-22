@@ -99,7 +99,7 @@ Each module below gets split into subtasks (frontend / backend / DB / tests) whe
 - **Tests:** search by partial phone; duplicate detection per org only; isolation.
 - **Acceptance:** repeat customer found by last 4 digits of phone in < 5 s.
 
-### T4.4 AC equipment management — High — In Progress (D-028: add/remove ACs per address; AC history waits for jobs, T4.6) — depends T4.3
+### T4.4 AC equipment management — High — Completed 22 Nov 2026 (D-028: add/remove ACs per address; history: `GET /customers/:id/history`, `GET /equipment/:id/history` 0c91022, app AC page and Past jobs card c257d43; e2e and component tests; phone test TP-42 pending) — depends T4.3
 - **Objective:** know every AC a customer has and its history.
 - **Stories:** add AC with type, brand, capacity, room; optional fields hidden by default; view AC history.
 - **DB:** Equipment. **API:** doc 06 §5.
