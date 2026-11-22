@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react-native';
+import { fireEvent, screen, within } from '@testing-library/react-native';
 import { StyleSheet } from 'react-native';
 
 import { api } from '@/features/auth/session';
@@ -68,5 +68,29 @@ describe('Jobs tab header (BUG-13)', () => {
     const button = await screen.findByRole('button', { name: 'New' });
     // An icon would be a second, screen-reader-hidden Text (the glyph) inside the button.
     expect(within(button).getAllByText(/.*/, { includeHiddenElements: true })).toHaveLength(1);
+  });
+});
+
+describe('Jobs tab with an empty list (BUG-05 check, TP-41)', () => {
+  const rowStyle = (label: string) => StyleSheet.flatten(screen.getByLabelText(label).props.style);
+
+  it('Completed with no jobs: the chip row does not grow and the chips stay 36 dp pills', async () => {
+    const get = jest.spyOn(api, 'get').mockResolvedValue([] as never);
+    await renderScreen(<JobsScreen />);
+    await fireEvent.press(await screen.findByRole('radio', { name: 'Completed' }));
+    expect(await screen.findByText('No jobs here.')).toBeTruthy();
+    expect(get).toHaveBeenCalledWith('/jobs?status=COMPLETED');
+    expect(rowStyle('Show')).toMatchObject({ flexGrow: 0 });
+    expect(rowStyle('Show')).not.toMatchObject({ flex: 1 });
+    expect(StyleSheet.flatten(screen.getByRole('radio', { name: 'Completed' }).props.style)).toMatchObject({ height: 36 });
+  });
+
+  it('Enquiries with none open: same compact chips', async () => {
+    jest.spyOn(api, 'get').mockResolvedValue([] as never);
+    await renderScreen(<JobsScreen />);
+    await fireEvent.press(await screen.findByRole('tab', { name: 'Enquiries' }));
+    expect(await screen.findByText('No open enquiries')).toBeTruthy();
+    expect(rowStyle('Enquiries')).toMatchObject({ flexGrow: 0 });
+    expect(StyleSheet.flatten(screen.getByRole('radio', { name: 'Open' }).props.style)).toMatchObject({ height: 36 });
   });
 });
