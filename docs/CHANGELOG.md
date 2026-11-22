@@ -2,6 +2,11 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-22 — Hindi and Marathi pilot papers
+
+- `docs/pilot/staff-handout.hi.md` and `.mr.md`: one-page notes for senior technicians and helpers (joining, daily work, no internet, "needs attention", phone settings, help), using the app's own Hindi/Marathi button labels.
+- `docs/pilot/pilot-agreement.hi.md` and `.mr.md`: the pilot agreement translated. Drafts by Claude; a native speaker must check them; English stays the reference.
+
 ## 2026-11-22 — Help in the app (T7.3)
 
 - App: a **Help** card on More (owner) and Profile (technician, helper, and the join screen): **Message us on WhatsApp** with the app version already typed, **Email us**, **Privacy policy**, **Terms of use**, and the app version. Hindi and Marathi included. Phone test TP-47.

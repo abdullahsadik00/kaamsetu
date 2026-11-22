@@ -1,6 +1,6 @@
 # Pilot agreement (draft)
 
-**Status: draft, not legal advice.** Written so the owner can read it in five minutes. Have it checked by a lawyer before the first commercial customer (T7.2); for the pilot, the owner's written "I agree" (signed copy or WhatsApp) is enough. Translate it into Hindi or Marathi for the owner if they prefer, and keep the English text as the reference. Fill in the blanks marked `[…]`.
+**Status: draft, not legal advice.** Written so the owner can read it in five minutes. Have it checked by a lawyer before the first commercial customer (T7.2); for the pilot, the owner's written "I agree" (signed copy or WhatsApp) is enough. Hindi and Marathi drafts: `docs/pilot/pilot-agreement.hi.md` and `.mr.md` (a native speaker must check them); the English text stays the reference. Fill in the blanks marked `[…]`.
 
 It must not promise more than the public pages say: privacy policy and terms at `https://kaamsetu-api-staging-0368.onrender.com/privacy` and `/terms` (change to the production address when it exists, Q-09).
 

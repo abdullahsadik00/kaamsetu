@@ -2,6 +2,8 @@
 
 How to set up the pilot business, load its data and train the owner, senior technicians and helpers (T6.2). Use it with `docs/RUNBOOK.md` (what to do when something goes wrong) and `docs/PILOT_AGREEMENT.md` (what the owner agrees to).
 
+Hindi and Marathi copies to hand out: staff handout `docs/pilot/staff-handout.hi.md` / `.mr.md`, pilot agreement `docs/pilot/pilot-agreement.hi.md` / `.mr.md` (drafts by Claude: have a native speaker check them first, T3.14).
+
 Words in **bold** are the app's own labels (English). The app also runs in Hindi and Marathi: set the language on **More** (owner) or **Profile** (staff) during training.
 
 ## 1. Before the first day
