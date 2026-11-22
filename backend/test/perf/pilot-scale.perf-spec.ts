@@ -8,7 +8,7 @@ import { configureApp } from '../../src/app.setup.js';
 import { PrismaService } from '../../src/prisma/prisma.service.js';
 import { TenantFactory, type TestTenant } from '../helpers/tenants.js';
 
-const PREFIX = '90000061';
+const PREFIX = '90000065'; // unique among the test files
 /** One business after two years (docs/12 §6 "pilot scale", sized up from the discovery numbers). */
 const SCALE = { teams: 6, customers: 2000, jobs: 12_000, enquiries: 800, bills: 4000 };
 const RUNS = 30;
