@@ -171,4 +171,18 @@ describe('Enquiries (T4.5)', () => {
     expect(StyleSheet.flatten(chip?.parent?.props.style) ?? {}).not.toMatchObject({ flexDirection: 'row' });
     expect(screen.getByRole('button', { name: 'Open job #9' })).toBeTruthy();
   });
+
+  it('Add customer from the form comes back with that customer selected (BUG-14)', async () => {
+    jest.spyOn(api, 'get').mockImplementation(((path: string) =>
+      Promise.resolve(path.startsWith('/customers/') ? customer : [])) as never);
+    await renderScreen(<NewJobScreen />);
+    await fireEvent.press(await screen.findByText('Add customer'));
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/customers/new', params: { returnTo: 'job' } });
+
+    // The customer form dismisses back here with ?customerId=…; the next render picks it up.
+    mockParams = { customerId: 'cust-1' };
+    await fireEvent.changeText(screen.getByLabelText('Which customer?'), 'R');
+    expect(await screen.findByText('Rohan Kulkarni')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save job' })).toBeTruthy();
+  });
 });

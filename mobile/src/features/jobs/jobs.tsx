@@ -226,6 +226,12 @@ export function NewJobScreen() {
   const { t } = useTranslation();
   const params = useLocalSearchParams<{ customerId?: string; enquiryId?: string }>();
   const [customerId, setCustomerId] = useState<string | null>(params.customerId ?? null);
+  // Add customer from here comes back with ?customerId=… (BUG-14): select them, keep the rest.
+  const [seenCustomerParam, setSeenCustomerParam] = useState(params.customerId);
+  if (params.customerId !== seenCustomerParam) {
+    setSeenCustomerParam(params.customerId);
+    if (params.customerId) setCustomerId(params.customerId);
+  }
   const [q, setQ] = useState('');
   const found = useQuery({ ...useCustomers(q.trim()), enabled: !customerId && !params.enquiryId });
   const enquiry = useQuery({ ...useEnquiry(params.enquiryId ?? ''), enabled: !!params.enquiryId });
@@ -239,7 +245,16 @@ export function NewJobScreen() {
 
   if (!customerId) {
     return (
-      <Screen footer={<Button variant="secondary" icon="account-plus-outline" label={t('customers.add')} onPress={() => router.push('/customers/new')} />}>
+      <Screen
+        footer={
+          <Button
+            variant="secondary"
+            icon="account-plus-outline"
+            label={t('customers.add')}
+            onPress={() => router.push({ pathname: '/customers/new', params: { returnTo: 'job' } })}
+          />
+        }
+      >
         <TextField
           label={t('jobs.whichCustomer')}
           optionalLabel={t('uiOwner.searchByHint')}

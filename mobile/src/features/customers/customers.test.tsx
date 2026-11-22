@@ -13,7 +13,7 @@ import { CustomersScreen } from './customers-screen';
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories cannot use imports
 jest.mock('react-native-safe-area-context', () => require('react-native-safe-area-context/jest/mock').default);
 jest.mock('expo-router', () => ({
-  router: { push: jest.fn(), replace: jest.fn(), back: jest.fn() },
+  router: { push: jest.fn(), replace: jest.fn(), back: jest.fn(), dismissTo: jest.fn() },
   useLocalSearchParams: jest.fn(() => ({ id: 'c1', siteId: 's1' })),
 }));
 jest.mock('./api', () => ({
@@ -61,6 +61,17 @@ describe('Add customer (T4.3)', () => {
       site: { addressLine1: 'Flat 12, Sai Heights', locality: 'Kothrud' },
     });
     expect(router.replace).toHaveBeenCalledWith({ pathname: '/customers/[id]', params: { id: 'new-1' } });
+  });
+
+  it('opened from the New enquiry or job form, it goes back there with the new customer (BUG-14)', async () => {
+    useLocalSearchParams.mockReturnValue({ returnTo: 'job' });
+    mockCreate.mockResolvedValue({ id: 'new-1' } as Customer);
+    await renderScreen(<CustomerFormScreen />);
+    await fillCustomer();
+    await fireEvent.press(screen.getByText('Save customer'));
+
+    await waitFor(() => expect(router.dismissTo).toHaveBeenCalledWith({ pathname: '/jobs/new', params: { customerId: 'new-1' } }));
+    expect(router.replace).not.toHaveBeenCalled();
   });
 
   it('warns about a saved number and can add anyway', async () => {
