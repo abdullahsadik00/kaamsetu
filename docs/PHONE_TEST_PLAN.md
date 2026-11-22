@@ -44,7 +44,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-03 | Owner | Change language | T3.6 | Passed | 21 Nov 2026 | Step 3 in chat |
 | TP-04 | Owner | Add employees | T4.1 | Passed | 21 Nov 2026 | Step 4 in chat |
 | TP-05 | 1 Owner | Log out and pick another Google account | T3.11 | Passed | 22 Nov 2026 | First try picked a non-owner account and showed Join your business, as expected |
-| TP-09 | 1 Owner | Make teams | T4.2 | Pending | | |
+| TP-09 | 1 Owner | Make teams | T4.2 | Failed | 22 Nov 2026 | App closed after Save team and on opening the team: swap card read lists an older server doesn't send. Fixed in 45f4b7c; run again on build 94fc92db |
 | TP-10 | 1 Owner | Add a customer, duplicate warning, search | T4.3 | Pending | | |
 | TP-11 | 1 Owner | Second address, edit, archive | T4.3 | Pending | | |
 | TP-12 | 1 Owner | Add and remove ACs | T4.4 | Pending | | |
