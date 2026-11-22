@@ -44,4 +44,5 @@ A module is accepted when its acceptance criteria in `PROJECT_TASK_TRACKER.md` p
 - My Work opens in < 2 s on a mid-range Android phone with 50 cached jobs.
 - Finish Work saves locally in < 1 s, with or without network.
 - API p95 < 500 ms for list endpoints at pilot scale.
+  - Measured 22 Nov 2026 with `npm run test:perf` (backend, not in CI). Data: 6 teams, 2,000 customers, 3,000 ACs, 12,000 jobs over two years, 800 enquiries, 4,000 bills. Local database, 30 calls after 3 warm-ups. p95 in ms: dashboard 39, jobs 32, open jobs 27, customers 14, customer search 12, enquiries 14, bills 15–17, billing summary 26, cash 6, updates 10, My Work 18, sync bootstrap 19, customer history (500 jobs) 11. Lists are capped (100 jobs/bills, 50 customers), so they do not grow with the data. Not yet measured: staging (adds the network hop to the database).
 - Minimum device: Android 10, 3 GB RAM (confirm against the pilot team's actual phones, Q-11).
