@@ -15,6 +15,7 @@ import { InviteService } from '../auth/invite.service.js';
 import { ALL_ROLES, Roles } from '../auth/roles.js';
 import type { AuthContext } from '../auth/token.service.js';
 import { AppError } from '../common/app-error.js';
+import { audit } from '../common/audit.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg, scoped } from '../tenancy/tenant.js';
@@ -28,6 +29,7 @@ import type {
   CreateOrganization,
   UpdateOrganization,
 } from './organization.schemas.js';
+import { exportBusiness, exportCounts } from './export.js';
 import { OrganizationService } from './organization.service.js';
 
 const memberSelect = {
@@ -88,6 +90,19 @@ export class OrganizationController {
     body: UpdateOrganization,
   ) {
     return this.organizations.update(auth, body);
+  }
+
+  /**
+   * Owner downloads everything the business has entered, as JSON (doc 10 §4).
+   * Heavy, so a few times an hour at most; each download is in the audit log.
+   */
+  @Roles('OWNER')
+  @Throttle({ default: { ttl: 3_600_000, limit: 5 } })
+  @Get('organization/export')
+  async exportData(@CurrentAuth() auth: AuthContext) {
+    const data = await exportBusiness(this.prisma, requireOrg(auth));
+    await audit(this.prisma, auth, 'DATA_EXPORTED', 'Organization', data.business.id, exportCounts(data));
+    return data;
   }
 
   /** Owner removes someone who left: inactive at once, phones signed out (D-027). */

@@ -12,7 +12,8 @@ export type AuditAction =
   | 'PAYMENT_RECORDED'
   | 'PAYMENT_VOIDED'
   | 'CASH_CONFIRMED'
-  | 'CASH_REJECTED';
+  | 'CASH_REJECTED'
+  | 'DATA_EXPORTED';
 
 type Db = Pick<Prisma.TransactionClient, 'auditLog'>;
 

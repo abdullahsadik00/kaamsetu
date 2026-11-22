@@ -11,11 +11,13 @@
  *   npm run pilot -- list --business-phone 98xxxxxxxx
  *   npm run pilot -- purge-closed [--yes]   (closed > 30 days ago; run monthly)
  *   npm run pilot -- sign-out --phone 98xxxxxxxx [--yes]   (lost or stolen phone, docs/RUNBOOK.md)
+ *   npm run pilot -- export --business-phone 98xxxxxxxx [--out file.json]   (data request)
  *
  * Needs DATABASE_URL and, for invites, the server's OTP_HASH_SECRET.
  * Staff are invited by the owner in the app (More › Employees).
  */
 import 'dotenv/config';
+import { writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { PrismaPg } from '@prisma/adapter-pg';
 import {
@@ -23,6 +25,7 @@ import {
   type MemberRole,
 } from '../src/generated/prisma/client.js';
 import { normalizeIndianMobile } from '../src/auth/phone.js';
+import { exportBusiness, exportCounts } from '../src/organization/export.js';
 import { issueInvite } from './invite-tools.js';
 
 const { positionals, values } = parseArgs({
@@ -35,6 +38,7 @@ const { positionals, values } = parseArgs({
     'owner-phone': { type: 'string' },
     'business-phone': { type: 'string' },
     role: { type: 'string' },
+    out: { type: 'string' },
     yes: { type: 'boolean', default: false },
   },
 });
@@ -176,6 +180,21 @@ async function list() {
 }
 
 /**
+ * Writes everything a business has entered to a JSON file, for an owner's
+ * data request (same content as GET /organization/export). The file holds
+ * customers' personal data: hand it over and delete your copy.
+ */
+async function exportData() {
+  const org = await businessByPhone();
+  const data = await exportBusiness(prisma, org.id);
+  const file = values.out ?? `kaamsetu-export-${org.phone.slice(-4)}-${data.exportedAt.slice(0, 10)}.json`;
+  writeFileSync(file, JSON.stringify(data, null, 2));
+  console.log(`Target database: ${target()}
+${org.name}: written to ${file}`);
+  for (const [k, n] of Object.entries(exportCounts(data))) if (n) console.log(`  ${k}: ${n}`);
+}
+
+/**
  * Signs a person out on every phone (lost or stolen phone). Works for the
  * owner too, who cannot reset their own login in the app. Each request
  * checks the device, so the old phone stops at once; their Google login
@@ -264,6 +283,7 @@ const COMMANDS: Record<string, () => Promise<void>> = {
   list,
   'purge-closed': purgeClosed,
   'sign-out': signOut,
+  export: exportData,
 };
 
 async function main() {
