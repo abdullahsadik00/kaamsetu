@@ -3,7 +3,7 @@ import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/ui/app-text';
 import { Icon, type IconName } from '@/components/ui/icon';
-import { colors, radius, space } from '@/theme/tokens';
+import { colors, radius, space, touch } from '@/theme/tokens';
 
 type Option<T extends string> = { value: T; label: string; icon?: IconName };
 
@@ -75,7 +75,14 @@ export function FilterChips<T extends string>({
   onChange: (v: T) => void;
 }) {
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters} accessibilityLabel={label}>
+    // ScrollView grows by default; inside the screen's growing body it took the leftover height and the chips stretched.
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={styles.filterRow}
+      contentContainerStyle={styles.filters}
+      accessibilityLabel={label}
+    >
       {options.map((o) => {
         const on = o.value === value;
         return (
@@ -84,6 +91,7 @@ export function FilterChips<T extends string>({
             accessibilityRole="radio"
             accessibilityState={{ checked: on }}
             onPress={() => onChange(o.value)}
+            hitSlop={FILTER_SLOP}
             style={[styles.filter, on && styles.filterOn]}
           >
             <AppText variant="support" weight="semibold" color={on ? colors.tealTintText : colors.ink}>
@@ -95,6 +103,10 @@ export function FilterChips<T extends string>({
     </ScrollView>
   );
 }
+
+const FILTER_HEIGHT = 36;
+/** Pills look 36 dp but still take a 48 dp touch. */
+const FILTER_SLOP = { top: (touch.min - FILTER_HEIGHT) / 2, bottom: (touch.min - FILTER_HEIGHT) / 2 };
 
 /** One plain row in an action sheet (Stitch screen 17). */
 export function SheetRow({ label, onPress, danger, icon }: { label: string; onPress: () => void; danger?: boolean; icon?: IconName }) {
@@ -186,12 +198,13 @@ const styles = StyleSheet.create({
   gridChip: { flexGrow: 1, flexBasis: '30%' },
   chipOn: { backgroundColor: colors.tealTint, borderColor: colors.teal },
   chipPressed: { backgroundColor: colors.soft },
-  filters: { gap: space.sm, paddingRight: space.lg },
+  filterRow: { flexGrow: 0 },
+  filters: { gap: space.sm, paddingRight: space.lg, paddingVertical: (touch.min - FILTER_HEIGHT) / 2, alignItems: 'center' },
   filter: {
-    minHeight: 44,
+    height: FILTER_HEIGHT,
     justifyContent: 'center',
     paddingHorizontal: space.lg,
-    borderRadius: radius.md,
+    borderRadius: radius.full,
     borderWidth: 1,
     borderColor: colors.line2,
     backgroundColor: colors.surface,
