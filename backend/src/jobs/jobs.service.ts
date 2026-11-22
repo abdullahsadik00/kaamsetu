@@ -170,13 +170,14 @@ export class JobsService {
   }
 
   /** Creates a job with the next job number; optionally assigns a team straight away. */
-  async create(auth: AuthContext, input: CreateJob) {
-    const id = await this.prisma.$transaction((tx) => this.createIn(tx, auth, input));
+  /** `newId`: the phone's id for a job saved offline (D-021). */
+  async create(auth: AuthContext, input: CreateJob, newId?: string) {
+    const id = await this.prisma.$transaction((tx) => this.createIn(tx, auth, input, undefined, newId));
     return this.get(auth, id);
   }
 
   /** The job-creating part of `create`, inside the caller's transaction (also used to convert an enquiry). */
-  async createIn(tx: Prisma.TransactionClient, auth: AuthContext, input: CreateJob, serviceRequestId?: string) {
+  async createIn(tx: Prisma.TransactionClient, auth: AuthContext, input: CreateJob, serviceRequestId?: string, newId?: string) {
     const organizationId = requireOrg(auth);
     const memberId = auth.memberId as string;
     const site = await tx.site.findFirst({
@@ -201,6 +202,7 @@ export class JobsService {
     });
     const job = await tx.serviceJob.create({
       data: {
+        id: newId,
         organizationId,
         jobNumber: org.nextJobNumber - 1,
         customerId: input.customerId,

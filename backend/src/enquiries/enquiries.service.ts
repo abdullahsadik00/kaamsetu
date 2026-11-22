@@ -126,7 +126,8 @@ export class EnquiriesService {
   }
 
   /** Saves an enquiry with the next enquiry number. */
-  async create(auth: AuthContext, input: CreateEnquiry) {
+  /** `newId`: the phone's id for an enquiry saved offline (D-021). */
+  async create(auth: AuthContext, input: CreateEnquiry, newId?: string) {
     const organizationId = requireOrg(auth);
     const memberId = auth.memberId as string;
     const id = await this.prisma.$transaction(async (tx) => {
@@ -151,6 +152,7 @@ export class EnquiriesService {
       });
       const e = await tx.serviceRequest.create({
         data: {
+          id: newId,
           organizationId,
           requestNumber: org.nextRequestNumber - 1,
           customerId: input.customerId,

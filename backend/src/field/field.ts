@@ -6,11 +6,15 @@ import { Roles } from '../auth/roles.js';
 import type { AuthContext } from '../auth/token.service.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import type { JobStatus, JobUpdateType, Prisma } from '../generated/prisma/client.js';
+import { CustomersModule } from '../customers/customers.module.js';
+import { EnquiriesModule } from '../enquiries/enquiries.controller.js';
+import { JobsModule } from '../jobs/jobs.controller.js';
 import { SLOTS } from '../jobs/jobs.service.js';
 import { isOpen, nextStatus, type JobAction } from '../jobs/jobs.state.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg, scoped } from '../tenancy/tenant.js';
 import { everTeamIds, fieldScope, myTeamIds, presentJobs, scopeTeamIds, withMyTeam } from './scope.js';
+import { ENTITY, isOwnerOp, OWNER_OPS, OwnerOps, type OwnerOp } from './owner-ops.js';
 import { SyncController, SyncService } from './sync.js';
 
 // ---------- Contracts (docs/09 §5–6) ----------
@@ -23,8 +27,9 @@ const isUpdateOp = (o: string): o is UpdateOp => (UPDATE_OPS as readonly string[
 const OperationSchema = z.strictObject({
   /** Phone-generated UUID; also the idempotency key. */
   id: z.uuid(),
-  operation: z.enum(['job.start', 'job.hold', 'job.complete', ...UPDATE_OPS]),
-  entityType: z.literal('ServiceJob'),
+  operation: z.enum(['job.start', 'job.hold', 'job.complete', ...UPDATE_OPS, ...OWNER_OPS]),
+  /** ServiceJob for field work; owner operations name what they create (D-021). */
+  entityType: z.enum(['ServiceJob', 'Customer', 'Equipment', 'ServiceRequest']),
   entityId: z.uuid(),
   payload: z.record(z.string(), z.unknown()).nullable().default({}),
   baseVersion: z.number().int().nullable().optional(),
@@ -92,7 +97,7 @@ const UPDATE_TYPE: Record<UpdateOp, JobUpdateType> = {
 
 type Result = { id: string; status: 'applied' | 'duplicate' | 'conflict' | 'rejected'; code?: string };
 
-const ACTION: Record<Exclude<Operation['operation'], UpdateOp>, JobAction> = {
+const ACTION: Record<Exclude<Operation['operation'], UpdateOp | OwnerOp>, JobAction> = {
   'job.start': 'start',
   'job.hold': 'hold',
   'job.complete': 'complete',
@@ -109,7 +114,10 @@ const MyJobsQuery = z.strictObject({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$
  */
 @Injectable()
 export class FieldService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly ownerOps: OwnerOps,
+  ) {}
 
 
   /**
@@ -201,6 +209,11 @@ export class FieldService {
   }
 
   private async decide(auth: AuthContext, op: Operation): Promise<Result> {
+    if (isOwnerOp(op.operation)) {
+      if (op.entityType !== ENTITY[op.operation]) return { id: op.id, status: 'rejected', code: 'VALIDATION_FAILED' };
+      return { id: op.id, ...(await this.ownerOps.apply(auth, op.operation, op.entityId, op.payload)) };
+    }
+    if (op.entityType !== 'ServiceJob') return { id: op.id, status: 'rejected', code: 'VALIDATION_FAILED' };
     if (auth.role !== 'SENIOR_TECHNICIAN') {
       return { id: op.id, status: 'rejected', code: 'FORBIDDEN_ROLE' };
     }
@@ -382,5 +395,9 @@ export class FieldController {
   }
 }
 
-@Module({ controllers: [FieldController, SyncController], providers: [FieldService, SyncService] })
+@Module({
+  imports: [CustomersModule, EnquiriesModule, JobsModule],
+  controllers: [FieldController, SyncController],
+  providers: [FieldService, SyncService, OwnerOps],
+})
 export class FieldModule {}

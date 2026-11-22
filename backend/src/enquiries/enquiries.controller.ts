@@ -76,5 +76,5 @@ export class EnquiriesController {
   }
 }
 
-@Module({ imports: [JobsModule], controllers: [EnquiriesController], providers: [EnquiriesService] })
+@Module({ imports: [JobsModule], controllers: [EnquiriesController], providers: [EnquiriesService], exports: [EnquiriesService] })
 export class EnquiriesModule {}

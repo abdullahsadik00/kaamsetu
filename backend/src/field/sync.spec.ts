@@ -1,11 +1,12 @@
 import type { PrismaService } from '../prisma/prisma.service.js';
 import { FieldService, OPERATION_RETENTION_DAYS } from './field.js';
+import type { OwnerOps } from './owner-ops.js';
 import { dayIn, onFieldPhone, withMyTeam } from './scope.js';
 
 describe('sync operation retention (docs/09 §6)', () => {
   it('removes processed operations older than 30 days and keeps the rest', async () => {
     const deleteMany = vi.fn().mockResolvedValue({ count: 4 });
-    const field = new FieldService({ syncOperation: { deleteMany } } as unknown as PrismaService);
+    const field = new FieldService({ syncOperation: { deleteMany } } as unknown as PrismaService, {} as OwnerOps);
     const now = new Date('2026-11-21T10:00:00.000Z');
 
     await expect(field.purgeOldOperations(now)).resolves.toBe(4);
@@ -15,7 +16,7 @@ describe('sync operation retention (docs/09 §6)', () => {
 
   it('takes a shorter window when asked', async () => {
     const deleteMany = vi.fn().mockResolvedValue({ count: 0 });
-    const field = new FieldService({ syncOperation: { deleteMany } } as unknown as PrismaService);
+    const field = new FieldService({ syncOperation: { deleteMany } } as unknown as PrismaService, {} as OwnerOps);
     await field.purgeOldOperations(new Date('2026-11-21T00:00:00.000Z'), 1);
     expect(deleteMany).toHaveBeenCalledWith({ where: { receivedAt: { lt: new Date('2026-11-20T00:00:00.000Z') } } });
   });
