@@ -31,7 +31,7 @@ import type { FeedItem } from '@/features/updates/api';
 import { JobFeed } from '@/features/updates/feed';
 import { colors, radius, space } from '@/theme/tokens';
 
-import { ConfirmDialog, FilterChips, FormSection, OptionChips, SheetRow } from './parts';
+import { ConfirmDialog, FilterChips, FormSection, HeaderMore, OptionChips, SheetRow } from './parts';
 
 // ---------- API (docs/06 §6, D-030) ----------
 
@@ -633,18 +633,7 @@ export function JobScreen() {
       <Stack.Screen
         options={{
           title: `#${j.jobNumber}`,
-          headerRight: () => (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('uiOwner.more')}
-              onPress={() => setPanel('more')}
-              hitSlop={8}
-              style={styles.headerMore}
-            >
-              <AppText weight="semibold">{t('uiOwner.more')}</AppText>
-              <Icon name="dots-vertical" />
-            </Pressable>
-          ),
+          headerRight: () => <HeaderMore label={t('uiOwner.more')} onPress={() => setPanel('more')} />,
         }}
       />
       <Screen
@@ -903,7 +892,6 @@ const styles = StyleSheet.create({
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: space.sm },
   tag: { minHeight: 36, justifyContent: 'center', paddingHorizontal: space.md, borderRadius: radius.full, backgroundColor: colors.soft },
   actions: { flexDirection: 'row', gap: space.sm, marginTop: space.xs },
-  headerMore: { flexDirection: 'row', alignItems: 'center', gap: 2, minHeight: 44, paddingLeft: space.sm },
   sheetList: { borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, overflow: 'hidden' },
   teamOption: {
     flexDirection: 'row',

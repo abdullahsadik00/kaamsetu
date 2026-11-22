@@ -15,7 +15,7 @@ import { Icon } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { dayString } from '@/features/jobs/jobs';
-import { ConfirmDialog, FormSection, OptionChips, SheetRow } from '@/features/jobs/parts';
+import { ConfirmDialog, FormSection, HeaderMore, OptionChips, SheetRow } from '@/features/jobs/parts';
 import { colors, radius, space } from '@/theme/tokens';
 
 import {
@@ -161,12 +161,7 @@ export function InvoiceScreen({ kind }: { kind: Kind }) {
       <Stack.Screen
         options={{
           title,
-          headerRight: () => (
-            <Pressable accessibilityRole="button" accessibilityLabel={t('uiBilling.more')} onPress={() => setPanel('more')} hitSlop={8} style={styles.headerMore}>
-              <AppText weight="semibold">{t('uiBilling.more')}</AppText>
-              <Icon name="dots-vertical" />
-            </Pressable>
-          ),
+          headerRight: () => <HeaderMore label={t('uiBilling.more')} onPress={() => setPanel('more')} />,
         }}
       />
       <Screen footer={footer}>
@@ -520,7 +515,6 @@ const styles = StyleSheet.create({
   between: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.sm },
   actions: { flexDirection: 'row', gap: space.sm, marginTop: space.xs },
   footerRow: { flexDirection: 'row', gap: space.sm },
-  headerMore: { flexDirection: 'row', alignItems: 'center', gap: 2, minHeight: 44, paddingLeft: space.sm },
   sheetList: { borderRadius: radius.md, borderWidth: 1, borderColor: colors.line, overflow: 'hidden' },
   line: {
     minHeight: 48,

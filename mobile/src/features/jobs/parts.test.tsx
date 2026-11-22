@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 
 import { setupI18n } from '@/testing/render';
 
-import { FilterChips } from './parts';
+import { FilterChips, HeaderMore } from './parts';
 
 beforeAll(setupI18n);
 
@@ -28,5 +28,15 @@ describe('FilterChips (BUG-05)', () => {
     expect(screen.getByRole('radio', { name: 'Today' }).props.accessibilityState).toMatchObject({ checked: true });
     await fireEvent.press(chip);
     expect(onChange).toHaveBeenCalledWith('done');
+  });
+});
+
+describe('HeaderMore (BUG-08)', () => {
+  it('is one ⋮ icon named "More", with no visible "More" word', async () => {
+    const onPress = jest.fn();
+    await render(<HeaderMore label="More" onPress={onPress} />);
+    expect(screen.queryByText('More')).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'More' }));
+    expect(onPress).toHaveBeenCalled();
   });
 });

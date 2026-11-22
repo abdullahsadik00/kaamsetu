@@ -108,6 +108,20 @@ const FILTER_HEIGHT = 36;
 /** Pills look 36 dp but still take a 48 dp touch. */
 const FILTER_SLOP = { top: (touch.min - FILTER_HEIGHT) / 2, bottom: (touch.min - FILTER_HEIGHT) / 2 };
 
+/** Header ⋮ that opens a page's action sheet: one icon, named "More" for screen readers (BUG-08). */
+export function HeaderMore({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={({ pressed }) => [styles.headerMore, pressed && styles.chipPressed]}
+    >
+      <Icon name="dots-vertical" color={colors.ink} />
+    </Pressable>
+  );
+}
+
 /** One plain row in an action sheet (Stitch screen 17). */
 export function SheetRow({ label, onPress, danger, icon }: { label: string; onPress: () => void; danger?: boolean; icon?: IconName }) {
   return (
@@ -210,6 +224,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   filterOn: { backgroundColor: colors.tealTint, borderColor: colors.teal },
+  headerMore: { width: touch.min, height: touch.min, alignItems: 'center', justifyContent: 'center', borderRadius: radius.full },
   sheetRow: {
     minHeight: 56,
     flexDirection: 'row',
