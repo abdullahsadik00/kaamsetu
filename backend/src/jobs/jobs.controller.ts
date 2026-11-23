@@ -13,6 +13,7 @@ import {
 import { z } from 'zod';
 import { CurrentAuth } from '../auth/auth.guard.js';
 import { Roles } from '../auth/roles.js';
+import { OpenWhenReadOnly } from '../organization/plans.js';
 import type { AuthContext } from '../auth/token.service.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import { Feature } from '../organization/features.js';
@@ -77,6 +78,7 @@ export class JobsController {
     return this.jobs.assign(auth, id, body.teamId);
   }
 
+  @OpenWhenReadOnly()
   @Post(':id/cancel')
   @HttpCode(HttpStatus.OK)
   cancel(

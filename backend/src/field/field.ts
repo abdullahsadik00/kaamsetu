@@ -3,6 +3,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Injectable, Module, Post, 
 import { z } from 'zod';
 import { CurrentAuth } from '../auth/auth.guard.js';
 import { Roles } from '../auth/roles.js';
+import { OpenWhenReadOnly } from '../organization/plans.js';
 import type { AuthContext } from '../auth/token.service.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import type { JobStatus, JobUpdateType, Prisma } from '../generated/prisma/client.js';
@@ -388,6 +389,7 @@ export class FieldController {
 
   /** The phone outbox's endpoint (docs/09 §6). */
   @Roles('SENIOR_TECHNICIAN', 'HELPER', 'OWNER')
+  @OpenWhenReadOnly()
   @Post('sync/operations')
   @HttpCode(HttpStatus.OK)
   operations(

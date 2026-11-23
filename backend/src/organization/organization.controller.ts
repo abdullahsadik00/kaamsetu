@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { CurrentAuth } from '../auth/auth.guard.js';
 import { InviteService } from '../auth/invite.service.js';
 import { ALL_ROLES, Roles } from '../auth/roles.js';
+import { GRACE_DAYS, OpenWhenReadOnly, PLANS, planFor, planState, type PlanId } from './plans.js';
 import type { AuthContext } from '../auth/token.service.js';
 import { AppError } from '../common/app-error.js';
 import { audit } from '../common/audit.js';
@@ -112,6 +113,7 @@ export class OrganizationController {
   /** Owner removes someone who left: inactive at once, phones signed out (D-027). */
   @Roles('OWNER')
   @Feature('EMPLOYEES')
+  @OpenWhenReadOnly()
   @Post('employees/:id/deactivate')
   @HttpCode(HttpStatus.OK)
   deactivateEmployee(
@@ -153,23 +155,42 @@ export class OrganizationController {
         gstin: true,
         timezone: true,
         businessType: true,
-        subscription: { select: { status: true, trialEndsAt: true } },
+        subscription: { select: { plan: true, status: true, currentPeriodEnd: true, trialEndsAt: true } },
       },
     });
     if (!org) throw AppError.notFound('ORGANIZATION_NOT_FOUND');
     const { subscription, ...details } = org;
-    const onTrial = auth.role === 'OWNER' && subscription?.status === 'TRIALING';
+    const owner = auth.role === 'OWNER';
+    const onTrial = owner && subscription?.status === 'TRIALING';
     const inTeam = (await myTeamIds(this.prisma, auth)).length > 0;
     return {
       ...details,
       features: featuresFor(details.businessType),
       trialEndsAt: onTrial ? (subscription?.trialEndsAt ?? null) : null,
+      // Plan & payment (D-045): only the owner sees and pays for it.
+      plan: owner ? planState(subscription) : null,
       inTeam,
+    };
+  }
+
+  /** The plans an owner can choose (screen 72), with the one that fits the business type. */
+  @Roles('OWNER')
+  @Get('plans')
+  async plans(@CurrentAuth() auth: AuthContext) {
+    const org = await this.prisma.organization.findUniqueOrThrow({
+      where: { id: requireOrg(auth) },
+      select: { businessType: true },
+    });
+    return {
+      plans: (Object.keys(PLANS) as PlanId[]).map((id) => ({ id, ...PLANS[id] })),
+      suggested: planFor(org.businessType),
+      graceDays: GRACE_DAYS,
     };
   }
 
   /** Owner changes how the business works; screens follow `features` (D-044). */
   @Roles('OWNER')
+  @OpenWhenReadOnly()
   @Post('organization/business-type')
   @HttpCode(HttpStatus.OK)
   changeBusinessType(

@@ -16,6 +16,8 @@
  *       (the owner's existing customers, docs/PILOT_GUIDE.md §2)
  *   npm run pilot -- extend-trial --business-phone 98xxxxxxxx --until 2027-02-28 [--yes]
  *       (free trial to the end of that day, India time; the pilot runs longer than 30 days)
+ *   npm run pilot -- set-plan --business-phone 98xxxxxxxx --plan solo|crew|business --period month|year [--yes]
+ *       (after the owner has paid, D-045: starts the plan, or adds the period to the one running)
  *
  * Needs DATABASE_URL and, for invites, the server's OTP_HASH_SECRET.
  * Staff are invited by the owner in the app (More › Employees).
@@ -31,6 +33,7 @@ import {
 import { normalizeIndianMobile } from '../src/auth/phone.js';
 import { importCustomers, readCustomerRows } from '../src/customers/import.js';
 import { exportBusiness, exportCounts } from '../src/organization/export.js';
+import { PLANS, planState, type PlanId } from '../src/organization/plans.js';
 import { issueInvite } from './invite-tools.js';
 
 const { positionals, values } = parseArgs({
@@ -46,6 +49,8 @@ const { positionals, values } = parseArgs({
     out: { type: 'string' },
     file: { type: 'string' },
     until: { type: 'string' },
+    plan: { type: 'string' },
+    period: { type: 'string' },
     yes: { type: 'boolean', default: false },
   },
 });
@@ -202,8 +207,8 @@ const istDate = (d: Date) => d.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata
 
 /**
  * Moves a business's free-trial end (D-014) to the end of --until, India
- * time. Only for a business still on its trial; nothing in the app is
- * blocked when a trial ends yet (T7.1), the owner just sees the date.
+ * time. Only for a business still on its trial; after it (and 7 grace
+ * days) the business is view-only until it has a plan (D-045).
  */
 async function extendTrial() {
   const org = await businessByPhone();
@@ -228,11 +233,61 @@ async function extendTrial() {
   console.log(`✓ Free trial of "${org.name}" now ends ${istDate(end)}. The owner sees it on More.`);
 }
 
+/**
+ * Records a payment the owner made by UPI or bank transfer (D-045, until a
+ * payment provider is added): starts the plan, or adds the period to the end
+ * of the same plan still running. The business type must fit the plan.
+ */
+async function setPlan() {
+  const org = await businessByPhone();
+  const plan = need('plan').toUpperCase() as PlanId;
+  if (!(plan in PLANS)) throw new UsageError('--plan must be solo, crew or business');
+  const period = need('period');
+  if (period !== 'month' && period !== 'year') throw new UsageError('--period must be month or year');
+  if (!PLANS[plan].types.includes(org.businessType)) {
+    throw new UsageError(
+      `"${org.name}" works as ${org.businessType}; the ${plan} plan allows ${PLANS[plan].types.join(', ')}. The owner changes the business type in the app first, or choose a bigger plan.`,
+    );
+  }
+  const sub = await prisma.subscription.findUnique({ where: { organizationId: org.id } });
+  const owner = await prisma.organizationMember.findFirst({ where: { organizationId: org.id, role: 'OWNER', status: 'ACTIVE' } });
+  if (!sub || !owner) throw new UsageError(`"${org.name}" has no subscription or owner`);
+  const now = new Date();
+  const running = sub.status === 'ACTIVE' && sub.plan === plan && sub.currentPeriodEnd > now;
+  const start = running ? sub.currentPeriodEnd : now;
+  const end = new Date(start);
+  end.setMonth(end.getMonth() + (period === 'year' ? 12 : 1));
+  const price = period === 'year' ? PLANS[plan].yearly : PLANS[plan].monthly;
+  confirmWrite(
+    `put "${org.name}" on the ${plan} plan until ${istDate(end)} (₹${price / 100} for one ${period}${running ? ', added to the running period' : ''})`,
+  );
+  await prisma.$transaction([
+    prisma.subscription.update({
+      where: { organizationId: org.id },
+      data: { plan, status: 'ACTIVE', currentPeriodStart: running ? sub.currentPeriodStart : now, currentPeriodEnd: end },
+    }),
+    prisma.auditLog.create({
+      data: {
+        organizationId: org.id,
+        actorUserId: owner.userId,
+        action: 'PLAN_CHANGED',
+        entityType: 'Subscription',
+        entityId: sub.id,
+        metadata: { plan, period, until: end.toISOString(), price, by: 'pilot set-plan' },
+      },
+    }),
+  ]);
+  console.log(`✓ "${org.name}" is on the ${plan} plan until ${istDate(end)}. The owner sees it in More › Plan & payment.`);
+}
+
 async function list() {
   const org = await businessByPhone();
   console.log(`Target database: ${target()}\n${org.name} (${org.phone}, ${org.city ?? '-'})`);
   const sub = await prisma.subscription.findUnique({ where: { organizationId: org.id } });
-  if (sub) console.log(`  ${sub.status}${sub.trialEndsAt ? `, trial ends ${istDate(sub.trialEndsAt)}` : ''}`);
+  if (sub) {
+    const s = planState(sub);
+    console.log(`  ${s.plan} ${s.status}, ends ${s.endsAt ? istDate(s.endsAt) : '-'}, ${s.access}`);
+  }
   const members = await prisma.organizationMember.findMany({
     where: { organizationId: org.id },
     include: { user: true },
@@ -351,6 +406,7 @@ const COMMANDS: Record<string, () => Promise<void>> = {
   export: exportData,
   'import-customers': importCustomersFromFile,
   'extend-trial': extendTrial,
+  'set-plan': setPlan,
 };
 
 async function main() {

@@ -6,6 +6,8 @@ import { CreateCustomerSchema, CreateEquipmentSchema } from '../customers/custom
 import { CustomersService } from '../customers/customers.service.js';
 import { CreateEnquirySchema, EnquiriesService } from '../enquiries/enquiries.service.js';
 import { CreateJobSchema, JobsService } from '../jobs/jobs.service.js';
+import { loadPlan } from '../organization/plans.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 /**
  * Owner basic offline, saving (D-021, docs/09 §2): what the owner saved
@@ -35,10 +37,15 @@ export class OwnerOps {
     private readonly customers: CustomersService,
     private readonly enquiries: EnquiriesService,
     private readonly jobs: JobsService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async apply(auth: AuthContext, op: OwnerOp, entityId: string, payload: unknown): Promise<Outcome> {
     if (auth.role !== 'OWNER') return { status: 'rejected', code: 'FORBIDDEN_ROLE' };
+    // New work saved offline after the plan ended (D-045), like the online routes.
+    if (auth.organizationId && (await loadPlan(this.prisma, auth.organizationId)).access === 'READ_ONLY') {
+      return { status: 'rejected', code: 'PLAN_ENDED' };
+    }
     try {
       switch (op) {
         case 'customer.create': {

@@ -9,6 +9,7 @@ import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { AppError } from '../common/app-error.js';
 import { FEATURE_KEY, featuresFor, type Feature } from '../organization/features.js';
+import { loadPlan, OPEN_WHEN_READ_ONLY } from '../organization/plans.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ROLES_KEY, type Role } from './roles.js';
 import { TokenService } from './token.service.js';
@@ -88,6 +89,22 @@ export class AuthGuard implements CanActivate {
           403,
           'NOT_IN_BUSINESS_TYPE',
           'Your business type does not include this. Change it in Business details.',
+        );
+      }
+    }
+
+    // Step 5 (D-045): once the plan has ended (after the grace days) the
+    // business is view-only: reading and export work, new work does not.
+    if (roles && auth.organizationId && req.method !== 'GET') {
+      const open = this.reflector.getAllAndOverride<boolean>(OPEN_WHEN_READ_ONLY, [
+        context.getHandler(),
+        context.getClass(),
+      ]);
+      if (!open && (await loadPlan(this.prisma, auth.organizationId)).access === 'READ_ONLY') {
+        throw new AppError(
+          402,
+          'PLAN_ENDED',
+          'Your plan has ended. Choose a plan to keep adding work; everything you saved is still here.',
         );
       }
     }

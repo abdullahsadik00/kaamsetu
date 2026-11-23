@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { AuthContext } from '../auth/token.service.js';
 import { AppError } from '../common/app-error.js';
 import type { Prisma } from '../generated/prisma/client.js';
+import { loadPlan, teamLimit } from '../organization/plans.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg, scoped } from '../tenancy/tenant.js';
 import { businessToday, dayLendings, lendHelper, teamDay, undoLending } from './day-helpers.js';
@@ -114,6 +115,7 @@ export class TeamsService {
   async create(auth: AuthContext, input: CreateTeam) {
     const organizationId = requireOrg(auth);
     const team = await this.prisma.$transaction(async (tx) => {
+      await roomForTeam(tx, organizationId);
       const t = await tx.team.create({ data: { organizationId, name: input.name } });
       if (input.seniorMemberId) {
         await this.join(tx, auth, t.id, input.seniorMemberId, true);
@@ -127,11 +129,12 @@ export class TeamsService {
   }
 
   async update(auth: AuthContext, id: string, input: UpdateTeam) {
-    const result = await this.prisma.team.updateMany({
-      where: scoped(auth, { id }),
-      data: input,
+    await this.prisma.$transaction(async (tx) => {
+      const team = await tx.team.findFirst({ where: scoped(auth, { id }), select: { active: true } });
+      if (!team) throw AppError.notFound('TEAM_NOT_FOUND');
+      if (input.active && !team.active) await roomForTeam(tx, requireOrg(auth));
+      await tx.team.updateMany({ where: scoped(auth, { id }), data: input });
     });
-    if (result.count === 0) throw AppError.notFound('TEAM_NOT_FOUND');
     return this.get(auth, id);
   }
 
@@ -214,5 +217,13 @@ export class TeamsService {
         isPrimary,
       },
     });
+  }
+}
+
+/** The Business plan has up to 10 active teams (D-045); a trial has no limit. */
+async function roomForTeam(tx: Prisma.TransactionClient, organizationId: string) {
+  const max = teamLimit((await loadPlan(tx, organizationId)).plan);
+  if (max !== null && (await tx.team.count({ where: { organizationId, active: true } })) >= max) {
+    throw new AppError(HttpStatus.CONFLICT, 'TEAM_LIMIT', `Your plan has up to ${max} teams. Turn off a team first.`);
   }
 }

@@ -2,6 +2,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Module, Param, Patch, Post
 import { z } from 'zod';
 import { CurrentAuth } from '../auth/auth.guard.js';
 import { Roles } from '../auth/roles.js';
+import { OpenWhenReadOnly } from '../organization/plans.js';
 import type { AuthContext } from '../auth/token.service.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import {
@@ -74,6 +75,7 @@ export class BillsController {
   }
 
   /** Returns the payment; the same idempotency key again returns the same one. */
+  @OpenWhenReadOnly()
   @Post(':id/payments')
   @HttpCode(HttpStatus.CREATED)
   pay(
@@ -147,6 +149,7 @@ export class PaymentsController {
     return this.billing.summary(auth);
   }
 
+  @OpenWhenReadOnly()
   @Post('payments/:id/void')
   @HttpCode(HttpStatus.OK)
   void(@CurrentAuth() auth: AuthContext, @Param('id', Id) id: string, @Body(Reason) body: { reason: string }) {
@@ -163,6 +166,7 @@ export class PaymentsController {
     return this.billing.listCash(auth, q.status);
   }
 
+  @OpenWhenReadOnly()
   @Post('cash-collections/:id/confirm')
   @HttpCode(HttpStatus.OK)
   confirm(
@@ -173,6 +177,7 @@ export class PaymentsController {
     return this.billing.confirmCash(auth, id, body.addToBill);
   }
 
+  @OpenWhenReadOnly()
   @Post('cash-collections/:id/reject')
   @HttpCode(HttpStatus.OK)
   reject(@CurrentAuth() auth: AuthContext, @Param('id', Id) id: string, @Body(Reason) body: { reason: string }) {

@@ -2,6 +2,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Injectable, Module, Post, 
 import { z } from 'zod';
 import { CurrentAuth } from '../auth/auth.guard.js';
 import { Roles } from '../auth/roles.js';
+import { OpenWhenReadOnly } from '../organization/plans.js';
 import { Feature } from '../organization/features.js';
 import type { AuthContext } from '../auth/token.service.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
@@ -259,6 +260,7 @@ export class UpdatesController {
   }
 
   /** The owner opened the feed: rows received up to `upTo` are read. */
+  @OpenWhenReadOnly()
   @Post('seen')
   @HttpCode(HttpStatus.OK)
   seen(@CurrentAuth() auth: AuthContext, @Body(new ZodValidationPipe(SeenSchema)) body: { upTo: string }) {

@@ -6,6 +6,7 @@ import type { MemberRole, Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg } from '../tenancy/tenant.js';
 import { CREW_EMPLOYEE_LIMIT, featuresFor } from './features.js';
+import { loadPlan, planAllowsType } from './plans.js';
 import type {
   ChangeBusinessType,
   CreateEmployee,
@@ -273,6 +274,14 @@ export class OrganizationService {
     return this.prisma.$transaction(async (tx) => {
       const org = await tx.organization.findUniqueOrThrow({ where: { id: organizationId }, select: { businessType: true } });
       if (org.businessType !== to) {
+        // A paid plan allows only its types (D-045); a trial allows all.
+        if (!planAllowsType((await loadPlan(tx, organizationId)).plan, to)) {
+          throw new AppError(
+            HttpStatus.CONFLICT,
+            'PLAN_DOES_NOT_ALLOW',
+            'Your plan does not include this business type. Choose a bigger plan first.',
+          );
+        }
         if (to !== 'VENDOR') {
           const staff = await activeStaff(tx, organizationId);
           if (staff > (to === 'SOLO' ? 0 : CREW_EMPLOYEE_LIMIT)) {
