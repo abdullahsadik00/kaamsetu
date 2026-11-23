@@ -2,6 +2,13 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-23 — Row-level security on all tables (D-040)
+
+- Backend: migration `20261123090000_enable_rls` turns on row-level security for every table in `public`, so Supabase's Data API (anon key) cannot read KaamSetu data. The API is the table owner and is not affected.
+- Tests: `rls.e2e-spec` fails if any table lacks RLS; e2e 173 passed.
+- Still for Sadik: in the Supabase dashboard, turn the Data API off (Project Settings › Data API) and check Advisors › Security shows no "RLS disabled" errors after the deploy.
+- Risk register R-11: another company, KAAMSETU Fast Job Private Limited (recruitment, Uttar Pradesh), uses the name.
+
 ## 2026-11-22 — Free trial status (T7.1, first part)
 
 - App: the owner sees "Free trial · 12 days left" under the business name on **More**; after the end, "Free trial ended on …. Keep working; we will talk to you about a plan." Nothing is blocked or deleted when a trial ends; what happens then is still to decide (T7.1). Hindi and Marathi included. Phone test TP-48.
