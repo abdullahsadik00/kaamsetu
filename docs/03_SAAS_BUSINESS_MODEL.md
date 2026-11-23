@@ -80,6 +80,8 @@ A simple future plan structure could be:
 
 These are product packaging ideas, not finalized prices or commitments.
 
+**Plans in the app (D-045, 23 Nov 2026):** Solo ₹299, Crew ₹499, Business ₹1,499 a month (a year = ten months). Solo allows working alone, Crew adds one employee, Business allows several teams (up to 10). Shown only inside the app; nothing announced publicly (D-014).
+
 **Who the plans must fit (D-041):** a single technician, a two-person crew, and a vendor with several teams. The smallest plan has to make sense for one person who is both owner and technician; the largest for a vendor with many teams. Plan limits by number of teams or staff fit this range better than limits by jobs (see above).
 
 ## 6. Subscription enforcement
@@ -97,6 +99,8 @@ The backend should know:
 Do not block technicians from accessing already assigned work solely because a subscription payment is overdue without a carefully designed grace-period and data-export policy.
 
 Never delete customer business data on subscription expiry.
+
+**Built (D-045):** after a trial or paid period: 7 grace days with a reminder, then view-only (see, export, pay; no new work, 402 `PLAN_ENDED`). Technicians can still finish jobs already given out and the owner can record money for past work. Payment is manual (UPI, then `pilot set-plan`) until Razorpay.
 
 ## 7. Onboarding
 

@@ -16,7 +16,7 @@ Do these in order. Tick each one.
 | 2 | Build and share the APK | `eas build --profile preview --platform android` in `app/mobile`; send the link | Link opens on the owner's phone |
 | 3 | Owner creates the business | Owner installs the APK, **Continue with Google** › **Set up a new business** › **Create my business** | Owner sees **Home** |
 | 4 | Load the customer list | §2 below | `import-customers` printed "Added …" |
-| 4a | Extend the free trial to the pilot's end | `npm run pilot -- extend-trial --business-phone <mobile> --until <pilot end date> --yes` (the app's trial is 30 days; the pilot is longer) | **More** shows the right days left |
+| 4a | Extend the free trial to the pilot's end (**must**: 7 days after the trial ends the business goes view-only, D-045) | `npm run pilot -- extend-trial --business-phone <mobile> --until <pilot end date> --yes` (the app's trial is 30 days; the pilot is longer). After the pilot, a paid plan: `npm run pilot -- set-plan --business-phone <mobile> --plan business --period month --yes` | **More** shows the right days left |
 | 5 | Owner fills the rate list | **Billing** › **Rate list**: service, gas filling, common parts | At least 5 usual prices |
 | 6 | Owner adds staff | **More** › **Employees** › **Add employee** for each senior technician and helper | Everyone listed |
 | 7 | Owner makes teams | **More** › **Teams** › **Add team**: one senior technician and their helpers | Each team shows a lead |

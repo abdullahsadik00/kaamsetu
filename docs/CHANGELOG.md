@@ -2,6 +2,13 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-23 — Plans, grace days and view-only (D-045, T7.1)
+
+- App: **More › Plan & payment** (screen 72): trial days left, paid till, grace days or view-only; Solo ₹299, Crew ₹499, Business ₹1,499 a month or ten months for a year; the plan that fits the business type is picked, smaller ones are greyed; **Pay on WhatsApp** sends the choice to support. Home shows a banner once the plan has ended; More shows the plan line. Refused offline saves say why in words. Hindi and Marathi included (native-speaker review with T3.14). Phone test TP-51.
+- Backend: plan state from the trial or period end (full, 7 grace days, view-only); view-only answers 402 `PLAN_ENDED` except finishing given-out work, money for past work and making the business smaller; `GET /plans`; plan in `GET /organization`; Business plan up to 10 teams; paid plan limits the business type. `npm run pilot -- set-plan --business-phone <mobile> --plan solo|crew|business --period month|year` records a UPI payment.
+- Fix: **Download business data** failed (500) for any business with a job (a BigInt sync number in the export); found by the new tests.
+- Tests: e2e 197, unit 91, app 185 passed.
+
 ## 2026-11-23 — Business type at sign-up decides the screens (D-044, T7.6)
 
 - App, onboarding (screens 51, 52): signed-out users now start on the teal welcome. **Get started** › **How do you work?** › a three-step walkthrough whose middle step fits the answer (teams / two of you / alone) › log in › **Your business** with the type already chosen. **I already use KaamSetu** goes straight to log in. App tests 177 passed.

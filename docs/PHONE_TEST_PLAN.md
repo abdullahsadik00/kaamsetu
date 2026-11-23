@@ -78,6 +78,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-47 | 4 Owner, technician | Help: WhatsApp support, privacy, terms | T7.3 | Pending | | Needs the new APK; set `SUPPORT_WHATSAPP` on Render first |
 | TP-48 | 4 Owner, technician | Free trial days left | T7.1 | Pending | | Needs the new APK (built after 22 Nov evening) |
 | TP-49 | 4 Owner | Owner does field work (solo technician) | T7.4 | Pending | | Needs a new APK (built after 23 Nov) and the backend on staging |
+| TP-51 | 4 Owner, technician | Plan & payment, grace days and view-only | T7.1 (D-045) | Pending | | Needs a new APK, the backend on staging and a test business you can let expire (not the pilot) |
 | TP-50 | 4 Owner | Business type: solo, then crew, then several teams | T7.6 | Pending | | Needs a new APK (built after 23 Nov), the backend on staging and a spare Google account with no business |
 | TP-39b | 4 Owner | Updates from teams, bell, job feed | T4.7 (D-037) | Pending | | |
 | TP-36b | 4 Owner | Home dashboard | T4.12 | Pending | | |
@@ -561,6 +562,23 @@ Before: set `SUPPORT_WHATSAPP` (your number) and `SUPPORT_EMAIL` on Render and r
 - Step 1: "Free trial · N days left" (30 days from when the test business was made, if it was made in the app).
 - Step 2: the days left match the new date.
 - Step 3: no trial line for staff.
+
+### TP-51 Plan & payment, grace days and view-only
+Use a test business, never the pilot. On the laptop, `npm run pilot -- extend-trial` moves the trial end; the steps below need it in the past, so ask Claude to set the dates for you if needed.
+1. Owner: **More › Plan & payment**. Switch **Monthly / Yearly**, tap each plan, then **Pay on WhatsApp**.
+2. Trial end set to 2 days ago: open **Home**, then **More**.
+3. Trial end set to 9 days ago: on **Home** try **+ New job**; turn the internet off and add a customer, then turn it back on.
+4. Technician (same business, view-only): start and finish a job given before.
+5. Owner: **More › Download business data**.
+6. On the laptop: `npm run pilot -- set-plan --business-phone <test business mobile> --plan business --period month --yes`. Reopen the app.
+
+**Expected**
+- Step 1: FREE TRIAL with the days left; the plan that fits your business type has "Fits how you work"; smaller plans are greyed; yearly shows ten months' price; WhatsApp opens to support with "I want the … plan for one month (₹…) for "<business>"…".
+- Step 2: a Home banner "Your plan has ended. Pay within 5 days…"; More shows "Plan ended · pay now"; everything still works.
+- Step 3: the new job is refused: "Your plan has ended. Choose a plan in More › Plan & payment…"; the offline customer shows **Not accepted** with the same reason. Lists and job pages still open.
+- Step 4: Start and Finish work are accepted.
+- Step 5: the file is shared (it works view-only too).
+- Step 6: the banner is gone; More shows "Business plan · till <date a month ahead>"; new jobs work again.
 
 ### TP-49 Owner does field work (solo technician)
 1. Owner: **More › Teams › Add team**. Name it "Me", pick yourself as the senior (your name · Owner) and save.
