@@ -51,7 +51,8 @@ export async function exportBusiness(db: PrismaClient, organizationId: string) {
     db.teamDayHelper.findMany({ where }),
     db.serviceRequest.findMany({ where, orderBy: { requestNumber: 'asc' } }),
     db.serviceRequestEquipment.findMany({ where }),
-    db.serviceJob.findMany({ where, orderBy: { jobNumber: 'asc' } }),
+    // syncSeq is the phone sync cursor: internal, and a BigInt that JSON cannot hold.
+    db.serviceJob.findMany({ where, orderBy: { jobNumber: 'asc' }, omit: { syncSeq: true } }),
     db.jobEquipment.findMany({ where }),
     db.jobAssignment.findMany({ where }),
     db.jobStatusHistory.findMany({ where }),
