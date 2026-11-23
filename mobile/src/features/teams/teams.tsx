@@ -52,6 +52,9 @@ const staff = (list: Employee[] | undefined, role: Employee['role']) =>
 
 const personName = (e: Employee) => e.user.name || e.user.phone || '';
 
+/** The owner can be a team's senior when they do the field work themselves (D-043). */
+const seniorChoices = (list: Employee[] | undefined) => [...staff(list, 'OWNER'), ...staff(list, 'SENIOR_TECHNICIAN')];
+
 // ---------- Teams list (screen 60) ----------
 
 export function TeamsScreen() {
@@ -118,7 +121,7 @@ export function NewTeamScreen() {
       router.replace({ pathname: '/teams/[id]', params: { id: team.id } });
     },
   });
-  const seniors = staff(employees.data, 'SENIOR_TECHNICIAN');
+  const seniors = seniorChoices(employees.data);
   const helperList = staff(employees.data, 'HELPER');
 
   return (
@@ -130,7 +133,10 @@ export function NewTeamScreen() {
       {seniors.length ? (
         <ChoiceChips
           label={t('teams.senior')}
-          options={seniors.map((e) => ({ value: e.id, label: personName(e) }))}
+          options={seniors.map((e) => ({
+            value: e.id,
+            label: e.role === 'OWNER' ? `${personName(e)} · ${t('roles.OWNER')}` : personName(e),
+          }))}
           value={senior}
           onChange={setSenior}
         />
@@ -206,7 +212,7 @@ export function TeamScreen() {
   const inTeam = new Set(tm.members.map((m) => m.memberId));
   const linked = new Map((employees.data ?? []).map((e) => [e.id, e.loginLinked]));
   const available = (employees.data ?? []).filter(
-    (e) => e.status === 'ACTIVE' && e.role !== 'OWNER' && !inTeam.has(e.id),
+    (e) => e.status === 'ACTIVE' && !inTeam.has(e.id),
   );
   const error = remove.error ?? edit.error ?? makePrimary.error;
   const subtitle = (m: TeamMember) =>

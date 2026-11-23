@@ -44,4 +44,19 @@ describe('Add team (T4.2)', () => {
     );
     expect(router.replace).toHaveBeenCalledWith({ pathname: '/teams/[id]', params: { id: 't1' } });
   });
+
+  it('offers the owner as the senior, for a business where the owner does the field work (D-043)', async () => {
+    jest.spyOn(api, 'get').mockImplementation(async (path: string) =>
+      (path === '/employees' ? employees : []) as never,
+    );
+    const post = jest.spyOn(api, 'post').mockResolvedValue({ id: 't1' } as never);
+
+    await renderScreen(<NewTeamScreen />);
+    await fireEvent.press(await screen.findByText('Owner · Owner'));
+    await fireEvent.press(screen.getByText('Save team'));
+
+    await waitFor(() =>
+      expect(post).toHaveBeenCalledWith('/teams', { name: 'Team 1', seniorMemberId: 'o', helperMemberIds: [] }),
+    );
+  });
 });

@@ -52,6 +52,8 @@ export type Business = {
   gstin: string | null;
   /** Owner only, while on the free trial (T7.1). */
   trialEndsAt?: string | null;
+  /** The caller is in a team: an owner who does field work gets My work (D-043). */
+  inTeam?: boolean;
 };
 
 export const ORGANIZATION_KEY = ['organization'] as const;
