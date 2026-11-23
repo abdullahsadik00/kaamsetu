@@ -577,15 +577,16 @@ Before: set `SUPPORT_WHATSAPP` (your number) and `SUPPORT_EMAIL` on Render and r
 - Step 6: the other team's job is not on **My work**.
 
 ### TP-50 Business type: solo, then crew, then several teams
-1. Sign in with the spare Google account (no business yet). On **Set up your business**, fill in the details but don't choose how you work; tap **Create my business**.
-2. Choose **Alone** and create the business.
+1. Log out if needed. On the welcome, tap **Get started**, then **Next** without choosing.
+2. Choose **Alone** › **Next**. Go through the three steps (try **Back** once), then **Continue** and sign in with the spare Google account (no business yet). Fill in **Your business** and create it.
 3. Look at the tabs and **More**. Make a job for a test customer from **Jobs**.
 4. **More › Business details › Change business type** › **Me + one helper or partner** › **Save changes**. Then **More › Employees** and add one helper; try to add a second.
 5. Change the type to **Alone** again.
 6. Change the type to **Several teams**.
 
 **Expected**
-- Step 1: "Choose how you work" shows; nothing is created.
+- Step 1: the teal welcome with **Get started** and **I already use KaamSetu**; **Next** shows "Choose how you work".
+- Step 2: step 2 of 3 reads "All your jobs in one list" (not "Every team knows its work"); after sign-in **Your business** opens directly with **Alone** already chosen.
 - Step 3: a **My work** tab; no **Teams** or **Employees** on More; the job form has no team choice and the job appears on **My work**.
 - Step 4: "Business type changed." **Employees** appears (no **Teams**); the second helper is refused with "A two-person business has one employee…".
 - Step 5: refused with "Remove employees first…".
