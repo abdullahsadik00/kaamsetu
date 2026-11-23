@@ -58,7 +58,29 @@ export type Business = {
   businessType?: BusinessType;
   /** Parts of the app this business has (D-044); missing from servers before D-044. */
   features?: Feature[];
+  /** The owner's plan (D-045); null for staff, missing from servers before D-045. */
+  plan?: PlanState | null;
 };
+
+export type PlanId = 'SOLO' | 'CREW' | 'BUSINESS';
+/** FULL: all works. GRACE: all works, pay soon. READ_ONLY: see and export, no new work. */
+export type PlanAccess = 'FULL' | 'GRACE' | 'READ_ONLY';
+export type PlanState = {
+  plan: PlanId | 'TRIAL';
+  status: 'TRIALING' | 'ACTIVE' | 'PAST_DUE' | 'CANCELLED';
+  endsAt: string | null;
+  graceEndsAt: string | null;
+  access: PlanAccess;
+};
+export type PlanOption = { id: PlanId; monthly: number; yearly: number; types: BusinessType[]; maxTeams: number | null };
+
+/** Plans the owner can choose (screen 72), and the one that fits the business type. */
+export const usePlans = () =>
+  queryOptions({
+    queryKey: ['plans'],
+    queryFn: () => api.get<{ plans: PlanOption[]; suggested: PlanId; graceDays: number }>('/plans'),
+    staleTime: 60 * 60 * 1000,
+  });
 
 export type BusinessType = 'SOLO' | 'CREW' | 'VENDOR';
 export type Feature = 'TEAMS' | 'EMPLOYEES' | 'STAFF_UPDATES';

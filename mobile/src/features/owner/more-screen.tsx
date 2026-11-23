@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
-import type { TFunction } from 'i18next';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
@@ -12,29 +11,22 @@ import { Screen } from '@/components/ui/screen';
 import { useSession } from '@/features/auth/session';
 import { useBusiness, useFeatures } from '@/features/employees/api';
 import { ProfileSection } from '@/features/profile/profile-section';
-import { i18n } from '@/localization/i18n';
 import { colors, radius, space } from '@/theme/tokens';
 
 import { shareBusinessData } from './export-data';
+import { planLine } from './plan-screen';
 
 /**
  * Owner More (Stitch 59), limited to what exists: Teams, Employees, Business
  * details (D-027), then account, language and log out.
  */
-/** "Free trial · 12 days left"; after the end only says so: nothing is blocked (T7.1). */
-function trialLine(t: TFunction, endsAt: string): string {
-  const end = new Date(endsAt);
-  const ms = end.getTime() - Date.now();
-  if (ms <= 0) return t('uiOwner.trialEnded', { date: end.toLocaleDateString(i18n.language === 'en' ? 'en-IN' : `${i18n.language}-IN`, { day: 'numeric', month: 'short' }) });
-  return t('uiOwner.trialDaysLeft', { count: Math.ceil(ms / 86_400_000) });
-}
-
 export function OwnerMoreScreen() {
   const { t } = useTranslation();
   const business = useQuery(useBusiness());
   const features = useFeatures();
   const ownerName = useSession((s) => s.profile?.user.name ?? null);
   const name = business.data?.name;
+  const plan = business.data?.plan;
   const [exporting, setExporting] = useState(false);
   const [exportFailed, setExportFailed] = useState(false);
   const exportData = async () => {
@@ -67,9 +59,9 @@ export function OwnerMoreScreen() {
             <AppText variant="support" color={colors.slate}>
               {[ownerName, t('roles.OWNER'), business.data?.city].filter(Boolean).join(' · ')}
             </AppText>
-            {business.data?.trialEndsAt ? (
-              <AppText variant="small" color={colors.slate} testID="trial">
-                {trialLine(t, business.data.trialEndsAt)}
+            {plan ? (
+              <AppText variant="small" color={plan.access === 'FULL' ? colors.slate : colors.bad} testID="trial">
+                {planLine(t, plan)}
               </AppText>
             ) : null}
           </View>
@@ -90,6 +82,9 @@ export function OwnerMoreScreen() {
         ) : null}
         <ListRow icon="tag-outline" title={t('uiBilling.rateList')} subtitle={t('uiBilling.rateListHint')} onPress={() => router.push('/rates')} divider />
         <ListRow icon="store-outline" title={t('business.title')} subtitle={t('uiOwner.businessHint')} onPress={() => router.push('/business')} divider />
+        {plan ? (
+          <ListRow icon="credit-card-outline" title={t('uiPlan.title')} subtitle={planLine(t, plan)} onPress={() => router.push('/plan')} divider />
+        ) : null}
         <ListRow
           icon="download-outline"
           title={t('uiOwner.exportData')}

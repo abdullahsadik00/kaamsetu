@@ -6,6 +6,7 @@ import { AppText } from '@/components/ui/app-text';
 import { Button } from '@/components/ui/button';
 import { Card, SectionLabel } from '@/components/ui/card';
 import { Icon, type IconName } from '@/components/ui/icon';
+import { i18n } from '@/localization/i18n';
 import { colors, space } from '@/theme/tokens';
 
 import type { OutboxOperation } from './outbox';
@@ -49,6 +50,9 @@ export function PendingSaves({ only }: { only?: OwnerOp[] }) {
       </AppText>
       {ops.map((o) => {
         const refused = o.state === 'NEEDS_ATTENTION';
+        // Known codes (e.g. PLAN_ENDED) say why in words; others show the code.
+        const refusedText = (code: string | null | undefined) =>
+          `${t('uiOwner.refusedSave')}${code ? (i18n.exists(`errors.${code}`) ? ` ${t(`errors.${code}`)}` : ` (${code})`) : ''}`;
         const kind = o.operation as OwnerOp;
         return (
           <View key={o.id} style={styles.row}>
@@ -56,7 +60,7 @@ export function PendingSaves({ only }: { only?: OwnerOp[] }) {
             <View style={styles.flex}>
               <AppText weight="semibold">{[t(LABEL[kind]), detail(o)].filter(Boolean).join(' · ')}</AppText>
               <AppText variant="small" color={refused ? colors.bad : colors.muted}>
-                {refused ? `${t('uiOwner.refusedSave')}${o.lastErrorCode ? ` (${o.lastErrorCode})` : ''}` : t('sync.saved')}
+                {refused ? refusedText(o.lastErrorCode) : t('sync.saved')}
               </AppText>
             </View>
             {refused ? <Button variant="text" label={t('sync.gotIt')} onPress={() => void dismissSave(qc, o)} /> : null}

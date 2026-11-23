@@ -70,28 +70,38 @@ describe('Download business data (doc 10 §4)', () => {
   });
 });
 
-describe('Free trial (T7.1)', () => {
-  const withTrial = (endsAt: string | null) =>
-    jest.spyOn(api, 'get').mockImplementation(async () => ({ name: 'Cool Care', city: 'Pune', trialEndsAt: endsAt }) as never);
+describe('Plan line and row (T7.1, D-045)', () => {
+  const DAY = 86_400_000;
+  const withPlan = (plan: object | null) =>
+    jest.spyOn(api, 'get').mockImplementation(async () => ({ name: 'Cool Care', city: 'Pune', plan }) as never);
+  const at = (days: number) => new Date(Date.now() + days * DAY).toISOString();
 
-  it('shows the days left', async () => {
-    withTrial(new Date(Date.now() + 11.5 * 86_400_000).toISOString());
+  it('shows the trial days left and opens Plan & payment', async () => {
+    withPlan({ plan: 'TRIAL', status: 'TRIALING', endsAt: at(11.5), graceEndsAt: at(18.5), access: 'FULL' });
     await renderScreen(<OwnerMoreScreen />);
-    expect(await screen.findByText('Free trial · 12 days left')).toBeTruthy();
+    expect((await screen.findByTestId('trial')).props.children).toBe('Free trial · 12 days left');
+    expect(screen.getByText('Plan & payment')).toBeTruthy();
   });
 
-  it('after the end only says so; everything stays usable', async () => {
-    withTrial(new Date(Date.now() - 2 * 86_400_000).toISOString());
+  it('a paid plan shows its end date', async () => {
+    withPlan({ plan: 'CREW', status: 'ACTIVE', endsAt: at(20), graceEndsAt: at(27), access: 'FULL' });
     await renderScreen(<OwnerMoreScreen />);
-    expect((await screen.findByTestId('trial')).props.children).toMatch(/^Free trial ended on .+\. Keep working/);
+    expect((await screen.findByTestId('trial')).props.children).toMatch(/^Crew plan · till /);
+  });
+
+  it('view-only says so; data download stays', async () => {
+    withPlan({ plan: 'TRIAL', status: 'TRIALING', endsAt: at(-9), graceEndsAt: at(-2), access: 'READ_ONLY' });
+    await renderScreen(<OwnerMoreScreen />);
+    expect((await screen.findByTestId('trial')).props.children).toBe('View-only · choose a plan');
     expect(screen.getByText('Download business data')).toBeTruthy();
   });
 
-  it('shows nothing when not on a trial', async () => {
-    withTrial(null);
+  it('shows nothing for a server without plans', async () => {
+    withPlan(null);
     await renderScreen(<OwnerMoreScreen />);
     await screen.findByText('Cool Care');
     expect(screen.queryByTestId('trial')).toBeNull();
+    expect(screen.queryByText('Plan & payment')).toBeNull();
   });
 });
 

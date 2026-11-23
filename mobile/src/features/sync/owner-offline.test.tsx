@@ -76,7 +76,7 @@ describe('Owner saves without internet (D-021)', () => {
     await renderScreen(<PendingSaves />);
     expect(await screen.findByText('Waiting to send (2)')).toBeTruthy();
     expect(screen.getByText('New customer · Meera')).toBeTruthy();
-    expect(screen.getByText('Not accepted. Check and add it again. (SITE_NOT_FOUND)')).toBeTruthy();
+    expect(screen.getByText('Not accepted. Check and add it again. This address was not found.')).toBeTruthy();
     await fireEvent.press(screen.getByText('OK, got it'));
     await waitFor(async () => expect(await mockOutbox.unsentOf(['enquiry.create'])).toEqual([]));
   });

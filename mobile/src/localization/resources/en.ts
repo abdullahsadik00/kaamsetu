@@ -1,5 +1,6 @@
 import { billingUi } from './ui/billing';
 import { swapUi } from './ui/swap';
+import { planUi } from './ui/plans';
 import { enquiryUi } from './ui/enquiries';
 import { fieldUi } from './ui/field';
 import { homeUi } from './ui/home';
@@ -20,6 +21,7 @@ export const en = {
   uiBilling: billingUi.en,
   uiUpdates: updatesUi.en,
   uiSwap: swapUi.en,
+  uiPlan: planUi.en,
   common: {
     appName: 'KaamSetu',
     tagline: 'Work made easier. Accounts made easier. Business made easier.',
@@ -388,6 +390,9 @@ export const en = {
     EMPLOYEE_LIMIT: 'A two-person business has one employee. Change the business type to add more.',
     TOO_MANY_EMPLOYEES: 'Remove employees first: this business type has fewer.',
     OPEN_JOBS_ON_OTHER_TEAMS: 'Give other teams’ open jobs to your own team, or finish or cancel them first.',
+    PLAN_ENDED: 'Your plan has ended. Choose a plan in More › Plan & payment to keep adding work.',
+    PLAN_DOES_NOT_ALLOW: 'Your plan does not include this business type. Choose a bigger plan first.',
+    TEAM_LIMIT: 'Your plan has up to 10 teams. Turn off a team first.',
     JOB_NOT_FOUND: 'This job was not found.',
     ENQUIRY_NOT_FOUND: 'This enquiry was not found.',
     VERSION_CONFLICT: 'This job was changed in the meantime. Please check and try again.',

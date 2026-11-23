@@ -13,8 +13,10 @@ import { Screen } from '@/components/ui/screen';
 import { PendingSaves } from '@/features/sync/pending-saves';
 import { api, useSession } from '@/features/auth/session';
 import { useDayLabel } from '@/features/jobs/jobs';
-import { useFeatures } from '@/features/employees/api';
+import { useBusiness, useFeatures } from '@/features/employees/api';
 import { useTeams } from '@/features/teams/teams';
+
+import { PlanBanner } from './plan-screen';
 import type { FeedItem } from '@/features/updates/api';
 import { FeedRow, UpdatesBell } from '@/features/updates/feed';
 import { useLanguage } from '@/localization/i18n';
@@ -83,6 +85,7 @@ export function OwnerHomeScreen() {
   const name = useSession((s) => s.profile?.user.name ?? null);
   const dash = useQuery(useDashboard());
   const features = useFeatures();
+  const plan = useQuery(useBusiness()).data?.plan;
   const teams = useQuery({ ...useTeams(), enabled: features.has('TEAMS') });
   const dayLabel = useDayLabel();
 
@@ -127,6 +130,7 @@ export function OwnerHomeScreen() {
         </View>
         {features.has('STAFF_UPDATES') ? <UpdatesBell unread={d?.updates?.unread ?? 0} /> : null}
       </View>
+      <PlanBanner plan={plan} />
 
       {teams.data && teams.data.length === 0 ? (
         <Card tone="warm">

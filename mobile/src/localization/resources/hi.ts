@@ -1,6 +1,7 @@
 import type { Translations } from './en';
 import { billingUi } from './ui/billing';
 import { swapUi } from './ui/swap';
+import { planUi } from './ui/plans';
 import { enquiryUi } from './ui/enquiries';
 import { fieldUi } from './ui/field';
 import { homeUi } from './ui/home';
@@ -22,6 +23,7 @@ export const hi: Translations = {
   uiBilling: billingUi.hi,
   uiUpdates: updatesUi.hi,
   uiSwap: swapUi.hi,
+  uiPlan: planUi.hi,
   common: {
     appName: 'कामसेतु',
     tagline: 'काम आसान। हिसाब आसान। कारोबार आसान।',
@@ -390,6 +392,9 @@ export const hi: Translations = {
     EMPLOYEE_LIMIT: 'दो लोगों के कारोबार में एक ही कर्मचारी होता है। ज़्यादा जोड़ने के लिए प्रकार बदलें।',
     TOO_MANY_EMPLOYEES: 'पहले कर्मचारी कम करें: इस प्रकार में इतने कर्मचारी नहीं हो सकते।',
     OPEN_JOBS_ON_OTHER_TEAMS: 'दूसरी टीमों के खुले काम पहले अपनी टीम को दें, पूरे करें या रद्द करें।',
+    PLAN_ENDED: 'आपका प्लान ख़त्म हो गया। काम जोड़ते रहने के लिए More › प्लान और भुगतान में प्लान चुनें।',
+    PLAN_DOES_NOT_ALLOW: 'आपके प्लान में यह बिज़नेस प्रकार नहीं है। पहले बड़ा प्लान चुनें।',
+    TEAM_LIMIT: 'आपके प्लान में 10 टीमों तक हैं। पहले कोई टीम बंद करें।',
     JOB_NOT_FOUND: 'यह काम नहीं मिला।',
     ENQUIRY_NOT_FOUND: 'यह पूछताछ नहीं मिली।',
     VERSION_CONFLICT: 'इस बीच काम बदल गया। देखकर फिर से कोशिश करें।',
