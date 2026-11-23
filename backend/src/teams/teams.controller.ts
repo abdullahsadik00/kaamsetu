@@ -14,6 +14,7 @@ import {
 import { z } from 'zod';
 import { CurrentAuth } from '../auth/auth.guard.js';
 import { Roles } from '../auth/roles.js';
+import { Feature } from '../organization/features.js';
 import type { AuthContext } from '../auth/token.service.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import { DayQuerySchema, LendHelperSchema } from './day-helpers.js';
@@ -30,6 +31,7 @@ const Id = new ZodValidationPipe(z.uuid());
 
 /** Teams (docs/06 §4, T4.2, D-029). Owner only. */
 @Roles('OWNER')
+@Feature('TEAMS')
 @Controller('teams')
 export class TeamsController {
   constructor(private readonly teams: TeamsService) {}

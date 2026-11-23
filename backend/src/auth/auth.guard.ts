@@ -8,6 +8,8 @@ import {
 import { Reflector } from '@nestjs/core';
 import type { Request } from 'express';
 import { AppError } from '../common/app-error.js';
+import { FEATURE_KEY, featuresFor, type Feature } from '../organization/features.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 import { ROLES_KEY, type Role } from './roles.js';
 import { TokenService } from './token.service.js';
 import type { AuthContext } from './token.service.js';
@@ -34,6 +36,7 @@ export class AuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly tokens: TokenService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -67,6 +70,25 @@ export class AuthGuard implements CanActivate {
       }
       if (!roles.includes(auth.role)) {
         throw new AppError(403, 'FORBIDDEN_ROLE', 'Your role cannot do this.');
+      }
+    }
+
+    // Step 4 (D-044): the business type includes this part of the app.
+    const feature = this.reflector.getAllAndOverride<Feature | undefined>(
+      FEATURE_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+    if (feature && auth.organizationId) {
+      const org = await this.prisma.organization.findUnique({
+        where: { id: auth.organizationId },
+        select: { businessType: true },
+      });
+      if (!org || !featuresFor(org.businessType).includes(feature)) {
+        throw new AppError(
+          403,
+          'NOT_IN_BUSINESS_TYPE',
+          'Your business type does not include this. Change it in Business details.',
+        );
       }
     }
     return true;

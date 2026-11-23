@@ -15,6 +15,7 @@ import { CurrentAuth } from '../auth/auth.guard.js';
 import { Roles } from '../auth/roles.js';
 import type { AuthContext } from '../auth/token.service.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
+import { Feature } from '../organization/features.js';
 import {
   AssignSchema,
   CancelSchema,
@@ -65,6 +66,7 @@ export class JobsController {
     return this.jobs.update(auth, id, body);
   }
 
+  @Feature('TEAMS')
   @Post(':id/assign-team')
   @HttpCode(HttpStatus.OK)
   assign(

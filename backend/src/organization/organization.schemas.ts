@@ -18,6 +18,8 @@ export const CreateOrganizationSchema = z.strictObject({
     .transform((v) => v.toUpperCase())
     .pipe(z.string().regex(GSTIN, 'GSTIN should look like 27ABCDE1234F1Z5'))
     .optional(),
+  /** How the business works (D-044); older apps send nothing and get VENDOR. */
+  businessType: z.enum(['SOLO', 'CREW', 'VENDOR']).default('VENDOR'),
 });
 export type CreateOrganization = z.infer<typeof CreateOrganizationSchema>;
 
@@ -38,6 +40,12 @@ export const UpdateOrganizationSchema = z
   .partial()
   .refine((v) => Object.keys(v).length > 0, { message: 'Nothing to change' });
 export type UpdateOrganization = z.infer<typeof UpdateOrganizationSchema>;
+
+/** Owner changes how the business works (D-044). */
+export const ChangeBusinessTypeSchema = z.strictObject({
+  businessType: z.enum(['SOLO', 'CREW', 'VENDOR']),
+});
+export type ChangeBusinessType = z.infer<typeof ChangeBusinessTypeSchema>;
 
 /** Owner adds a senior technician or helper (D-027); they join by invite QR (D-025). */
 export const CreateEmployeeSchema = z.strictObject({

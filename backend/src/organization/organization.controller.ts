@@ -21,16 +21,19 @@ import { myTeamIds } from '../field/scope.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg, scoped } from '../tenancy/tenant.js';
 import {
+  ChangeBusinessTypeSchema,
   CreateEmployeeSchema,
   CreateOrganizationSchema,
   UpdateOrganizationSchema,
 } from './organization.schemas.js';
 import type {
+  ChangeBusinessType,
   CreateEmployee,
   CreateOrganization,
   UpdateOrganization,
 } from './organization.schemas.js';
 import { exportBusiness, exportCounts } from './export.js';
+import { Feature, featuresFor } from './features.js';
 import { OrganizationService } from './organization.service.js';
 
 const memberSelect = {
@@ -108,6 +111,7 @@ export class OrganizationController {
 
   /** Owner removes someone who left: inactive at once, phones signed out (D-027). */
   @Roles('OWNER')
+  @Feature('EMPLOYEES')
   @Post('employees/:id/deactivate')
   @HttpCode(HttpStatus.OK)
   deactivateEmployee(
@@ -119,6 +123,7 @@ export class OrganizationController {
 
   /** Owner adds a senior technician or helper (D-027); they join by invite. */
   @Roles('OWNER')
+  @Feature('EMPLOYEES')
   @Post('employees')
   @HttpCode(HttpStatus.CREATED)
   async addEmployee(
@@ -147,6 +152,7 @@ export class OrganizationController {
         gstBills: true,
         gstin: true,
         timezone: true,
+        businessType: true,
         subscription: { select: { status: true, trialEndsAt: true } },
       },
     });
@@ -154,10 +160,27 @@ export class OrganizationController {
     const { subscription, ...details } = org;
     const onTrial = auth.role === 'OWNER' && subscription?.status === 'TRIALING';
     const inTeam = (await myTeamIds(this.prisma, auth)).length > 0;
-    return { ...details, trialEndsAt: onTrial ? (subscription?.trialEndsAt ?? null) : null, inTeam };
+    return {
+      ...details,
+      features: featuresFor(details.businessType),
+      trialEndsAt: onTrial ? (subscription?.trialEndsAt ?? null) : null,
+      inTeam,
+    };
+  }
+
+  /** Owner changes how the business works; screens follow `features` (D-044). */
+  @Roles('OWNER')
+  @Post('organization/business-type')
+  @HttpCode(HttpStatus.OK)
+  changeBusinessType(
+    @CurrentAuth() auth: AuthContext,
+    @Body(new ZodValidationPipe(ChangeBusinessTypeSchema)) body: ChangeBusinessType,
+  ) {
+    return this.organizations.changeBusinessType(auth, body);
   }
 
   @Roles('OWNER')
+  @Feature('EMPLOYEES')
   @Get('employees')
   async employees(@CurrentAuth() auth: AuthContext) {
     const rows = await this.prisma.organizationMember.findMany({
@@ -169,6 +192,7 @@ export class OrganizationController {
   }
 
   @Roles('OWNER')
+  @Feature('EMPLOYEES')
   @Get('employees/:id')
   async employee(
     @CurrentAuth() auth: AuthContext,
@@ -185,6 +209,7 @@ export class OrganizationController {
 
   /** QR + 6-digit invite that links this employee's Google login (D-025). */
   @Roles('OWNER')
+  @Feature('EMPLOYEES')
   @Post('employees/:id/invite')
   @HttpCode(HttpStatus.CREATED)
   invite(
@@ -196,6 +221,7 @@ export class OrganizationController {
 
   /** Unlinks the employee's Google login and signs out their phones. */
   @Roles('OWNER')
+  @Feature('EMPLOYEES')
   @Post('employees/:id/reset-login')
   @HttpCode(HttpStatus.OK)
   resetLogin(

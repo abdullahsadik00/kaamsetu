@@ -37,6 +37,8 @@ model Organization {
   gstin        String?
   /// Default for new bills: GST bill or not (prototype "We give GST bills"); each bill can still change it.
   gstBills     Boolean      @default(false)
+  /// SOLO / CREW get their own team at sign-up; VENDOR has several teams (D-044).
+  businessType BusinessType @default(VENDOR)
   currencyCode String       @default("INR") @db.Char(3)
   timezone     String       @default("Asia/Kolkata")
   status       RecordStatus @default(ACTIVE)
@@ -59,6 +61,13 @@ model Organization {
   /// Next bill number (KS-0001, KS-0002, …) and quotation number (Q-001, …), T4.10.
   nextBillNumber    Int                  @default(1)
   nextQuoteNumber   Int                  @default(1)
+}
+
+/// How the business works; decides which screens and routes it has (D-044).
+enum BusinessType {
+  SOLO
+  CREW
+  VENDOR
 }
 
 enum SubscriptionStatus {

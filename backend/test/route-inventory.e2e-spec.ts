@@ -8,11 +8,12 @@ import { App } from 'supertest/types.js';
 import { AppModule } from '../src/app.module.js';
 import { API_PREFIX, configureApp } from '../src/app.setup.js';
 import { ALL_ROLES, ROLES_KEY, type Role } from '../src/auth/roles.js';
+import { FEATURE_KEY } from '../src/organization/features.js';
 import { TenantFactory, type TestTenant } from './helpers/tenants.js';
 
 const PREFIX = '90000059';
 
-type Route = { method: string; path: string; roles: Role[] | 'public' | 'signed-in' };
+type Route = { method: string; path: string; roles: Role[] | 'public' | 'signed-in'; feature?: string };
 
 /** Every HTTP route with who may call it, read from the controllers' metadata. */
 function routes(app: INestApplication): Route[] {
@@ -31,7 +32,9 @@ function routes(app: INestApplication): Route[] {
         const isPublic = Reflect.getMetadata('kaamsetu:public', handler) ?? Reflect.getMetadata('kaamsetu:public', ctrl);
         const roles = (Reflect.getMetadata(ROLES_KEY, handler) ?? Reflect.getMetadata(ROLES_KEY, ctrl)) as Role[] | undefined;
         const path = `/${[API_PREFIX, base, [sub].flat()[0]].filter(Boolean).join('/')}`.replace(/\/+/g, '/').replace(/\/$/, '');
-        out.push({ method, path, roles: isPublic ? 'public' : (roles ?? 'signed-in') });
+        // Business-type gate (D-044), when the route has one.
+        const feature = (Reflect.getMetadata(FEATURE_KEY, handler) ?? Reflect.getMetadata(FEATURE_KEY, ctrl)) as string | undefined;
+        out.push({ method, path, roles: isPublic ? 'public' : (roles ?? 'signed-in'), ...(feature ? { feature } : {}) });
       }
     }
   }
@@ -64,7 +67,7 @@ describe('Every route: roles and login (e2e, T5.2)', () => {
 
   it('the inventory matches the reviewed list (a new route or role change shows up here)', () => {
     expect(all.length).toBeGreaterThan(40);
-    expect(all.map((r) => `${r.method.padEnd(6)} ${r.path}  ${Array.isArray(r.roles) ? r.roles.join(',') : r.roles}`)).toMatchSnapshot();
+    expect(all.map((r) => `${r.method.padEnd(6)} ${r.path}  ${Array.isArray(r.roles) ? r.roles.join(',') : r.roles}${r.feature ? `  [${r.feature}]` : ''}`)).toMatchSnapshot();
   });
 
   it('business routes always name their roles', () => {

@@ -2,6 +2,7 @@ import { Body, Controller, Get, HttpCode, HttpStatus, Injectable, Module, Post, 
 import { z } from 'zod';
 import { CurrentAuth } from '../auth/auth.guard.js';
 import { Roles } from '../auth/roles.js';
+import { Feature } from '../organization/features.js';
 import type { AuthContext } from '../auth/token.service.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import { holdSide } from '../dashboard/hold-side.js';
@@ -246,6 +247,7 @@ export class UpdatesService {
 }
 
 @Roles('OWNER')
+@Feature('STAFF_UPDATES')
 @Controller('updates')
 export class UpdatesController {
   constructor(private readonly updates: UpdatesService) {}

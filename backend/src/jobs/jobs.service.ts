@@ -198,8 +198,14 @@ export class JobsService {
     const org = await tx.organization.update({
       where: { id: organizationId },
       data: { nextJobNumber: { increment: 1 } },
-      select: { nextJobNumber: true },
+      select: { nextJobNumber: true, businessType: true },
     });
+    // SOLO and CREW have one team, the owner's own: every job goes to it (D-044).
+    const teamId =
+      input.teamId ??
+      (org.businessType === 'VENDOR'
+        ? undefined
+        : (await tx.team.findFirst({ where: scoped(auth, { active: true }), orderBy: { createdAt: 'asc' }, select: { id: true } }))?.id);
     const job = await tx.serviceJob.create({
       data: {
         id: newId,
@@ -214,19 +220,19 @@ export class JobsService {
         amountToCollect: input.amountToCollect ?? null,
         createdByMemberId: memberId,
         serviceRequestId: serviceRequestId ?? null,
-        status: input.teamId ? 'ASSIGNED' : 'NEW',
-        assignedTeamId: input.teamId ?? null,
+        status: teamId ? 'ASSIGNED' : 'NEW',
+        assignedTeamId: teamId ?? null,
         equipment: { create: [...acs].map((equipmentId) => ({ organizationId, equipmentId })) },
         history: {
           create: [
             { organizationId, toStatus: 'NEW', byMemberId: memberId },
-            ...(input.teamId
+            ...(teamId
               ? [{ organizationId, fromStatus: 'NEW' as const, toStatus: 'ASSIGNED' as const, byMemberId: memberId }]
               : []),
           ],
         },
-        ...(input.teamId
-          ? { assignments: { create: { organizationId, teamId: input.teamId, assignedByMemberId: memberId } } }
+        ...(teamId
+          ? { assignments: { create: { organizationId, teamId: teamId, assignedByMemberId: memberId } } }
           : {}),
       },
     });

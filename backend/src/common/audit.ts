@@ -14,7 +14,8 @@ export type AuditAction =
   | 'CASH_CONFIRMED'
   | 'CASH_REJECTED'
   | 'DATA_EXPORTED'
-  | 'CUSTOMERS_IMPORTED';
+  | 'CUSTOMERS_IMPORTED'
+  | 'BUSINESS_TYPE_CHANGED';
 
 type Db = Pick<Prisma.TransactionClient, 'auditLog'>;
 

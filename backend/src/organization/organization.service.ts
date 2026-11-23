@@ -2,13 +2,50 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import type { AuthContext } from '../auth/token.service.js';
 import { AppError } from '../common/app-error.js';
 import { audit } from '../common/audit.js';
+import type { MemberRole, Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg } from '../tenancy/tenant.js';
+import { CREW_EMPLOYEE_LIMIT, featuresFor } from './features.js';
 import type {
+  ChangeBusinessType,
   CreateEmployee,
   CreateOrganization,
   UpdateOrganization,
 } from './organization.schemas.js';
+
+const OPEN_JOB = ['NEW', 'ASSIGNED', 'IN_PROGRESS', 'ON_HOLD'] as const;
+
+/** Employees still in the business (the owner not counted). */
+const activeStaff = (tx: Prisma.TransactionClient, organizationId: string) =>
+  tx.organizationMember.count({ where: { organizationId, status: 'ACTIVE', role: { not: 'OWNER' } } });
+
+/**
+ * The owner's own team for SOLO and CREW (D-044): the first active team the
+ * owner is in, else a new "My team" with the owner as its primary senior.
+ */
+async function ownTeam(tx: Prisma.TransactionClient, organizationId: string, ownerMemberId: string) {
+  const mine = await tx.teamMember.findFirst({
+    where: { organizationId, organizationMemberId: ownerMemberId, leftAt: null, team: { active: true } },
+    orderBy: { joinedAt: 'asc' },
+    select: { teamId: true },
+  });
+  if (mine) return mine.teamId;
+  const team = await tx.team.create({ data: { organizationId, name: 'My team' } });
+  await tx.teamMember.create({
+    data: { organizationId, teamId: team.id, organizationMemberId: ownerMemberId, position: 'SENIOR_TECHNICIAN', isPrimary: true },
+  });
+  return team.id;
+}
+
+/** Puts an employee into the owner's team in the position matching their role, unless already there. */
+async function joinTeam(tx: Prisma.TransactionClient, organizationId: string, teamId: string, member: { id: string; role: MemberRole }) {
+  if (member.role === 'OWNER') return;
+  const there = await tx.teamMember.findFirst({ where: { teamId, organizationMemberId: member.id, leftAt: null } });
+  if (there) return;
+  await tx.teamMember.create({
+    data: { organizationId, teamId, organizationMemberId: member.id, position: member.role, isPrimary: false },
+  });
+}
 
 /** Trial length promised to early-access businesses (D-014). */
 export const TRIAL_DAYS = 30;
@@ -51,6 +88,7 @@ export class OrganizationService {
           city: input.city || null,
           gstBills: input.gstBills,
           gstin: input.gstin ?? null,
+          businessType: input.businessType,
           subscription: {
             create: {
               currentPeriodEnd: trialEnd,
@@ -60,9 +98,11 @@ export class OrganizationService {
         },
         select: { id: true, name: true, phone: true, city: true, gstBills: true, gstin: true },
       });
-      await tx.organizationMember.create({
+      const owner = await tx.organizationMember.create({
         data: { organizationId: org.id, userId: auth.userId, role: 'OWNER' },
       });
+      // A solo technician or a crew does the field work: their own team (D-044).
+      if (input.businessType !== 'VENDOR') await ownTeam(tx, org.id, owner.id);
       // Owner's own number: set it if they have none and nobody else uses it.
       const user = await tx.user.findUniqueOrThrow({ where: { id: auth.userId } });
       const phoneFree =
@@ -159,6 +199,14 @@ export class OrganizationService {
   async addEmployee(auth: AuthContext, input: CreateEmployee) {
     const organizationId = requireOrg(auth);
     return this.prisma.$transaction(async (tx) => {
+      const { businessType } = await tx.organization.findUniqueOrThrow({ where: { id: organizationId }, select: { businessType: true } });
+      if (businessType === 'CREW' && (await activeStaff(tx, organizationId)) >= CREW_EMPLOYEE_LIMIT) {
+        throw new AppError(
+          HttpStatus.CONFLICT,
+          'EMPLOYEE_LIMIT',
+          'A two-person business has one employee. Change the business type to add more.',
+        );
+      }
       let user = await tx.user.findUnique({
         where: { phone: input.phone },
         include: { memberships: true },
@@ -206,7 +254,62 @@ export class OrganizationService {
         role: input.role,
         ...(before ? { previousRole: before.role } : {}),
       });
+      // A crew works as one team: the new person joins the owner's (D-044).
+      if (businessType === 'CREW') {
+        await joinTeam(tx, organizationId, await ownTeam(tx, organizationId, auth.memberId as string), member);
+      }
       return member;
+    });
+  }
+
+  /**
+   * Owner changes how the business works (D-044). Going down to SOLO or CREW
+   * needs few enough employees and no open jobs outside the owner's team;
+   * the other teams are then turned off (their history stays).
+   */
+  async changeBusinessType(auth: AuthContext, input: ChangeBusinessType) {
+    const organizationId = requireOrg(auth);
+    const to = input.businessType;
+    return this.prisma.$transaction(async (tx) => {
+      const org = await tx.organization.findUniqueOrThrow({ where: { id: organizationId }, select: { businessType: true } });
+      if (org.businessType !== to) {
+        if (to !== 'VENDOR') {
+          const staff = await activeStaff(tx, organizationId);
+          if (staff > (to === 'SOLO' ? 0 : CREW_EMPLOYEE_LIMIT)) {
+            throw new AppError(
+              HttpStatus.CONFLICT,
+              'TOO_MANY_EMPLOYEES',
+              to === 'SOLO'
+                ? 'Remove your employees first: working alone means no employees.'
+                : 'Keep only one employee first: a two-person business has one.',
+            );
+          }
+          const teamId = await ownTeam(tx, organizationId, auth.memberId as string);
+          const open = await tx.serviceJob.count({
+            where: {
+              organizationId,
+              status: { in: [...OPEN_JOB] },
+              OR: [{ assignedTeamId: null }, { assignedTeamId: { not: teamId } }],
+            },
+          });
+          if (open > 0) {
+            throw new AppError(
+              HttpStatus.CONFLICT,
+              'OPEN_JOBS_ON_OTHER_TEAMS',
+              'Give the open jobs to your own team, finish or cancel them first.',
+            );
+          }
+          await tx.team.updateMany({ where: { organizationId, active: true, id: { not: teamId } }, data: { active: false } });
+          const left = await tx.organizationMember.findFirst({
+            where: { organizationId, status: 'ACTIVE', role: { not: 'OWNER' } },
+            select: { id: true, role: true },
+          });
+          if (left) await joinTeam(tx, organizationId, teamId, left);
+        }
+        await tx.organization.update({ where: { id: organizationId }, data: { businessType: to } });
+        await audit(tx, auth, 'BUSINESS_TYPE_CHANGED', 'Organization', organizationId, { from: org.businessType, to });
+      }
+      return { businessType: to, features: featuresFor(to) };
     });
   }
 }
