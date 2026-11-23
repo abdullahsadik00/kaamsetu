@@ -2,6 +2,12 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-23 — Business type at sign-up decides the screens (D-044, T7.6)
+
+- App: sign-up asks **How do you work?** (Alone / Me + one helper or partner / Several teams). A solo or two-person business sees no Teams screens, team picker or staff updates; a solo business sees no Employees either. **More › Business details** shows the type and changes it, with the reason when it cannot. Hindi and Marathi included (native-speaker review with T3.14). Phone test TP-50.
+- Backend: `Organization.businessType` (migration `20261123120000_business_type`, existing businesses are VENDOR). Gated routes answer 403 `NOT_IN_BUSINESS_TYPE`; SOLO and CREW get their own team at sign-up and their jobs go to it; CREW has one employee; `POST /organization/business-type` with checks and an audit entry.
+- Tests: e2e 186 passed (new `business-type.e2e-spec`, route inventory shows each route's gate); app 171 passed.
+
 ## 2026-11-23 — Owner field work (D-043, Q-16) and new name KaamSaathi (D-042)
 
 - Backend: the owner can be added to a team (always as its senior). In a team, the owner sees that team's jobs on `GET /my/jobs` and in sync, and can start, hold and finish them. `GET /organization` returns `inTeam`.

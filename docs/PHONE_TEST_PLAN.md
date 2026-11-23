@@ -78,6 +78,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-47 | 4 Owner, technician | Help: WhatsApp support, privacy, terms | T7.3 | Pending | | Needs the new APK; set `SUPPORT_WHATSAPP` on Render first |
 | TP-48 | 4 Owner, technician | Free trial days left | T7.1 | Pending | | Needs the new APK (built after 22 Nov evening) |
 | TP-49 | 4 Owner | Owner does field work (solo technician) | T7.4 | Pending | | Needs a new APK (built after 23 Nov) and the backend on staging |
+| TP-50 | 4 Owner | Business type: solo, then crew, then several teams | T7.6 | Pending | | Needs a new APK (built after 23 Nov), the backend on staging and a spare Google account with no business |
 | TP-39b | 4 Owner | Updates from teams, bell, job feed | T4.7 (D-037) | Pending | | |
 | TP-36b | 4 Owner | Home dashboard | T4.12 | Pending | | |
 | TP-34 | 4 Owner | Quotations and bills | T4.10 | Pending | | GST rates wait for Q-04 |
@@ -574,6 +575,21 @@ Before: set `SUPPORT_WHATSAPP` (your number) and `SUPPORT_EMAIL` on Render and r
 - Step 4: the job shows Done on **My work** and Completed on the owner's **Jobs**.
 - Step 5: the start is saved on the phone and reaches the server once online (the owner's **Jobs** shows it in progress).
 - Step 6: the other team's job is not on **My work**.
+
+### TP-50 Business type: solo, then crew, then several teams
+1. Sign in with the spare Google account (no business yet). On **Set up your business**, fill in the details but don't choose how you work; tap **Create my business**.
+2. Choose **Alone** and create the business.
+3. Look at the tabs and **More**. Make a job for a test customer from **Jobs**.
+4. **More › Business details › Change business type** › **Me + one helper or partner** › **Save changes**. Then **More › Employees** and add one helper; try to add a second.
+5. Change the type to **Alone** again.
+6. Change the type to **Several teams**.
+
+**Expected**
+- Step 1: "Choose how you work" shows; nothing is created.
+- Step 3: a **My work** tab; no **Teams** or **Employees** on More; the job form has no team choice and the job appears on **My work**.
+- Step 4: "Business type changed." **Employees** appears (no **Teams**); the second helper is refused with "A two-person business has one employee…".
+- Step 5: refused with "Remove employees first…".
+- Step 6: **Teams** appears on More with one team (yours) and the helper in it.
 
 ### TP-25 Reset login and remove an employee (run last)
 1. **More › Employees** › **Test Helper** › **Reset login** and confirm.

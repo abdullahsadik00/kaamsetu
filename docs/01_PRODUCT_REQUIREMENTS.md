@@ -35,7 +35,7 @@ These are the initial pilot assumptions. Validate the actual daily workflow befo
 - **Two-person crews**: a technician and a helper who run their own business.
 - **Single technicians** working alone.
 
-Any of them can take jobs from service centres, from their own customers, or commercial VRF/VRV work. Do not hard-code the pilot's shape (an owner who stays off the field, several fixed teams). How a solo technician or a two-person crew uses the roles is open (Q-16).
+Any of them can take jobs from service centres, from their own customers, or commercial VRF/VRV work. Do not hard-code the pilot's shape (an owner who stays off the field, several fixed teams). At sign-up the owner says how they work (D-044): **alone** (SOLO), **owner + one helper or partner** (CREW) or **several teams** (VENDOR). The app shows only the screens that type needs: SOLO and CREW have no Teams screens and no team picker (jobs go to the owner's own team, worked from **My work**); CREW can add one employee; VENDOR has everything. The owner can change the type in Business details; paid plans will later decide which types a business can use.
 
 ## 3. Product goals
 

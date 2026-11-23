@@ -169,6 +169,8 @@ Potential endpoints:
 - `GET /sync/changes?cursor=`
 - `POST /sync/operations`
 
+**Business type, 23 Nov 2026 (D-044):** `POST /organizations` takes `businessType` (`SOLO`, `CREW`, `VENDOR`; default `VENDOR`). `GET /organization` returns `businessType` and `features` (`TEAMS`, `EMPLOYEES`, `STAFF_UPDATES`). Routes outside the type answer 403 `NOT_IN_BUSINESS_TYPE`: `/teams/*` and `POST /jobs/:id/assign-team` need `TEAMS`, `/employees/*` needs `EMPLOYEES`, `/updates/*` needs `STAFF_UPDATES`. For SOLO and CREW a job made without `teamId` goes to the owner's team. `POST /employees` for CREW: 409 `EMPLOYEE_LIMIT` after one active employee. `POST /organization/business-type {businessType}` (owner): 409 `TOO_MANY_EMPLOYEES` (SOLO needs none, CREW one at most) or `OPEN_JOBS_ON_OTHER_TEAMS`; answers `{businessType, features}`; audit `BUSINESS_TYPE_CHANGED`.
+
 **Owner field work, 23 Nov 2026 (D-043):** `GET /organization` also returns `inTeam` (the caller is in an active team). An owner can be added to a team (`POST /teams/:id/members`, always as senior; `OWNER_NOT_IN_TEAM` is gone). `GET /my/jobs`, `GET /sync/bootstrap` and `GET /sync/changes` allow OWNER and return only the jobs of the owner's teams (empty when in none). Job operations in `POST /sync/operations` (`job.start`, `job.hold`, `job.complete`, updates) accept OWNER for those jobs.
 
 **Free trial, 22 Nov 2026 (T7.1):** `GET /organization` also returns `trialEndsAt` (ISO time) for the owner while the business is on its free trial; `null` for staff and when not on a trial. Nothing is blocked when it passes.

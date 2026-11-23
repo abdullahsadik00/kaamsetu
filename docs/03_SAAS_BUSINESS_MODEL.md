@@ -84,6 +84,8 @@ These are product packaging ideas, not finalized prices or commitments.
 
 ## 6. Subscription enforcement
 
+**Business type first (D-044):** what a business can use is decided today by its business type (SOLO, CREW, VENDOR) through one feature map (`backend/src/organization/features.ts`), checked on the server for every gated route and mirrored in the app. When paid plans arrive, the plan feeds the same map (for example, VENDOR only on a team plan); no screen needs its own check.
+
 The backend should know:
 - Plan ID.
 - Subscription status.
