@@ -91,7 +91,8 @@ describe('Sync: bootstrap and changes (e2e, T4.9, D-035)', () => {
     expect(res.jobs[0]).not.toHaveProperty('amountToCollect');
     expect(res.jobs[0]).not.toHaveProperty('complaint');
     expect(res.jobs[0]).not.toHaveProperty('equipment');
-    await http().get('/api/v1/sync/bootstrap').set(owner).expect(403);
+    // An owner not in a team gets nothing (D-043).
+    expect((await http().get('/api/v1/sync/bootstrap').set(owner).expect(200)).body.data.jobs).toEqual([]);
     expect((await bootstrap(b.tokens.SENIOR_TECHNICIAN)).jobs).toEqual([]);
   });
 

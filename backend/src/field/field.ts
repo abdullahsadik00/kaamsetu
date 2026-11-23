@@ -216,7 +216,8 @@ export class FieldService {
       return { id: op.id, ...(await this.ownerOps.apply(auth, op.operation, op.entityId, op.payload)) };
     }
     if (op.entityType !== 'ServiceJob') return { id: op.id, status: 'rejected', code: 'VALIDATION_FAILED' };
-    if (auth.role !== 'SENIOR_TECHNICIAN') {
+    // An owner in a team works its jobs like its senior (D-043); team membership decides below.
+    if (auth.role !== 'SENIOR_TECHNICIAN' && auth.role !== 'OWNER') {
       return { id: op.id, status: 'rejected', code: 'FORBIDDEN_ROLE' };
     }
     const teamIds = await myTeamIds(this.prisma, auth);
@@ -376,7 +377,7 @@ export class FieldService {
 export class FieldController {
   constructor(private readonly field: FieldService) {}
 
-  @Roles('SENIOR_TECHNICIAN', 'HELPER')
+  @Roles('SENIOR_TECHNICIAN', 'HELPER', 'OWNER')
   @Get('my/jobs')
   myJobs(
     @CurrentAuth() auth: AuthContext,

@@ -170,8 +170,10 @@ export class TeamsService {
 
   /**
    * Puts an active employee of the same business into a team, in the
-   * position matching their role. A senior becomes primary if asked, or
-   * when the team has no primary senior yet; only one primary at a time.
+   * position matching their role. An owner who does field work themselves
+   * (one- or two-person business, D-043) joins as the senior. A senior becomes
+   * primary if asked, or when the team has no primary senior yet; only one
+   * primary at a time.
    */
   private async join(
     tx: Prisma.TransactionClient,
@@ -187,15 +189,12 @@ export class TeamsService {
     if (member.status !== 'ACTIVE') {
       throw bad('EMPLOYEE_NOT_ACTIVE', 'This person has been removed from the business.');
     }
-    if (member.role === 'OWNER') {
-      throw bad('OWNER_NOT_IN_TEAM', 'The owner is not part of a team.');
-    }
     const already = await tx.teamMember.findFirst({
       where: { teamId, organizationMemberId: memberId, leftAt: null },
     });
     if (already) throw new AppError(HttpStatus.CONFLICT, 'ALREADY_IN_TEAM', 'Already in this team.');
 
-    const position = member.role;
+    const position = member.role === 'OWNER' ? 'SENIOR_TECHNICIAN' : member.role;
     let isPrimary = false;
     if (position === 'SENIOR_TECHNICIAN') {
       const current = await tx.teamMember.findFirst({

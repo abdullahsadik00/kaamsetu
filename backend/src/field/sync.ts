@@ -117,13 +117,13 @@ export class SyncController {
   constructor(private readonly sync: SyncService) {}
 
   /** First login or after the phone's store was cleared (docs/09 §6). */
-  @Roles('SENIOR_TECHNICIAN', 'HELPER')
+  @Roles('SENIOR_TECHNICIAN', 'HELPER', 'OWNER')
   @Get('bootstrap')
   bootstrap(@CurrentAuth() auth: AuthContext) {
     return this.sync.bootstrap(auth);
   }
 
-  @Roles('SENIOR_TECHNICIAN', 'HELPER')
+  @Roles('SENIOR_TECHNICIAN', 'HELPER', 'OWNER')
   @Get('changes')
   changes(@CurrentAuth() auth: AuthContext, @Query(new ZodValidationPipe(ChangesQuery)) q: { cursor: string }) {
     return this.sync.changes(auth, q.cursor);

@@ -100,7 +100,8 @@ describe('Field: my jobs and sync operations (e2e, T4.7)', () => {
     expect(notMine.body.data.results[0]).toMatchObject({ status: 'rejected', code: 'JOB_NOT_ACCESSIBLE' });
     const otherBusiness = await send(b.tokens.SENIOR_TECHNICIAN, op('job.start', otherTeamJob));
     expect(otherBusiness.body.data.results[0]).toMatchObject({ status: 'rejected', code: 'JOB_NOT_ACCESSIBLE' });
-    await http().get('/api/v1/my/jobs').set(as(a.tokens.OWNER)).expect(403);
+    // An owner not in a team has no field jobs (D-043).
+    expect((await http().get('/api/v1/my/jobs').set(as(a.tokens.OWNER)).expect(200)).body.data).toEqual([]);
   });
 
   it('finish page: keeps the report and the money with the team; refuses bad reports (T4.8)', async () => {

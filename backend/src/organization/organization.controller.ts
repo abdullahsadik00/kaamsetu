@@ -17,6 +17,7 @@ import type { AuthContext } from '../auth/token.service.js';
 import { AppError } from '../common/app-error.js';
 import { audit } from '../common/audit.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
+import { myTeamIds } from '../field/scope.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { requireOrg, scoped } from '../tenancy/tenant.js';
 import {
@@ -130,6 +131,7 @@ export class OrganizationController {
   /**
    * The caller's own business. Any member may see its basic details; only the
    * owner sees when the free trial ends (null when not on a trial, T7.1).
+   * `inTeam`: the caller is in an active team, so an owner gets My work (D-043).
    */
   @Roles(...ALL_ROLES)
   @Get('organization')
@@ -151,7 +153,8 @@ export class OrganizationController {
     if (!org) throw AppError.notFound('ORGANIZATION_NOT_FOUND');
     const { subscription, ...details } = org;
     const onTrial = auth.role === 'OWNER' && subscription?.status === 'TRIALING';
-    return { ...details, trialEndsAt: onTrial ? (subscription?.trialEndsAt ?? null) : null };
+    const inTeam = (await myTeamIds(this.prisma, auth)).length > 0;
+    return { ...details, trialEndsAt: onTrial ? (subscription?.trialEndsAt ?? null) : null, inTeam };
   }
 
   @Roles('OWNER')

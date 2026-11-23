@@ -88,13 +88,8 @@ describe('Teams (e2e, T4.2)', () => {
     expect(members.find((m) => m.isPrimary)?.memberId).toBe(a.memberIds.SENIOR_TECHNICIAN);
   });
 
-  it('refuses the owner, other businesses’ staff and removed employees', async () => {
-    const owner = await http()
-      .post(`/api/v1/teams/${team.id}/members`)
-      .set(as(a.tokens.OWNER))
-      .send({ memberId: a.memberIds.OWNER })
-      .expect(400);
-    expect(owner.body.error.code).toBe('OWNER_NOT_IN_TEAM');
+  // The owner may join a team (D-043): see owner-field.e2e-spec.
+  it('refuses other businesses’ staff and removed employees', async () => {
     await http()
       .post(`/api/v1/teams/${team.id}/members`)
       .set(as(a.tokens.OWNER))
