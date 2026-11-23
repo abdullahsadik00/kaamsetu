@@ -28,6 +28,7 @@ import {
 } from '@/features/enquiries/enquiries';
 import { isOffline, newId, saveOffline } from '@/features/sync/owner-offline';
 import { PendingSaves } from '@/features/sync/pending-saves';
+import { useFeatures } from '@/features/employees/api';
 import { useTeams, type Team } from '@/features/teams/teams';
 import type { FeedItem } from '@/features/updates/api';
 import { JobFeed } from '@/features/updates/feed';
@@ -306,7 +307,8 @@ function JobForm({
   const { t } = useTranslation();
   const qc = useQueryClient();
   const customer = useQuery(useCustomer(customerId));
-  const teams = useQuery(useTeams());
+  const features = useFeatures();
+  const teams = useQuery({ ...useTeams(), enabled: features.has('TEAMS') });
   const dayLabel = useDayLabel();
   const [siteId, setSiteId] = useState<string | null>(enquiry?.siteId ?? null);
   const [acs, setAcs] = useState<string[]>(enquiry?.equipment.map((e) => e.id) ?? []);
@@ -384,6 +386,8 @@ function JobForm({
   const c = customer.data;
   const site = c.sites.find((s) => s.id === siteId) ?? c.sites[0];
   const activeTeams = (teams.data ?? []).filter((tm) => tm.active);
+  // No team to pick: the server gives the job to the owner's own team (D-044).
+  const ownTeam = features.ready && !features.has('TEAMS');
   const addTag = (text: string) => setComplaint((v) => (v.trim() ? `${v.trim()}, ${text}` : text));
   const submit = (run: (site: string) => Promise<unknown>) => {
     if (!site || submitting.current) return;
@@ -401,8 +405,8 @@ function JobForm({
         <>
           <Button
             size="large"
-            label={teamId ? t('uiEnquiry.createJob') : t('uiEnquiry.saveJob')}
-            loadingLabel={teamId ? t('uiEnquiry.creatingJob') : t('uiEnquiry.savingJob')}
+            label={teamId || ownTeam ? t('uiEnquiry.createJob') : t('uiEnquiry.saveJob')}
+            loadingLabel={teamId || ownTeam ? t('uiEnquiry.creatingJob') : t('uiEnquiry.savingJob')}
             onPress={() => submit(save.mutateAsync)}
             loading={save.isPending}
             disabled={busy}
@@ -539,18 +543,21 @@ function JobForm({
         ) : null}
       </FormSection>
 
-      <FormSection label={t('jobs.team')} hint={t('uiOwner.optional')}>
-        {activeTeams.length ? (
-          <OptionChips
-            label={t('jobs.team')}
-            options={activeTeams.map((tm) => ({ value: tm.id, label: tm.name }))}
-            value={teamId}
-            onChange={setTeamId}
-          />
-        ) : (
-          <AppText variant="support" color={colors.slate}>{t('jobs.noTeams')}</AppText>
-        )}
-      </FormSection>
+      {/* SOLO and CREW: the server gives every job to the owner's own team (D-044). */}
+      {features.has('TEAMS') ? (
+        <FormSection label={t('jobs.team')} hint={t('uiOwner.optional')}>
+          {activeTeams.length ? (
+            <OptionChips
+              label={t('jobs.team')}
+              options={activeTeams.map((tm) => ({ value: tm.id, label: tm.name }))}
+              value={teamId}
+              onChange={setTeamId}
+            />
+          ) : (
+            <AppText variant="support" color={colors.slate}>{t('jobs.noTeams')}</AppText>
+          )}
+        </FormSection>
+      ) : null}
 
       <TextField
         label={t('jobs.amount')}
@@ -591,7 +598,8 @@ export function JobScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const qc = useQueryClient();
   const job = useQuery(useJob(id));
-  const teams = useQuery(useTeams());
+  const features = useFeatures();
+  const teams = useQuery({ ...useTeams(), enabled: features.has('TEAMS') });
   const dayLabel = useDayLabel();
   const [panel, setPanel] = useState<'none' | 'more' | 'assign' | 'cancel'>('none');
   const [sheetTeam, setSheetTeam] = useState<string | null>(null);
@@ -634,6 +642,7 @@ export function JobScreen() {
   const error = apply.error ?? cancel.error ?? followUp.error;
   const activeTeams = (teams.data ?? []).filter((tm) => tm.active);
   const team = (teams.data ?? []).find((tm) => tm.id === j.teamId);
+  const pickTeam = features.has('TEAMS');
   const { helpers, phone: teamPhone } = teamLines(team);
   const phoneDigits = j.customer?.phone.replace(/\D/g, '') ?? '';
   const address = j.site ? [j.site.addressLine1, j.site.locality, j.site.city].filter(Boolean).join(', ') : null;
@@ -676,7 +685,12 @@ export function JobScreen() {
             j.teamId ? (
               // Stacked full width: "Change team or time" does not fit half a footer in hi/mr.
               <>
-                <Button variant="secondary" icon="calendar-edit" label={t('uiOwner.changeTeamTime')} onPress={openAssign} />
+                <Button
+                  variant="secondary"
+                  icon="calendar-edit"
+                  label={pickTeam ? t('uiOwner.changeTeamTime') : t('uiOwner.changeTime')}
+                  onPress={openAssign}
+                />
                 {teamPhone ? (
                   <Button variant="secondary" icon="phone-outline" label={t('uiOwner.callTeam')} onPress={() => Linking.openURL(`tel:${teamPhone}`)} />
                 ) : null}
@@ -828,7 +842,7 @@ export function JobScreen() {
       <BottomSheet
         visible={panel === 'assign'}
         onClose={() => setPanel('none')}
-        title={j.teamId ? t('uiOwner.changeTeamTime') : t('uiOwner.assignTeam')}
+        title={!pickTeam ? t('uiOwner.changeTime') : j.teamId ? t('uiOwner.changeTeamTime') : t('uiOwner.assignTeam')}
         subtitle={[t(`jobs.types.${j.type}`), j.acCount ? t('customers.acCount', { count: j.acCount }) : null, j.place].filter(Boolean).join(' · ')}
         footer={
           <>
@@ -847,15 +861,17 @@ export function JobScreen() {
           <OptionChips label={t('jobs.day')} options={dayOptions} value={day} onChange={setDay} />
           {day ? <OptionChips label={t('jobs.slot')} options={slotOptions} value={slot} onChange={setSlot} /> : null}
         </FormSection>
-        <FormSection label={t('uiOwner.team')}>
-          {activeTeams.length ? (
-            activeTeams.map((tm) => (
-              <TeamOption key={tm.id} team={tm} selected={sheetTeam === tm.id} onPress={() => setSheetTeam(tm.id)} />
-            ))
-          ) : (
-            <AppText variant="support" color={colors.slate}>{t('jobs.noTeams')}</AppText>
-          )}
-        </FormSection>
+        {pickTeam ? (
+          <FormSection label={t('uiOwner.team')}>
+            {activeTeams.length ? (
+              activeTeams.map((tm) => (
+                <TeamOption key={tm.id} team={tm} selected={sheetTeam === tm.id} onPress={() => setSheetTeam(tm.id)} />
+              ))
+            ) : (
+              <AppText variant="support" color={colors.slate}>{t('jobs.noTeams')}</AppText>
+            )}
+          </FormSection>
+        ) : null}
       </BottomSheet>
 
       {/* Stitch 18: cancel dialog */}

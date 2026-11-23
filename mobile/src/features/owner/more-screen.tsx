@@ -10,7 +10,7 @@ import { Card } from '@/components/ui/card';
 import { initials, ListRow } from '@/components/ui/list-row';
 import { Screen } from '@/components/ui/screen';
 import { useSession } from '@/features/auth/session';
-import { useBusiness } from '@/features/employees/api';
+import { useBusiness, useFeatures } from '@/features/employees/api';
 import { ProfileSection } from '@/features/profile/profile-section';
 import { i18n } from '@/localization/i18n';
 import { colors, radius, space } from '@/theme/tokens';
@@ -32,6 +32,7 @@ function trialLine(t: TFunction, endsAt: string): string {
 export function OwnerMoreScreen() {
   const { t } = useTranslation();
   const business = useQuery(useBusiness());
+  const features = useFeatures();
   const ownerName = useSession((s) => s.profile?.user.name ?? null);
   const name = business.data?.name;
   const [exporting, setExporting] = useState(false);
@@ -75,14 +76,18 @@ export function OwnerMoreScreen() {
         </Card>
       ) : null}
       <Card style={styles.listCard}>
-        <ListRow icon="account-group-outline" title={t('teams.title')} subtitle={t('uiOwner.teamsHint')} onPress={() => router.push('/teams')} divider />
-        <ListRow
-          icon="card-account-details-outline"
-          title={t('owner.employees')}
-          subtitle={t('uiOwner.employeesHint')}
-          onPress={() => router.push('/employees')}
-          divider
-        />
+        {features.has('TEAMS') ? (
+          <ListRow icon="account-group-outline" title={t('teams.title')} subtitle={t('uiOwner.teamsHint')} onPress={() => router.push('/teams')} divider />
+        ) : null}
+        {features.has('EMPLOYEES') ? (
+          <ListRow
+            icon="card-account-details-outline"
+            title={t('owner.employees')}
+            subtitle={t('uiOwner.employeesHint')}
+            onPress={() => router.push('/employees')}
+            divider
+          />
+        ) : null}
         <ListRow icon="tag-outline" title={t('uiBilling.rateList')} subtitle={t('uiBilling.rateListHint')} onPress={() => router.push('/rates')} divider />
         <ListRow icon="store-outline" title={t('business.title')} subtitle={t('uiOwner.businessHint')} onPress={() => router.push('/business')} divider />
         <ListRow

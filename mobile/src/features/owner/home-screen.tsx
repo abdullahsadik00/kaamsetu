@@ -13,6 +13,7 @@ import { Screen } from '@/components/ui/screen';
 import { PendingSaves } from '@/features/sync/pending-saves';
 import { api, useSession } from '@/features/auth/session';
 import { useDayLabel } from '@/features/jobs/jobs';
+import { useFeatures } from '@/features/employees/api';
 import { useTeams } from '@/features/teams/teams';
 import type { FeedItem } from '@/features/updates/api';
 import { FeedRow, UpdatesBell } from '@/features/updates/feed';
@@ -81,7 +82,8 @@ export function OwnerHomeScreen() {
   const language = useLanguage();
   const name = useSession((s) => s.profile?.user.name ?? null);
   const dash = useQuery(useDashboard());
-  const teams = useQuery(useTeams());
+  const features = useFeatures();
+  const teams = useQuery({ ...useTeams(), enabled: features.has('TEAMS') });
   const dayLabel = useDayLabel();
 
   // The tab stays mounted: refresh when the owner comes back to it (not on the first focus).
@@ -123,7 +125,7 @@ export function OwnerHomeScreen() {
           </AppText>
           <AppText variant="title">{firstName ? `${greeting}, ${firstName}` : greeting}</AppText>
         </View>
-        <UpdatesBell unread={d?.updates?.unread ?? 0} />
+        {features.has('STAFF_UPDATES') ? <UpdatesBell unread={d?.updates?.unread ?? 0} /> : null}
       </View>
 
       {teams.data && teams.data.length === 0 ? (

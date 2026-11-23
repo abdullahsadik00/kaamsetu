@@ -94,3 +94,20 @@ describe('Jobs tab with an empty list (BUG-05 check, TP-41)', () => {
     expect(StyleSheet.flatten(screen.getByRole('radio', { name: 'Open' }).props.style)).toMatchObject({ height: 36 });
   });
 });
+
+describe('Owner job page for a solo or crew business (D-044)', () => {
+  it('offers "Change day or time" with no team choice, and never asks for teams', async () => {
+    const assigned = { ...cancelled, status: 'ASSIGNED', cancelReason: null, teamId: 'team-1', teamName: 'My team' };
+    const get = jest.spyOn(api, 'get').mockImplementation(((path: string) => {
+      if (path === '/organization') return Promise.resolve({ id: 'o1', name: 'Cool Air', businessType: 'SOLO', features: [] });
+      return Promise.resolve(path.startsWith('/jobs') ? assigned : []);
+    }) as never);
+    await renderScreen(<JobScreen />);
+    const change = await screen.findByRole('button', { name: 'Change day or time' });
+    // The job's own details show its team; the sheet adds no team section.
+    const before = screen.queryAllByText('Team').length;
+    await fireEvent.press(change);
+    expect(screen.queryAllByText('Team')).toHaveLength(before);
+    expect(get.mock.calls.map(([path]) => path)).not.toContain('/teams');
+  });
+});

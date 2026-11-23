@@ -14,11 +14,14 @@ import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { displayPhone } from '@/features/customers/api';
 import {
+  changeBusinessType,
   ORGANIZATION_KEY,
   updateBusiness,
   useBusiness,
   type Business,
+  type BusinessType,
 } from '@/features/employees/api';
+import { BusinessTypeChoice } from '@/features/onboarding/business-type';
 import { colors, radius, space } from '@/theme/tokens';
 
 const GSTIN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
@@ -52,6 +55,19 @@ function BusinessView({ business }: { business: Business }) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
+  const [changingType, setChangingType] = useState(false);
+  const [typeSaved, setTypeSaved] = useState(false);
+  if (changingType) {
+    return (
+      <TypeForm
+        business={business}
+        onDone={(saved) => {
+          setChangingType(false);
+          setTypeSaved(saved);
+        }}
+      />
+    );
+  }
   if (editing) {
     return (
       <BusinessForm
@@ -94,6 +110,59 @@ function BusinessView({ business }: { business: Business }) {
         </AppText>
       ) : null}
       <Button variant="secondary" icon="pencil-outline" label={t('uiOwner.editDetails')} onPress={() => setEditing(true)} />
+      <Card style={styles.viewCard}>
+        <View style={styles.viewRow}>
+          <AppText variant="support" color={colors.muted}>
+            {t('business.type')}
+          </AppText>
+          <AppText variant="section" weight="semibold">
+            {t(`onboarding.types.${business.businessType ?? 'VENDOR'}`)}
+          </AppText>
+        </View>
+      </Card>
+      {typeSaved ? (
+        <AppText color={colors.ok} accessibilityLiveRegion="polite">
+          {t('business.typeSaved')}
+        </AppText>
+      ) : null}
+      <Button variant="secondary" icon="swap-horizontal" label={t('business.changeType')} onPress={() => setChangingType(true)} />
+    </Screen>
+  );
+}
+
+/** Owner changes how the business works (D-044); screens follow at once. */
+function TypeForm({ business, onDone }: { business: Business; onDone: (saved: boolean) => void }) {
+  const { t } = useTranslation();
+  const qc = useQueryClient();
+  const [type, setType] = useState<BusinessType>(business.businessType ?? 'VENDOR');
+  const save = useMutation({
+    mutationFn: () => changeBusinessType(type),
+    onSuccess: async () => {
+      // Teams, staff and jobs can change with the type: reload everything.
+      await qc.invalidateQueries();
+      onDone(true);
+    },
+  });
+  return (
+    <Screen
+      footer={
+        <>
+          <Button
+            label={t('business.save')}
+            onPress={() => save.mutate()}
+            loading={save.isPending}
+            disabled={type === (business.businessType ?? 'VENDOR')}
+          />
+          <Button variant="secondary" label={t('common.cancel')} onPress={() => onDone(false)} />
+        </>
+      }
+    >
+      <BusinessTypeChoice value={type} onChange={setType} />
+      {save.error ? (
+        <AppText color={colors.bad} accessibilityLiveRegion="polite">
+          {errorMessage(t, save.error)}
+        </AppText>
+      ) : null}
     </Screen>
   );
 }

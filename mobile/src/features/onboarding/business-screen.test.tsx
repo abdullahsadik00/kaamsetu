@@ -49,6 +49,7 @@ describe('Your business (T4.1)', () => {
     await fireEvent.changeText(screen.getByLabelText('Your name'), 'Sadik');
     await fireEvent.changeText(screen.getByLabelText('Business mobile number'), '098765 01234');
     await fireEvent.changeText(screen.getByLabelText('City'), 'Pune');
+    await fireEvent.press(screen.getByRole('radio', { name: 'Alone' }));
     await fireEvent(screen.getByLabelText('We give GST bills'), 'valueChange', true);
     await fireEvent.changeText(await screen.findByLabelText('GSTIN'), '27abcde1234f1z5');
     await fireEvent.press(screen.getByText('Create my business'));
@@ -61,7 +62,18 @@ describe('Your business (T4.1)', () => {
         city: 'Pune',
         gstBills: true,
         gstin: '27ABCDE1234F1Z5',
+        businessType: 'SOLO',
       }),
     );
+  });
+
+  it('asks how the business works before creating it (D-044)', async () => {
+    await renderScreen(<BusinessScreen />);
+    await fireEvent.changeText(screen.getByLabelText('Business name'), 'Cool Care AC');
+    await fireEvent.changeText(screen.getByLabelText('Your name'), 'Sadik');
+    await fireEvent.changeText(screen.getByLabelText('Business mobile number'), '9876501234');
+    await fireEvent.press(screen.getByText('Create my business'));
+    expect(await screen.findByText('Choose how you work')).toBeTruthy();
+    expect(mockCreate).not.toHaveBeenCalled();
   });
 });

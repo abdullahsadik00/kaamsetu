@@ -90,6 +90,7 @@ const serve = (dash: Dashboard | Error) =>
   jest.spyOn(api, 'get').mockImplementation(((path: string) => {
     if (path === '/dashboard') return dash instanceof Error ? Promise.reject(dash) : Promise.resolve(dash);
     if (path === '/teams') return Promise.resolve([{ id: 'team-1', active: true }]);
+    if (path === '/organization') return Promise.resolve({ id: 'o1', name: 'Cool Air', businessType: 'VENDOR', features: ['TEAMS', 'EMPLOYEES', 'STAFF_UPDATES'] });
     return Promise.reject(new Error(`unexpected ${path}`));
   }) as never);
 

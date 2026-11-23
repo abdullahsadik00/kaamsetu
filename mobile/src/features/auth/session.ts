@@ -121,6 +121,8 @@ export type NewBusiness = {
   city?: string;
   gstBills: boolean;
   gstin?: string;
+  /** How the business works (D-044). */
+  businessType: 'SOLO' | 'CREW' | 'VENDOR';
 };
 
 /**

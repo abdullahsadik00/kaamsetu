@@ -13,6 +13,8 @@ import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { createBusiness, useSession } from '@/features/auth/session';
 import { SwitchCard } from '@/features/customers/people-ui';
+
+import { BusinessTypeChoice } from './business-type';
 import { colors, space } from '@/theme/tokens';
 
 const GSTIN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
@@ -28,6 +30,8 @@ const schema = z
     city: z.string().trim(),
     gstBills: z.boolean(),
     gstin: z.string().trim().toUpperCase(),
+    // Required: it decides which screens the owner gets (D-044).
+    businessType: z.enum(['SOLO', 'CREW', 'VENDOR']).nullable().refine((v) => v !== null),
   })
   .refine((v) => !v.gstin || GSTIN.test(v.gstin), { path: ['gstin'] });
 
@@ -47,6 +51,7 @@ export function BusinessScreen() {
       city: '',
       gstBills: false,
       gstin: '',
+      businessType: null,
     },
   });
   const gstBills = useWatch({ control: form.control, name: 'gstBills' });
@@ -59,6 +64,7 @@ export function BusinessScreen() {
         ...(v.city ? { city: v.city } : {}),
         gstBills: v.gstBills,
         ...(v.gstBills && v.gstin ? { gstin: v.gstin } : {}),
+        businessType: v.businessType ?? 'VENDOR',
       }),
     // The session now has the OWNER role; the root guards open the owner tabs.
     onSuccess: () => router.replace('/'),
@@ -119,6 +125,17 @@ export function BusinessScreen() {
             value={field.value}
             onChangeText={field.onChange}
             error={fieldState.error ? t('auth.phoneInvalid') : undefined}
+          />
+        )}
+      />
+      <Controller
+        control={form.control}
+        name="businessType"
+        render={({ field, fieldState }) => (
+          <BusinessTypeChoice
+            value={field.value}
+            onChange={field.onChange}
+            error={fieldState.error ? t('onboarding.typeError') : undefined}
           />
         )}
       />

@@ -94,3 +94,30 @@ describe('Free trial (T7.1)', () => {
     expect(screen.queryByTestId('trial')).toBeNull();
   });
 });
+
+describe('More by business type (D-044)', () => {
+  const as = (businessType: string, features: string[]) =>
+    jest.spyOn(api, 'get').mockImplementation(async () => ({ name: 'Cool Care', city: 'Pune', businessType, features }) as never);
+
+  it('a solo technician sees no Teams or Employees', async () => {
+    as('SOLO', []);
+    await renderScreen(<OwnerMoreScreen />);
+    await screen.findByText('Cool Care');
+    expect(screen.queryByText('Teams')).toBeNull();
+    expect(screen.queryByText('Employees')).toBeNull();
+  });
+
+  it('a crew sees Employees but not Teams', async () => {
+    as('CREW', ['EMPLOYEES']);
+    await renderScreen(<OwnerMoreScreen />);
+    expect(await screen.findByText('Employees')).toBeTruthy();
+    expect(screen.queryByText('Teams')).toBeNull();
+  });
+
+  it('a vendor sees both', async () => {
+    as('VENDOR', ['TEAMS', 'EMPLOYEES', 'STAFF_UPDATES']);
+    await renderScreen(<OwnerMoreScreen />);
+    expect(await screen.findByText('Teams')).toBeTruthy();
+    expect(screen.getByText('Employees')).toBeTruthy();
+  });
+});

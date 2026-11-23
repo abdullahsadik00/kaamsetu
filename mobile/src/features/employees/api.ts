@@ -1,4 +1,4 @@
-import { queryOptions } from '@tanstack/react-query';
+import { queryOptions, useQuery } from '@tanstack/react-query';
 
 import type { Role } from '@/api/token-store';
 import { api } from '@/features/auth/session';
@@ -54,7 +54,14 @@ export type Business = {
   trialEndsAt?: string | null;
   /** The caller is in a team: an owner who does field work gets My work (D-043). */
   inTeam?: boolean;
+  /** How the business works (D-044). */
+  businessType?: BusinessType;
+  /** Parts of the app this business has (D-044); missing from servers before D-044. */
+  features?: Feature[];
 };
+
+export type BusinessType = 'SOLO' | 'CREW' | 'VENDOR';
+export type Feature = 'TEAMS' | 'EMPLOYEES' | 'STAFF_UPDATES';
 
 export const ORGANIZATION_KEY = ['organization'] as const;
 
@@ -63,6 +70,23 @@ export const useBusiness = () =>
     queryKey: ORGANIZATION_KEY,
     queryFn: () => api.get<Business>('/organization'),
   });
+
+/**
+ * Which parts of the app this business has (D-044). Nothing until the
+ * business is loaded; a server from before D-044 sends no list: everything.
+ */
+export function useFeatures() {
+  const data = useQuery(useBusiness()).data;
+  return {
+    ready: !!data,
+    businessType: data?.businessType ?? 'VENDOR',
+    has: (f: Feature) => (data ? (data.features ? data.features.includes(f) : true) : false),
+  };
+}
+
+/** Owner changes how the business works (D-044); the server checks staff and open jobs. */
+export const changeBusinessType = (businessType: BusinessType) =>
+  api.post<{ businessType: BusinessType; features: Feature[] }>('/organization/business-type', { businessType });
 
 /** Owner edits business details; send only what changed; gstin null clears it. */
 export const updateBusiness = (
