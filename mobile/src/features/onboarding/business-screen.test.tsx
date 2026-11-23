@@ -4,6 +4,7 @@ import { createBusiness } from '@/features/auth/session';
 import { renderScreen, setupI18n } from '@/testing/render';
 
 import { BusinessScreen } from './business-screen';
+import { useOnboardingChoice } from './choice';
 
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), replace: jest.fn() } }));
 jest.mock('@/features/auth/session', () => ({
@@ -17,6 +18,13 @@ beforeAll(setupI18n);
 beforeEach(() => mockCreate.mockReset());
 
 describe('Your business (T4.1)', () => {
+  it('starts with the type chosen before log in (D-044)', async () => {
+    useOnboardingChoice.setState({ businessType: 'CREW' });
+    await renderScreen(<BusinessScreen />);
+    expect(screen.getByRole('radio', { name: 'Me + one helper or partner' }).props.accessibilityState).toMatchObject({ checked: true });
+    useOnboardingChoice.setState({ businessType: null });
+  });
+
   it('requires a business name, owner name and a valid mobile', async () => {
     await renderScreen(<BusinessScreen />);
     await fireEvent.press(screen.getByText('Create my business'));

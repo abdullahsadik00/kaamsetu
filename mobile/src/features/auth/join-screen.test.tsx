@@ -1,6 +1,8 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { router } from 'expo-router';
 
 import { ApiError } from '@/api/errors';
+import { useOnboardingChoice } from '@/features/onboarding/choice';
 import { renderScreen, setupI18n } from '@/testing/render';
 
 import { JoinScreen } from './join-screen';
@@ -22,6 +24,16 @@ async function openCodeForm() {
   await renderScreen(<JoinScreen />);
   await fireEvent.press(screen.getByText('Enter code instead'));
 }
+
+describe('After Get started (D-044)', () => {
+  afterEach(() => useOnboardingChoice.setState({ businessType: null }));
+
+  it('a new owner goes straight to Your business', async () => {
+    useOnboardingChoice.setState({ businessType: 'SOLO' });
+    await renderScreen(<JoinScreen />);
+    expect(router.push).toHaveBeenCalledWith('/setup-business');
+  });
+});
 
 describe('Join your business (phone + code)', () => {
   it('checks the number and code before sending anything', async () => {

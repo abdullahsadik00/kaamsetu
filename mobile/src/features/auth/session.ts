@@ -173,11 +173,12 @@ export async function deleteAccount(): Promise<void> {
   await clearLocalSession();
 }
 
-export type HomeRoute = '/login' | '/home' | '/my-work' | '/today' | '/join-business';
+export type HomeRoute = '/welcome' | '/home' | '/my-work' | '/today' | '/join-business';
 
 /** Where each role lands (docs/02 §3). */
 export function homeRoute(state: Pick<SessionState, 'status' | 'profile'>): HomeRoute {
-  if (state.status !== 'signedIn' || !state.profile) return '/login';
+  // Signed out: the welcome (screen 51); "I already use KaamSetu" goes to log in.
+  if (state.status !== 'signedIn' || !state.profile) return '/welcome';
   const role: Role | undefined = state.profile.membership?.role;
   switch (role) {
     case 'OWNER':

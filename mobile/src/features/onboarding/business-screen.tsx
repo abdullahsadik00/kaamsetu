@@ -15,6 +15,7 @@ import { createBusiness, useSession } from '@/features/auth/session';
 import { SwitchCard } from '@/features/customers/people-ui';
 
 import { BusinessTypeChoice } from './business-type';
+import { useOnboardingChoice } from './choice';
 import { colors, space } from '@/theme/tokens';
 
 const GSTIN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
@@ -51,7 +52,8 @@ export function BusinessScreen() {
       city: '',
       gstBills: false,
       gstin: '',
-      businessType: null,
+      // Chosen on "How do you work?" before logging in, if they came that way.
+      businessType: useOnboardingChoice.getState().businessType,
     },
   });
   const gstBills = useWatch({ control: form.control, name: 'gstBills' });

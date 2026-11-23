@@ -14,6 +14,9 @@ export default function AuthLayout() {
         contentStyle: { backgroundColor: colors.paper },
       }}
     >
+      <Stack.Screen name="welcome" options={{ headerShown: false }} />
+      <Stack.Screen name="how-you-work" options={{ title: t('onboarding.howWork') }} />
+      <Stack.Screen name="walkthrough" options={{ headerShown: false }} />
       <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="phone" options={{ title: t('auth.loginTitle') }} />
       <Stack.Screen name="otp" options={{ title: t('auth.otpTitle') }} />

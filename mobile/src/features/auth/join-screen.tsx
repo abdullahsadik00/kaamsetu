@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
+import { useOnboardingChoice } from '@/features/onboarding/choice';
 import { ProfileSection } from '@/features/profile/profile-section';
 import { colors, radius, space } from '@/theme/tokens';
 
@@ -45,6 +46,11 @@ export function JoinScreen() {
   useEffect(() => {
     if (pendingInvite && join.isIdle) join.mutate({ token: pendingInvite });
   }, [pendingInvite, join]);
+
+  // Came through "Get started" (D-044): a new owner, so straight to "Your business"; Back returns here.
+  useEffect(() => {
+    if (!pendingInvite && useOnboardingChoice.getState().businessType) router.push('/setup-business');
+  }, [pendingInvite]);
 
   const submit = form.handleSubmit(({ phone, code }) => join.mutate({ phone: `+91${phone}`, code }));
 

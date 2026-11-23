@@ -18,8 +18,8 @@ import { googleLogin } from './session';
 const phoneLoginShown = __DEV__ || process.env.EXPO_PUBLIC_PHONE_LOGIN === '1';
 
 /**
- * Welcome + log in (screens 51 and 53) on one page: the teal brand block, then
- * one button for the Google account already on the phone (D-025).
+ * Log in (screen 53), after the welcome (51) or the walkthrough (52): the teal
+ * brand block, then one button for the Google account already on the phone (D-025).
  */
 export function LoginScreen() {
   const { t } = useTranslation();
