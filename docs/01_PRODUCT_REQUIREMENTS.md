@@ -29,6 +29,14 @@ Initial customer profile:
 
 These are the initial pilot assumptions. Validate the actual daily workflow before treating every assumption as universal.
 
+**Target market (D-041).** KaamSetu is a subscription SaaS for AC service businesses of every size, and the pilot business is only the starting point:
+
+- **Vendors with several teams**, like the pilot business.
+- **Two-person crews**: a technician and a helper who run their own business.
+- **Single technicians** working alone.
+
+Any of them can take jobs from service centres, from their own customers, or commercial VRF/VRV work. Do not hard-code the pilot's shape (an owner who stays off the field, several fixed teams). How a solo technician or a two-person crew uses the roles is open (Q-16).
+
 ## 3. Product goals
 
 1. Stop losing customer requests in WhatsApp conversations.
@@ -299,6 +307,7 @@ Initial categories:
 - Uninstallation.
 - Gas/refrigerant-related work.
 - Commercial AC maintenance.
+- VRF/VRV systems (commercial; D-041).
 - AMC visit.
 - Inspection.
 - Other.

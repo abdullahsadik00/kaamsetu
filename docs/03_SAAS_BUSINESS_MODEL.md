@@ -80,6 +80,8 @@ A simple future plan structure could be:
 
 These are product packaging ideas, not finalized prices or commitments.
 
+**Who the plans must fit (D-041):** a single technician, a two-person crew, and a vendor with several teams. The smallest plan has to make sense for one person who is both owner and technician; the largest for a vendor with many teams. Plan limits by number of teams or staff fit this range better than limits by jobs (see above).
+
 ## 6. Subscription enforcement
 
 The backend should know:

@@ -2,6 +2,10 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-23 — Target market written down (D-041)
+
+- Docs: KaamSetu is a subscription SaaS for vendors with several teams, two-person crews and single technicians, with service-centre, own and VRF/VRV jobs (PRD §2, §9; doc 03 §5). New open question Q-16: how a one- or two-person business uses the owner/technician roles.
+
 ## 2026-11-23 — Row-level security on all tables (D-040)
 
 - Backend: migration `20261123090000_enable_rls` turns on row-level security for every table in `public`, so Supabase's Data API (anon key) cannot read KaamSetu data. The API is the table owner and is not affected.
