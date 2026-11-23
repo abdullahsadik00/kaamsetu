@@ -169,6 +169,8 @@ Potential endpoints:
 - `GET /sync/changes?cursor=`
 - `POST /sync/operations`
 
+**Owner field work, 23 Nov 2026 (D-043):** `GET /organization` also returns `inTeam` (the caller is in an active team). An owner can be added to a team (`POST /teams/:id/members`, always as senior; `OWNER_NOT_IN_TEAM` is gone). `GET /my/jobs`, `GET /sync/bootstrap` and `GET /sync/changes` allow OWNER and return only the jobs of the owner's teams (empty when in none). Job operations in `POST /sync/operations` (`job.start`, `job.hold`, `job.complete`, updates) accept OWNER for those jobs.
+
 **Free trial, 22 Nov 2026 (T7.1):** `GET /organization` also returns `trialEndsAt` (ISO time) for the owner while the business is on its free trial; `null` for staff and when not on a trial. Nothing is blocked when it passes.
 
 **Help contacts, 22 Nov 2026 (T7.3):** `GET /support` (any signed-in person, also before joining a business) returns `{ whatsapp: '+91…' | null, email: string | null }` from the settings `SUPPORT_WHATSAPP` and `SUPPORT_EMAIL`. The app hides a contact that is null.

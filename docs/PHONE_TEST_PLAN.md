@@ -77,6 +77,7 @@ Statuses: **Passed**, **Pending** (built, run it), **Failed**, **Blocked**, **No
 | TP-46 | 4 Owner | Download business data | T7.3 | Pending | | Needs the new APK and backend |
 | TP-47 | 4 Owner, technician | Help: WhatsApp support, privacy, terms | T7.3 | Pending | | Needs the new APK; set `SUPPORT_WHATSAPP` on Render first |
 | TP-48 | 4 Owner, technician | Free trial days left | T7.1 | Pending | | Needs the new APK (built after 22 Nov evening) |
+| TP-49 | 4 Owner | Owner does field work (solo technician) | T7.4 | Pending | | Needs a new APK (built after 23 Nov) and the backend on staging |
 | TP-39b | 4 Owner | Updates from teams, bell, job feed | T4.7 (D-037) | Pending | | |
 | TP-36b | 4 Owner | Home dashboard | T4.12 | Pending | | |
 | TP-34 | 4 Owner | Quotations and bills | T4.10 | Pending | | GST rates wait for Q-04 |
@@ -559,6 +560,20 @@ Before: set `SUPPORT_WHATSAPP` (your number) and `SUPPORT_EMAIL` on Render and r
 - Step 1: "Free trial · N days left" (30 days from when the test business was made, if it was made in the app).
 - Step 2: the days left match the new date.
 - Step 3: no trial line for staff.
+
+### TP-49 Owner does field work (solo technician)
+1. Owner: **More › Teams › Add team**. Name it "Me", pick yourself as the senior (your name · Owner) and save.
+2. Look at the tab bar.
+3. **Jobs**: make a new job for a test customer and give it to the team "Me".
+4. **My work**: open the job, tap **Start**, then **Finish work** and save.
+5. Turn mobile data and Wi-Fi off, start a second "Me" job from **My work**, then turn the internet back on.
+6. Make a job for another team and look at **My work**.
+
+**Expected**
+- Step 2: a **My work** tab appears next to **Jobs** (an owner not in a team never sees it).
+- Step 4: the job shows Done on **My work** and Completed on the owner's **Jobs**.
+- Step 5: the start is saved on the phone and reaches the server once online (the owner's **Jobs** shows it in progress).
+- Step 6: the other team's job is not on **My work**.
 
 ### TP-25 Reset login and remove an employee (run last)
 1. **More › Employees** › **Test Helper** › **Reset login** and confirm.

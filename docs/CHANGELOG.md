@@ -2,6 +2,13 @@
 
 Meaningful product, documentation, architecture and implementation changes, newest first. Format loosely follows [Keep a Changelog](https://keepachangelog.com/). App releases will get version headings once the first build ships.
 
+## 2026-11-23 — Owner field work (D-043, Q-16) and new name KaamSaathi (D-042)
+
+- Backend: the owner can be added to a team (always as its senior). In a team, the owner sees that team's jobs on `GET /my/jobs` and in sync, and can start, hold and finish them. `GET /organization` returns `inTeam`.
+- App: **Add team** offers the owner as the senior ("Name · Owner"), and a team page lets the owner add themselves. An owner in a team gets a **My work** tab with the technician's offline job list and job page. Phone test TP-49.
+- Name: KaamSaathi chosen (D-042). The app, site and docs still say KaamSetu until the trademark, company and domain checks are done.
+- Tests: e2e 176 passed (new `owner-field.e2e-spec`, route inventory updated); app 164 passed.
+
 ## 2026-11-23 — Target market written down (D-041)
 
 - Docs: KaamSetu is a subscription SaaS for vendors with several teams, two-person crews and single technicians, with service-centre, own and VRF/VRV jobs (PRD §2, §9; doc 03 §5). New open question Q-16: how a one- or two-person business uses the owner/technician roles.
